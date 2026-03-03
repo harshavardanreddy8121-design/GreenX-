@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "features": "Features",
+    "contact": "Contact",
+    "login": "Login"
+  },
+  "hero": {
+    "title": "GreenX",
+    "subtitle": "WHERE LAND MEETS INTELLIGENCE.",
+    "cta": "Get Started"
+  },
+  "about": {
+    "title": "What is GreenX?",
+    "description": "GreenX is a next-generation agriculture technology platform that connects landowners, field managers, experts, and workers on a single intelligent dashboard. We leverage real-time weather data, soil analytics, crop health monitoring, and drone technology to maximize yields and minimize waste.",
+    "stat1_label": "Farms Managed",
+    "stat2_label": "Acres Covered",
+    "stat3_label": "Active Users"
+  },
+  "features": {
+    "title": "What We Do",
+    "weather": "Real-Time Weather",
+    "weather_desc": "Live weather forecasts for every farm based on location and pincode.",
+    "soil": "Soil Analytics",
+    "soil_desc": "NPK, pH, moisture and organic carbon monitoring for precision farming.",
+    "drone": "Drone Surveillance",
+    "drone_desc": "Aerial crop monitoring and health assessment using drone technology.",
+    "task": "Task Management",
+    "task_desc": "Assign and track daily farm tasks across your entire workforce.",
+    "finance": "Financial Tracking",
+    "finance_desc": "Revenue projections, profit sharing, and expense management.",
+    "diagnostics": "Crop Diagnostics",
+    "diagnostics_desc": "Expert-driven disease and pest risk assessments with prescriptions."
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "email_val": "greenxagritech@gmail.com",
+    "phone_val": "+91 81217 10210",
+    "address_val": "Hyderabad, Telangana, India"
+  },
+  "social": {
+    "title": "Follow Us"
+  },
+  "login_page": {
+    "title": "Login to GreenX",
+    "select_role": "Select your role",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "signing_in": "Signing in...",
+    "back": "Back to Home",
+    "contact_admin": "Contact your administrator to get your login credentials.",
+    "or": "or",
+    "google_signin": "Sign in with Google"
+  },
+  "roles": {
+    "admin": "Admin",
+    "landowner": "Land Owner",
+    "fieldmanager": "Field Manager",
+    "expert": "Expert",
+    "worker": "Worker"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "language": {
+    "en": "English",
+    "hi": "हिन्दी",
+    "te": "తెలుగు"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "weather": "Weather Forecast"
+  }
+}
