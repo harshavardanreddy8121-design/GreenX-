@@ -2,33 +2,34 @@
 
 ## Prerequisites
 
-- Java 17 or higher
+- Java 21 LTS or higher
 - Maven 3.8+
 - Oracle Database 12c or higher
 - Git
 
-### Install Java 17
+### Install Java 21
 
 **Windows:**
 ```bash
-choco install openjdk17
-# or download from: https://jdk.java.net/17/
+choco install openjdk21
+# or download from: https://jdk.java.net/21/
 ```
 
 **macOS:**
 ```bash
-brew install openjdk@17
+brew install openjdk@21
 ```
 
 **Linux (Ubuntu/Debian):**
 ```bash
 sudo apt-get update
-sudo apt-get install openjdk-17-jdk
+sudo apt-get install openjdk-21-jdk
 ```
 
 Verify installation:
 ```bash
 java -version
+# Should show: openjdk version "21.x.x" or similar
 ```
 
 ### Install Maven

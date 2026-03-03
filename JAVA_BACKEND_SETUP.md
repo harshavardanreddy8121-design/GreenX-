@@ -17,15 +17,16 @@ VITE_ORACLE_USER=oracle_user
 ## Java Backend Setup
 
 ### Prerequisites
-- Java 17 or higher
-- Maven or Gradle
+- Java 21 LTS or higher
+- Maven 3.8+ or Gradle 7.0+
 - Oracle Database (12c or higher)
 
 ### Recommended Stack
-- **Backend Framework**: Spring Boot 3.x
+- **Java Runtime**: Java 21 LTS
+- **Backend Framework**: Spring Boot 3.2.0+
 - **Database**: Oracle Database (with JDBC driver)
-- **ORM**: JPA/Hibernate or MyBatis
-- **Build Tool**: Maven or Gradle
+- **ORM**: JPA/Hibernate 6.1+
+- **Build Tool**: Maven 3.9+ or Gradle 7.0+
 
 ### Java Backend Endpoints Required
 

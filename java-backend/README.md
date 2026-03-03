@@ -1,16 +1,18 @@
 # Farm Management API - Java Backend
 
-RESTful API backend for the Farm Management System using Spring Boot 3.x and Oracle Database.
+RESTful API backend for the Farm Management System using Spring Boot 3.2, Java 21 LTS, and Oracle Database.
 
 ## 🎯 Features
 
+- ✅ **Java 21 LTS** - Latest long-term support Java runtime
+- ✅ **Spring Boot 3.2** - Modern Spring framework
 - ✅ **JWT Authentication** - Secure token-based authentication
 - ✅ **Oracle Database** - Enterprise-grade database support
 - ✅ **Generic CRUD API** - Flexible data operations
 - ✅ **CORS Enabled** - Frontend integration ready
 - ✅ **Health Check** - System monitoring endpoint
 - ✅ **Error Handling** - Comprehensive exception handling
-- ✅ **Docker Support** - Containerized deployment
+- ✅ **Docker Support** - Containerized deployment with Java 21
 
 ## 🏗️ Project Structure
 
