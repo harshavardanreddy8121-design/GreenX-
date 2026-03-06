@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   role: AppRole | null;
   loading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -43,9 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         javaApi.select('profiles', { eq: { id: sessionUser.id } }),
       ]);
 
+      // Fall back to role on the user object if user_roles table has no entry
       const roleData = roleResponse.success && roleResponse.data && (roleResponse.data as any[]).length > 0
         ? (roleResponse.data as any[])[0]?.role
-        : null;
+        : (sessionUser.role ?? null);
       const profileData = profileResponse.success && profileResponse.data && (profileResponse.data as any[]).length > 0
         ? (profileResponse.data as any[])[0]
         : null;
@@ -54,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(profileData as Profile | null);
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // Still set role from user object if available
+      setRole(sessionUser.role ?? null);
     }
     setLoading(false);
   };
@@ -75,6 +79,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; role?: string }> => {
+    const response = await javaApi.auth.signInWithPassword(email, password);
+    if (response.success && response.data) {
+      const userData = (response.data as any).user ?? response.data;
+      await fetchUserData(userData);
+      return { success: true, role: userData.role as string };
+    }
+    return { success: false, error: response.error };
+  };
+
   const logout = async () => {
     await javaApi.signOut();
     setUser(null);
@@ -83,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAuthenticated: !!user, role, loading, logout }}>
+    <AuthContext.Provider value={{ user, profile, isAuthenticated: !!user, role, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

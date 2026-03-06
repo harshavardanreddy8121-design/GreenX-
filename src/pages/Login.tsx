@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { GreenXLogo } from "@/components/GreenXLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { javaApi } from "@/integrations/java-api/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -32,7 +31,7 @@ export default function Login() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated, role, loading } = useAuth();
+  const { isAuthenticated, role, loading, login } = useAuth();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -48,9 +47,11 @@ export default function Login() {
     setLoginLoading(true);
 
     try {
-      const response = await javaApi.auth.signInWithPassword(email, password);
-      if (!response.success) {
-        setError(response.error || "Login failed");
+      const result = await login(email, password);
+      if (!result.success) {
+        setError(result.error || "Login failed");
+      } else if (result.role) {
+        navigate(roleRoutes[result.role] || '/');
       }
     } catch {
       setError("An unexpected error occurred.");
