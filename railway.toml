@@ -1,13 +1,27 @@
 [build]
-# Tell Railway the Dockerfile is inside java-backend/
+# Dockerfile lives in java-backend/; build context is java-backend/ so
+# COPY pom.xml and COPY src/ resolve correctly inside Docker.
 dockerfilePath = "java-backend/Dockerfile"
-# Build context is java-backend/ so COPY pom.xml / COPY src/ resolve correctly
 buildContext = "java-backend"
 
 [deploy]
-# Railway will set PORT automatically; Spring Boot reads ${PORT:-8082}
 startCommand = ""
 healthcheckPath = "/api/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+
+# ── Environment variables ────────────────────────────────────────────────────
+# These are used when you attach Railway's own Postgres plugin.
+# If you are using AWS RDS instead, override these in the Railway dashboard:
+#   SPRING_DATASOURCE_URL  = jdbc:postgresql://<rds-host>:5432/postgres
+#   SPRING_DATASOURCE_USERNAME = Greenx_db
+#   SPRING_DATASOURCE_PASSWORD = <your-password>
+#
+# Railway Postgres plugin references (active when a Postgres service is linked):
+[variables]
+SPRING_DATASOURCE_URL = "jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}"
+SPRING_DATASOURCE_USERNAME = "${{Postgres.PGUSER}}"
+SPRING_DATASOURCE_PASSWORD = "${{Postgres.PGPASSWORD}}"
+JWT_SECRET = "change-this-to-a-long-random-secret-before-going-live"
+ALLOWED_ORIGINS = "*"

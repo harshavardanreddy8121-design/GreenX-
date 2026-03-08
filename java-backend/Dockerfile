@@ -22,14 +22,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 COPY --from=builder /build/target/farm-management-api-*.jar app.jar
 
-# Railway injects PORT; default to 8082 for local Docker runs
-EXPOSE 8082
+# Railway injects PORT; expose 8080 as default
+EXPOSE 8080
 
-# Generous start-period: Spring Boot + AWS RDS connection takes ~60-90s
+# Generous start-period: Spring Boot + DB connection takes ~60-90s
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-8082}/api/health || exit 1
+  CMD curl -f http://localhost:${PORT:-8080}/api/health || exit 1
 
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 
 # sh expansion lets PORT and JAVA_OPTS resolve at runtime
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8082} -jar /app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
