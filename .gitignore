@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Java build output
+java-backend/target/
+*.class
+*.jar
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

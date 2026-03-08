@@ -4,96 +4,94 @@ import com.greenx.farmapi.dto.*;
 import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.UserRepository;
 import com.greenx.farmapi.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    
-    /**
-     * Login endpoint - authenticate user and return JWT token
-     */
+
+    @PostMapping("/register")
+    public ApiResponse<AuthResponse> register(@RequestBody RegisterRequest request) {
+        try {
+            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                return ApiResponse.error("User with this email already exists");
+            }
+            User user = User.builder()
+                    .email(request.getEmail())
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .name(request.getName())
+                    .role(request.getRole() != null ? request.getRole().toUpperCase() : "LAND_OWNER")
+                    .isActive(true)
+                    .build();
+            user = userRepository.save(user);
+            String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
+            return ApiResponse.success(AuthResponse.builder()
+                    .token(token)
+                    .user(UserDto.fromEntity(user))
+                    .build());
+        } catch (Exception e) {
+            return ApiResponse.error("Registration failed: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@RequestBody LoginRequest request) {
         try {
             Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
-            
             if (userOpt.isEmpty()) {
-                return ApiResponse.error("User not found");
+                return ApiResponse.error("Invalid email or password");
             }
-            
             User user = userOpt.get();
-            
-            // Verify password
             if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                return ApiResponse.error("Invalid credentials");
+                return ApiResponse.error("Invalid email or password");
             }
-            
-            // Generate JWT token
-            String token = jwtUtil.generateToken(user.getId(), user.getEmail());
-            
-            AuthResponse response = AuthResponse.builder()
-                .token(token)
-                .user(UserDto.fromEntity(user))
-                .build();
-            
-            return ApiResponse.success(response);
+            if (!user.isEnabled()) {
+                return ApiResponse.error("Account is deactivated. Please contact admin.");
+            }
+            String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
+            return ApiResponse.success(AuthResponse.builder()
+                    .token(token)
+                    .user(UserDto.fromEntity(user))
+                    .build());
         } catch (Exception e) {
             return ApiResponse.error("Login failed: " + e.getMessage());
         }
     }
-    
-    /**
-     * Get current user from token
-     */
+
     @GetMapping("/me")
     public ApiResponse<UserDto> getCurrentUser(HttpServletRequest request) {
         try {
-            String token = extractTokenFromRequest(request);
-            
+            String token = extractToken(request);
             if (token == null || !jwtUtil.validateToken(token)) {
                 return ApiResponse.error("Invalid or missing token");
             }
-            
             String userId = jwtUtil.extractUserId(token);
-            Optional<User> userOpt = userRepository.findById(userId);
-            
-            if (userOpt.isEmpty()) {
-                return ApiResponse.error("User not found");
-            }
-            
-            return ApiResponse.success(UserDto.fromEntity(userOpt.get()));
+            return userRepository.findById(userId)
+                    .map(u -> ApiResponse.success(UserDto.fromEntity(u)))
+                    .orElse(ApiResponse.error("User not found"));
         } catch (Exception e) {
             return ApiResponse.error("Failed to get current user: " + e.getMessage());
         }
     }
-    
-    /**
-     * Logout endpoint (optional - JWT is stateless)
-     */
+
     @PostMapping("/logout")
-    public ApiResponse<Void> logout() {
-        // JWT is stateless, so logout is handled on client side by removing token
-        return ApiResponse.success(null);
+    public ApiResponse<String> logout() {
+        return ApiResponse.success("Logged out");
     }
-    
-    /**
-     * Extract JWT token from Authorization header
-     */
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
+
+    private String extractToken(HttpServletRequest req) {
+        String h = req.getHeader("Authorization");
+        return (h != null && h.startsWith("Bearer ")) ? h.substring(7) : null;
     }
+
 }

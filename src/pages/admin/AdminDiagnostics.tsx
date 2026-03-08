@@ -25,7 +25,7 @@ export default function AdminDiagnostics() {
       ) : (
         <div className="grid gap-4">
           {diagnostics.map((d: any) => (
-            <div key={d.id} className="rounded-xl border border-border bg-card p-4">
+            <div key={d.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-alert p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold text-foreground">{d.farms?.name} — {d.farms?.crop}</h3>
                 <span className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleDateString()}</span>

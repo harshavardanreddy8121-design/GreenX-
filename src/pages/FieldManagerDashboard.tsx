@@ -2,260 +2,667 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { javaApi } from '@/integrations/java-api/client';
-import { GreenXLogo } from '@/components/GreenXLogo';
-import WeatherWidget from '@/components/WeatherWidget';
-import { LogOut, Sprout, Plus, X, Send, ClipboardList, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { fieldManager } from '@/lib/api';
+import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+
+type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports';
 
 export default function FieldManagerDashboard() {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showAssignModal, setShowAssignModal] = useState<string | null>(null);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskWorkerId, setNewTaskWorkerId] = useState('');
-  const [newTaskFarmId, setNewTaskFarmId] = useState('');
+  const [activeTab, setActiveTab] = useState<Tab>('overview');
+
+  // Log operation form
+  const [opFarmId, setOpFarmId] = useState('');
+  const [opType, setOpType] = useState('Ploughing');
+  const [opArea, setOpArea] = useState('');
+  const [opLabour, setOpLabour] = useState('');
+  const [opChemical, setOpChemical] = useState('');
+  const [opDose, setOpDose] = useState('');
+  const [opMachine, setOpMachine] = useState('');
+  const [opCost, setOpCost] = useState('');
+  const [opNotes, setOpNotes] = useState('');
+  // Log soil sample form
+  const [sampleFarmId, setSampleFarmId] = useState('');
+  const [samplePoints, setSamplePoints] = useState('');
+  const [sampleDepth, setSampleDepth] = useState('15');
+  const [sampleGPS, setSampleGPS] = useState('');
+  const [sampleCondition, setSampleCondition] = useState('Moist');
+  const [sampleNotes, setSampleNotes] = useState('');
+  const [sampleDate, setSampleDate] = useState(new Date().toISOString().split('T')[0]);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  // Get farms assigned to this field manager
   const { data: myFarms = [] } = useQuery({
     queryKey: ['fm-farms', user?.id],
-    queryFn: async () => {
-      const assignResponse = await javaApi.select('farm_assignments', {
-        eq: { user_id: user?.id, role: 'fieldmanager' }
-      });
-      if (!assignResponse.success || !assignResponse.data) return [];
-      const assignments = assignResponse.data as any[];
-      if (!assignments?.length) return [];
-      const farmIds = assignments.map((a: any) => a.farm_id);
-      const farmsResponse = await javaApi.select('farms', {
-        in: { id: farmIds }
-      });
-      return farmsResponse.success && farmsResponse.data ? farmsResponse.data as any[] : [];
-    },
+    queryFn: () => fieldManager.getAssignedFarms().catch(() => []),
     enabled: !!user?.id,
   });
 
-  // Get workers (users with worker role)
-  const { data: workers = [] } = useQuery({
-    queryKey: ['fm-workers'],
-    queryFn: async () => {
-      const rolesResponse = await javaApi.select('user_roles', {
-        eq: { role: 'worker' }
-      });
-      if (!rolesResponse.success || !rolesResponse.data) return [];
-      const roles = rolesResponse.data as any[];
-      if (!roles?.length) return [];
-      const ids = roles.map((r: any) => r.user_id);
-      const profileResponse = await javaApi.select('profiles', {
-        in: { id: ids }
-      });
-      return profileResponse.success && profileResponse.data ? profileResponse.data as any[] : [];
-    },
-  });
-
-  // Get pending tasks for assigned farms
   const { data: tasks = [] } = useQuery({
     queryKey: ['fm-tasks', user?.id],
-    queryFn: async () => {
-      if (!myFarms.length) return [];
-      const farmIds = myFarms.map((f: any) => f.id);
-      const taskResponse = await javaApi.select('tasks', {
-        in: { farm_id: farmIds },
-        order: { field: 'created_at', ascending: false }
-      });
-      return taskResponse.success && taskResponse.data ? taskResponse.data as any[] : [];
-    },
-    enabled: myFarms.length > 0,
+    queryFn: () => fieldManager.getTodayTasks().catch(() => []),
+    enabled: !!user?.id,
   });
 
-  const createTask = useMutation({
-    mutationFn: async () => {
-      const response = await javaApi.insert('tasks', {
-        title: newTaskTitle,
-        assigned_to: newTaskWorkerId,
-        farm_id: newTaskFarmId,
-        status: 'pending',
-        due_date: new Date().toISOString().split('T')[0],
-        photo_required: true,
-        created_by: user?.id,
-      });
-      if (!response.success) throw new Error(response.error);
-    },
+  const { data: prescriptions = [] } = useQuery({
+    queryKey: ['fm-prescriptions', user?.id],
+    queryFn: () => fieldManager.getPrescriptions().catch(() => []),
+    enabled: !!user?.id,
+  });
+
+  const { data: stats = {} as any } = useQuery({
+    queryKey: ['fm-stats', user?.id],
+    queryFn: () => fieldManager.getStats().catch(() => ({})),
+    enabled: !!user?.id,
+  });
+
+  const logOperation = useMutation({
+    mutationFn: () => fieldManager.logOperationJson({
+      farmId: opFarmId,
+      fieldManagerId: user?.id || '',
+      operationType: opType,
+      operationDate: new Date().toISOString().split('T')[0],
+      areaCoveredAcres: parseFloat(opArea) || undefined,
+      workersDeployed: parseInt(opLabour) || undefined,
+      productUsed: opChemical || undefined,
+      quantityUsed: opDose || undefined,
+      costIncurred: parseFloat(opCost) || undefined,
+      observations: opNotes,
+    }),
     onSuccess: () => {
-      toast.success('Task created');
+      toast.success('Operation logged! Visible to Land Owner & Cluster Admin.');
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
-      setShowTaskModal(false);
-      setNewTaskTitle('');
-      setNewTaskWorkerId('');
+      setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost('');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err?.message || 'Failed to log operation'),
   });
 
-  const assignWorker = useMutation({
-    mutationFn: async ({ farmId, workerId }: { farmId: string; workerId: string }) => {
-      const response = await javaApi.insert('farm_assignments', {
-        farm_id: farmId,
-        user_id: workerId,
-        role: 'worker',
-      });
-      if (!response.success) throw new Error(response.error);
+  const logSample = useMutation({
+    mutationFn: () => {
+      const selectedFarm = (myFarms as any[]).find((f: any) => f.id === sampleFarmId);
+      const sampleData = {
+        farmId: sampleFarmId,
+        assignedExpertId: selectedFarm?.expertId || undefined,
+        numPoints: parseInt(samplePoints) || 8,
+        depthCm: parseInt(sampleDepth) || 15,
+        gpsCoordinates: sampleGPS || undefined,
+        samplingMethod: sampleCondition,
+        collectionNotes: sampleNotes || undefined,
+        collectionDate: sampleDate,
+        status: 'COLLECTED',
+      };
+      const fd = new FormData();
+      fd.append('data', JSON.stringify(sampleData));
+      return fieldManager.logSampleCollection(fd);
     },
     onSuccess: () => {
-      toast.success('Worker assigned');
-      setShowAssignModal(null);
+      toast.success('Soil sample logged! Expert has been notified for testing.');
       queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
+      setSamplePoints(''); setSampleGPS(''); setSampleNotes('');
+      setSampleDate(new Date().toISOString().split('T')[0]);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err?.message || 'Failed to log soil sample'),
   });
+
+  const ackPrescription = useMutation({
+    mutationFn: (id: string) => fieldManager.acknowledgePrescription(id),
+    onSuccess: () => {
+      toast.success('Prescription acknowledged! Will begin treatment.');
+      queryClient.invalidateQueries({ queryKey: ['fm-prescriptions'] });
+    },
+  });
+
+  const updateTask = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => fieldManager.updateTaskStatus(id, status),
+    onSuccess: () => {
+      toast.success('Task updated!');
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+    },
+  });
+
+  const userName = profile?.full_name || user?.email?.split('@')[0] || 'Field Manager';
+  const pendingRx = prescriptions.filter((p: any) => p.status !== 'ACKNOWLEDGED');
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-card/90 backdrop-blur-lg border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          <GreenXLogo size="sm" />
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{profile?.full_name || user?.email}</span>
-            <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-muted"><LogOut className="w-4 h-4 text-muted-foreground" /></button>
-          </div>
-        </div>
-      </header>
-
-      <main className="p-4 space-y-4 max-w-2xl mx-auto pb-8">
-        {/* Weather for first assigned farm */}
-        {myFarms.length > 0 && (
-          <WeatherWidget village={myFarms[0].village} pincode={myFarms[0].pincode} compact />
-        )}
-
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">Assigned Farms</h2>
-          <button onClick={() => setShowTaskModal(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg btn-gradient text-primary-foreground text-xs font-medium">
-            <Plus className="w-3.5 h-3.5" /> New Task
-          </button>
+    <div className="gx-dashboard fm-accent">
+      {/* ── SIDEBAR ── */}
+      <div className="gx-sidebar">
+        <div className="gx-sidebar-user">
+          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-orange-dim)' }}>🚜</div>
+          <div className="gx-sidebar-name">{userName}</div>
+          <div className="gx-sidebar-role">FIELD MANAGER · OPS</div>
         </div>
 
-        {myFarms.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
-            <Sprout className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No farms assigned to you yet.</p>
-            <p className="text-xs mt-1">Ask your admin to assign farms to your account.</p>
+        <div className="gx-nav-group-label">My Work</div>
+        <SideNavItem icon="📋" label="Today's Tasks" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} badge={tasks.length > 0 ? String(tasks.length) : undefined} badgeColor="red" />
+        <SideNavItem icon="🌾" label="My Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
+        <SideNavItem icon="📅" label="Crop Calendar View" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
+        <SideNavItem icon="💊" label="Prescription Inbox" active={activeTab === 'rx'} onClick={() => setActiveTab('rx')} badge={pendingRx.length > 0 ? String(pendingRx.length) : undefined} badgeColor="red" />
+
+        <div className="gx-nav-group-label">Data Collection</div>
+        <SideNavItem icon="🧪" label="Log Soil Sample" active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
+        <SideNavItem icon="🚜" label="Record Field Operation" active={activeTab === 'operation'} onClick={() => setActiveTab('operation')} />
+        <SideNavItem icon="📷" label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
+        <SideNavItem icon="🐛" label="Report Pest / Disease" active={activeTab === 'pest'} onClick={() => setActiveTab('pest')} />
+        <SideNavItem icon="💧" label="Log Irrigation" active={activeTab === 'irrigation'} onClick={() => setActiveTab('irrigation')} />
+        <SideNavItem icon="🌱" label="Log Sowing" active={activeTab === 'sowing'} onClick={() => setActiveTab('sowing')} />
+
+        <div className="gx-nav-group-label">Workers</div>
+        <SideNavItem icon="👥" label="Assign Tasks" active={activeTab === 'assign'} onClick={() => setActiveTab('assign')} />
+        <SideNavItem icon="✅" label="Mark Complete" active={activeTab === 'complete'} onClick={() => setActiveTab('complete')} />
+        <SideNavItem icon="📊" label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+
+        <div className="gx-nav-group-label">Reports</div>
+        <SideNavItem icon="📈" label="My Activity Log" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} />
+
+        <div className="gx-sidebar-logout">
+          <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div className="gx-main">
+        <div className="gx-page-header">
+          <div className="gx-page-title">Field Operations — {userName} 🚜</div>
+          <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms</div>
+        </div>
+
+        {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}
+        {(activeTab === 'overview' || activeTab === 'tasks') && (<>
+          {pendingRx.length > 0 && (
+            <div className="gx-alert-box gx-alert-red">
+              <span>💊</span>
+              <div><strong>New Prescription from Expert:</strong> {pendingRx[0]?.fmInstructions || pendingRx[0]?.chemicalName || 'Treatment'} — Read instructions & start immediately.</div>
+            </div>
+          )}
+
+          <div className="gx-stats-row">
+            <div className="gx-stat-card orange"><div className="gx-stat-label">Today's Tasks</div><div className="gx-stat-value">{tasks.length}</div><div className="gx-stat-change gx-down">{tasks.filter((t: any) => t.status === 'COMPLETED').length} completed</div></div>
+            <div className="gx-stat-card green"><div className="gx-stat-label">Assigned Farms</div><div className="gx-stat-value">{myFarms.length}</div><div className="gx-stat-change gx-up">Active management</div></div>
+            <div className="gx-stat-card blue"><div className="gx-stat-label">Operations Logged</div><div className="gx-stat-value">{stats?.operationsLogged || 0}</div><div className="gx-stat-change gx-up">This season</div></div>
+            <div className="gx-stat-card gold"><div className="gx-stat-label">Photos Uploaded</div><div className="gx-stat-value">{stats?.photosUploaded || 0}</div><div className="gx-stat-change gx-neutral">Field docs</div></div>
           </div>
-        ) : (
-          myFarms.map((farm: any) => {
-            const isExpanded = expandedBlock === farm.id;
-            return (
-              <div key={farm.id} className="rounded-xl border border-border bg-card overflow-hidden">
-                <button onClick={() => setExpandedBlock(isExpanded ? null : farm.id)} className="w-full p-4 flex items-center justify-between text-left">
-                  <div>
-                    <h3 className="font-semibold text-foreground">{farm.name} — {farm.crop || 'No crop'}</h3>
-                    <p className="text-xs text-muted-foreground">{farm.village} · {farm.total_land} acres · {farm.growth_stage || '—'}</p>
+
+          <div className="gx-section-divider">📋 Today's Task List</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header"><div className="gx-card-title">📋 Tasks Assigned</div><span className="gx-status gx-s-pending">{tasks.length} Tasks</span></div>
+            <div className="gx-card-body">
+              <table className="gx-data-table">
+                <thead><tr><th>#</th><th>Task</th><th>Farm</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {tasks.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 20, opacity: .5 }}>No tasks assigned today</td></tr>
+                  ) : tasks.map((t: any, i: number) => (
+                    <tr key={t.id || i}>
+                      <td>{i + 1}</td>
+                      <td>{t.title || t.observations || 'Task'}</td>
+                      <td>{t.farm_code || t.farmId || '—'}</td>
+                      <td><span className={`gx-status ${t.priority === 'HIGH' ? 'gx-s-alert' : 'gx-s-done'}`}>{t.priority || 'Normal'}</span></td>
+                      <td><span className={`gx-status ${t.status === 'COMPLETED' ? 'gx-s-done' : 'gx-s-pending'}`}>{t.status || 'Pending'}</span></td>
+                      <td>
+                        {t.status !== 'COMPLETED' && (
+                          <button className="gx-btn gx-btn-orange" style={{ padding: '4px 12px', fontSize: 11 }}
+                            onClick={() => updateTask.mutate({ id: t.id, status: t.status === 'PENDING' ? 'IN_PROGRESS' : 'COMPLETED' })}>
+                            {t.status === 'IN_PROGRESS' ? '✅ Done' : '▶ Start'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ MY ASSIGNED FARMS TAB ═══ */}
+        {activeTab === 'farms' && (<>
+          <div className="gx-section-divider">🌾 My Assigned Farms</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🌾 Farms Under My Management</div><span className="gx-status gx-s-done">{myFarms.length} Active</span></div>
+            <div className="gx-card-body">
+              {myFarms.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
+                  <div>No farms assigned yet. Cluster Admin will assign farms to you.</div>
+                </div>
+              ) : (
+                <table className="gx-data-table">
+                  <thead><tr><th>#</th><th>Farm Code</th><th>Owner</th><th>Village</th><th>Area (ac)</th><th>Crop</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {myFarms.map((f: any, i: number) => (
+                      <tr key={f.id || i}>
+                        <td>{i + 1}</td>
+                        <td>{f.farmCode || '—'}</td>
+                        <td>{f.name || '—'}</td>
+                        <td>{f.village || '—'}</td>
+                        <td>{f.totalLand || '—'}</td>
+                        <td>{f.currentCrop || '—'}</td>
+                        <td><span className="gx-status gx-s-done">{f.status || 'Active'}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ CROP CALENDAR VIEW TAB ═══ */}
+        {activeTab === 'calendar' && (<>
+          <div className="gx-section-divider">📅 Crop Calendar View</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📅 Season Calendar & Scheduled Tasks</div><span className="gx-status gx-s-done">Published</span></div>
+            <div className="gx-card-body">
+              {tasks.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+                  <div>No calendar tasks available. Expert will publish after crop selection.</div>
+                </div>
+              ) : tasks.map((t: any, idx: number) => (
+                <div key={t.id || idx} className="gx-activity-item">
+                  <div className="gx-act-icon" style={{ background: t.status === 'COMPLETED' ? 'var(--gx-green-dim)' : 'var(--gx-orange-dim)' }}>
+                    {t.taskType === 'SOWING' ? '🌱' : t.taskType === 'FERTILIZER' ? '🧪' : t.taskType === 'IRRIGATION' ? '💧' : t.taskType === 'PEST_SCOUT' ? '🐛' : '📋'}
                   </div>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-
-                {isExpanded && (
-                  <div className="border-t border-border p-4 space-y-4">
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-xs font-medium text-foreground mb-2">Soil Data</p>
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div><span className="text-muted-foreground">pH:</span> <span className="font-medium">{farm.soil_ph || '—'}</span></div>
-                        <div><span className="text-muted-foreground">N:</span> <span className="font-medium">{farm.soil_nitrogen || '—'}</span></div>
-                        <div><span className="text-muted-foreground">P:</span> <span className="font-medium">{farm.soil_phosphorus || '—'}</span></div>
-                        <div><span className="text-muted-foreground">K:</span> <span className="font-medium">{farm.soil_potassium || '—'}</span></div>
-                        <div><span className="text-muted-foreground">OC:</span> <span className="font-medium">{farm.soil_organic_carbon || '—'}</span></div>
-                        <div><span className="text-muted-foreground">Moisture:</span> <span className="font-medium">{farm.soil_moisture || '—'}%</span></div>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setShowAssignModal(farm.id)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-sm hover:bg-muted/50 transition-colors">
-                      <Users className="w-4 h-4" /> Assign Worker
-                    </button>
+                  <div style={{ flex: 1 }}>
+                    <div className="gx-act-text"><strong>{t.taskTitle || t.taskType || 'Task'}</strong></div>
+                    <div className="gx-act-time">{t.scheduledDate ? new Date(t.scheduledDate).toLocaleDateString('en-IN') : ''} · {t.farmId || ''}</div>
                   </div>
-                )}
-              </div>
-            );
-          })
-        )}
-
-        {/* Tasks */}
-        <h2 className="text-lg font-semibold text-foreground pt-2">Tasks</h2>
-        {tasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tasks created yet.</p>
-        ) : (
-          tasks.map((task: any) => (
-            <div key={task.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
-              <ClipboardList className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">{task.title}</p>
-                <p className="text-xs text-muted-foreground">{task.profiles?.full_name || 'Unassigned'} · {task.farms?.name} · {task.status}</p>
-              </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${task.status === 'completed' ? 'bg-primary/10 text-primary' : 'bg-yellow-100 text-yellow-700'}`}>
-                {task.status}
-              </span>
+                  <span className={`gx-status ${t.status === 'COMPLETED' ? 'gx-s-done' : 'gx-s-pending'}`}>{t.status || 'Pending'}</span>
+                </div>
+              ))}
             </div>
-          ))
-        )}
-      </main>
-
-      {/* Create Task Modal */}
-      {showTaskModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Create Task</h3>
-              <button onClick={() => setShowTaskModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
-            </div>
-            <input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)}
-              placeholder="Task description" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-            <select value={newTaskWorkerId} onChange={e => setNewTaskWorkerId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-              <option value="">Select Worker</option>
-              {workers.map((w: any) => <option key={w.id} value={w.id}>{w.full_name}</option>)}
-            </select>
-            <select value={newTaskFarmId} onChange={e => setNewTaskFarmId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-              <option value="">Select Farm</option>
-              {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
-            </select>
-            <button onClick={() => createTask.mutate()} disabled={createTask.isPending || !newTaskTitle || !newTaskWorkerId || !newTaskFarmId}
-              className="w-full py-2.5 rounded-lg btn-gradient text-primary-foreground text-sm font-medium disabled:opacity-50">
-              <Send className="w-4 h-4 inline mr-2" /> {createTask.isPending ? 'Creating...' : 'Create Task'}
-            </button>
           </div>
-        </div>
-      )}
+        </>)}
 
-      {/* Assign Worker Modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Assign Worker</h3>
-              <button onClick={() => setShowAssignModal(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+        {/* ═══ PRESCRIPTION INBOX TAB ═══ */}
+        {activeTab === 'rx' && (<>
+          <div className="gx-section-divider">💊 Prescription Inbox</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">💊 Expert Prescriptions</div><span className="gx-status gx-s-alert">{pendingRx.length} Pending</span></div>
+            <div className="gx-card-body">
+              {prescriptions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>💊</div>
+                  <div>No prescriptions received. Expert will send when pest is detected.</div>
+                </div>
+              ) : (
+                <table className="gx-data-table">
+                  <thead><tr><th>#</th><th>Pest/Disease</th><th>Chemical</th><th>Dose</th><th>Method</th><th>Status</th><th>Action</th></tr></thead>
+                  <tbody>
+                    {prescriptions.map((p: any, i: number) => (
+                      <tr key={p.id || i}>
+                        <td>{i + 1}</td>
+                        <td><strong>{p.fmInstructions || p.chemicalName || '—'}</strong></td>
+                        <td>{p.chemicalName || '—'}</td>
+                        <td>{p.dose || '—'}</td>
+                        <td>{p.applicationMethod || '—'}</td>
+                        <td><span className={`gx-status ${p.isacknowledged || p.status === 'ACKNOWLEDGED' ? 'gx-s-done' : 'gx-s-alert'}`}>{p.isacknowledged || p.status === 'ACKNOWLEDGED' ? 'ACK' : 'Pending'}</span></td>
+                        <td>
+                          {!(p.isacknowledged || p.status === 'ACKNOWLEDGED') && (
+                            <button className="gx-btn gx-btn-orange" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => ackPrescription.mutate(p.id)}>✅ Acknowledge</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-            {workers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No workers available. Ask admin to create worker accounts.</p>
-            ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {workers.map((w: any) => (
-                  <button key={w.id} onClick={() => assignWorker.mutate({ farmId: showAssignModal, workerId: w.id })}
-                    disabled={assignWorker.isPending}
-                    className="w-full p-3 rounded-lg border border-border text-left hover:bg-muted/50 transition-colors disabled:opacity-50">
-                    <p className="text-sm font-medium text-foreground">{w.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{w.phone}</p>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
-      )}
+        </>)}
+
+        {/* ═══ LOG SOIL SAMPLE TAB ═══ */}
+        {activeTab === 'soil' && (<>
+          <div className="gx-section-divider">🧪 Log Soil Sample Collection</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🧪 Collect & Send to Expert Lab</div><span className="gx-status gx-s-pending">Collection</span></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={sampleFarmId} onChange={e => setSampleFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">No. of Sample Points</label><input type="number" className="gx-input" value={samplePoints} onChange={e => setSamplePoints(e.target.value)} placeholder="e.g. 8" /></div>
+                <div className="gx-form-group"><label className="gx-label">Depth (cm)</label><input type="number" className="gx-input" value={sampleDepth} onChange={e => setSampleDepth(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">GPS Coordinates</label><input type="text" className="gx-input" value={sampleGPS} onChange={e => setSampleGPS(e.target.value)} placeholder="17.3850, 78.4867" /></div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Soil Condition</label>
+                  <select className="gx-select" value={sampleCondition} onChange={e => setSampleCondition(e.target.value)}>
+                    <option>Dry</option><option>Moist</option><option>Wet</option></select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Collection Date</label><input type="date" className="gx-input" value={sampleDate} onChange={e => setSampleDate(e.target.value)} /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Field Manager Notes</label>
+                <textarea className="gx-textarea" value={sampleNotes} onChange={e => setSampleNotes(e.target.value)}
+                  placeholder="Collected from 8 zig-zag points across the field. Composite sample mixed in bucket..." />
+              </div>
+              <div className="gx-btn-row">
+                <button
+                  className="gx-btn gx-btn-orange"
+                  disabled={logSample.isPending}
+                  onClick={() => {
+                    if (!sampleFarmId) { toast.error('Please select a farm first'); return; }
+                    logSample.mutate();
+                  }}
+                >{logSample.isPending ? '⏳ Saving...' : '🧪 Log Sample & Send to Expert'}</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ RECORD FIELD OPERATION TAB ═══ */}
+        {activeTab === 'operation' && (<>
+          <div className="gx-section-divider">🚜 Log Field Operation</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📝 Record Operation</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id} — {f.landownerName || 'Farm'}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Operation Type</label>
+                  <select className="gx-select" value={opType} onChange={e => setOpType(e.target.value)}>
+                    <option>Ploughing</option><option>Sowing</option><option>Weeding</option><option>Fertilizer Application</option>
+                    <option>Pesticide Spray</option><option>Irrigation</option><option>Harvesting</option><option>Other</option>
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+                <div className="gx-form-group"><label className="gx-label">Area Covered (acres)</label><input type="number" step="0.5" className="gx-input" value={opArea} onChange={e => setOpArea(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Labour Count</label><input type="number" className="gx-input" value={opLabour} onChange={e => setOpLabour(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Chemical / Fertilizer Used</label><input type="text" className="gx-input" value={opChemical} onChange={e => setOpChemical(e.target.value)} placeholder="e.g. Urea 46-0-0" /></div>
+                <div className="gx-form-group"><label className="gx-label">Dose / Quantity</label><input type="text" className="gx-input" value={opDose} onChange={e => setOpDose(e.target.value)} placeholder="e.g. 50 kg/acre" /></div>
+                <div className="gx-form-group"><label className="gx-label">Machine Used</label><input type="text" className="gx-input" value={opMachine} onChange={e => setOpMachine(e.target.value)} placeholder="e.g. Tractor + Rotavator" /></div>
+                <div className="gx-form-group"><label className="gx-label">Cost (₹)</label><input type="number" className="gx-input" value={opCost} onChange={e => setOpCost(e.target.value)} /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Notes / Observations</label>
+                <textarea className="gx-textarea" value={opNotes} onChange={e => setOpNotes(e.target.value)}
+                  placeholder="Soil was dry, needed extra depth. Applied fertilizer post-irrigation..." />
+              </div>
+              <div className="gx-upload-box">
+                <div className="gx-upload-label">📷 Attach Field Photos (optional)</div>
+                <div style={{ fontSize: 11, opacity: .5 }}>Drag & drop or click · JPEG/PNG · Max 10MB</div>
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange" onClick={() => opFarmId && logOperation.mutate()}>📤 Log Operation & Notify</button>
+                <button className="gx-btn gx-btn-ghost">Save Draft</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ UPLOAD PHOTOS TAB ═══ */}
+        {activeTab === 'photos' && (<>
+          <div className="gx-section-divider">📷 Upload Field Photos</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📷 Field Photo Upload</div></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Photo Type</label>
+                  <select className="gx-select"><option>Crop Progress</option><option>Pest / Disease</option><option>Soil Condition</option><option>Irrigation</option><option>Post-Operation</option></select>
+                </div>
+              </div>
+              <div className="gx-upload-box" style={{ marginTop: 14 }}>
+                <div className="gx-upload-label">📷 Select or Capture Photos</div>
+                <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Caption / Notes</label>
+                <textarea className="gx-textarea" placeholder="Describe what the photo shows..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange">📤 Upload & Share</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ REPORT PEST / DISEASE TAB ═══ */}
+        {activeTab === 'pest' && (<>
+          <div className="gx-section-divider">🐛 Report Pest / Disease</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🐛 Pest / Disease Alert</div><span className="gx-status gx-s-alert">Send to Expert</span></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Pest / Disease Name</label><input type="text" className="gx-input" placeholder="e.g. Fall Armyworm, Aphids" /></div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Severity</label>
+                  <select className="gx-select"><option>Low (&lt;10%)</option><option>Moderate (10-25%)</option><option>High (&gt;25%)</option><option>Critical</option></select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Affected Area (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
+                <div className="gx-form-group"><label className="gx-label">Crop Stage</label><input type="text" className="gx-input" placeholder="e.g. Vegetative, Flowering" /></div>
+                <div className="gx-form-group"><label className="gx-label">Date Detected</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+              </div>
+              <div className="gx-upload-box" style={{ marginTop: 14 }}>
+                <div className="gx-upload-label">📷 Attach Pest / Damage Photos</div>
+                <div style={{ fontSize: 11, opacity: .5 }}>Photos help expert identify and prescribe accurately</div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Field Manager Observations</label>
+                <textarea className="gx-textarea" placeholder="Describe symptoms, affected parts, spread pattern..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange">🐛 Send Pest Alert to Expert</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ LOG IRRIGATION TAB ═══ */}
+        {activeTab === 'irrigation' && (<>
+          <div className="gx-section-divider">💧 Log Irrigation</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">💧 Record Irrigation Event</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Irrigation Method</label>
+                  <select className="gx-select"><option>Flood</option><option>Drip</option><option>Sprinkler</option><option>Furrow</option><option>Canal</option></select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Duration (hours)</label><input type="number" step="0.5" className="gx-input" /></div>
+                <div className="gx-form-group"><label className="gx-label">Area Irrigated (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
+                <div className="gx-form-group"><label className="gx-label">Water Source</label><input type="text" className="gx-input" placeholder="e.g. Borewell, Canal" /></div>
+                <div className="gx-form-group"><label className="gx-label">Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Notes</label>
+                <textarea className="gx-textarea" placeholder="Soil moisture level before irrigation, any issues observed..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange" onClick={() => { if (opFarmId) { setOpType('Irrigation'); logOperation.mutate(); } }}>💧 Log Irrigation</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ LOG SOWING TAB ═══ */}
+        {activeTab === 'sowing' && (<>
+          <div className="gx-section-divider">🌱 Log Sowing</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🌱 Record Sowing Event</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Crop Name</label><input type="text" className="gx-input" placeholder="e.g. Maize, Rice, Cotton" /></div>
+                <div className="gx-form-group"><label className="gx-label">Variety / Hybrid</label><input type="text" className="gx-input" placeholder="e.g. NK6240, Pioneer 30V92" /></div>
+                <div className="gx-form-group"><label className="gx-label">Seed Quantity (kg)</label><input type="number" className="gx-input" /></div>
+                <div className="gx-form-group"><label className="gx-label">Area Sown (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Sowing Method</label>
+                  <select className="gx-select"><option>Direct Seeding</option><option>Transplanting</option><option>Dibbling</option><option>Broadcasting</option><option>Line Sowing</option></select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Spacing (cm × cm)</label><input type="text" className="gx-input" placeholder="e.g. 60 × 20" /></div>
+                <div className="gx-form-group"><label className="gx-label">Sowing Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Notes</label>
+                <textarea className="gx-textarea" placeholder="Seed treatment done, soil moisture was adequate..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange" onClick={() => { if (opFarmId) { setOpType('Sowing'); logOperation.mutate(); } }}>🌱 Log Sowing & Notify</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ ASSIGN TASKS TAB ═══ */}
+        {activeTab === 'assign' && (<>
+          <div className="gx-section-divider">👥 Assign Tasks to Workers</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">👥 Task Assignment</div></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Task Title</label><input type="text" className="gx-input" placeholder="e.g. Apply Urea to Field A" /></div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Priority</label>
+                  <select className="gx-select"><option>Normal</option><option>HIGH</option><option>Urgent</option></select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Assign To (Worker)</label><input type="text" className="gx-input" placeholder="Worker name or ID" /></div>
+                <div className="gx-form-group"><label className="gx-label">Due Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Task Description</label>
+                <textarea className="gx-textarea" placeholder="Detailed instructions for the worker..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-orange">📤 Assign Task</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ MARK COMPLETE TAB ═══ */}
+        {activeTab === 'complete' && (<>
+          <div className="gx-section-divider">✅ Mark Tasks Complete</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">✅ Pending Completion</div><span className="gx-status gx-s-pending">{tasks.filter((t: any) => t.status === 'IN_PROGRESS').length} In Progress</span></div>
+            <div className="gx-card-body">
+              <table className="gx-data-table">
+                <thead><tr><th>#</th><th>Task</th><th>Farm</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {tasks.filter((t: any) => t.status !== 'COMPLETED').length === 0 ? (
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 30, opacity: .5 }}>All tasks completed! 🎉</td></tr>
+                  ) : tasks.filter((t: any) => t.status !== 'COMPLETED').map((t: any, i: number) => (
+                    <tr key={t.id || i}>
+                      <td>{i + 1}</td>
+                      <td>{t.title || t.observations || 'Task'}</td>
+                      <td>{t.farm_code || t.farmId || '—'}</td>
+                      <td><span className={`gx-status gx-s-pending`}>{t.status || 'Pending'}</span></td>
+                      <td><button className="gx-btn gx-btn-green" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => updateTask.mutate({ id: t.id, status: 'COMPLETED' })}>✅ Complete</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ ATTENDANCE TAB ═══ */}
+        {activeTab === 'attendance' && (<>
+          <div className="gx-section-divider">📊 Worker Attendance</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📊 Today's Attendance</div><span className="gx-status gx-s-done">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
+                <div>Worker attendance tracking. Workers check in/out from their dashboards.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Attendance records sync automatically for your assigned farms.</div>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ ACTIVITY LOG / REPORTS TAB ═══ */}
+        {activeTab === 'reports' && (<>
+          <div className="gx-section-divider">📈 My Activity Log</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📈 Operations & Activity History</div><span className="gx-status gx-s-done">{stats?.operationsLogged || 0} Logged</span></div>
+            <div className="gx-card-body">
+              <div className="gx-stats-row" style={{ marginBottom: 16 }}>
+                <div className="gx-stat-card orange"><div className="gx-stat-label">Operations</div><div className="gx-stat-value">{stats?.operationsLogged || 0}</div></div>
+                <div className="gx-stat-card blue"><div className="gx-stat-label">Samples</div><div className="gx-stat-value">{stats?.samplesCollected || 0}</div></div>
+                <div className="gx-stat-card green"><div className="gx-stat-label">Tasks Done</div><div className="gx-stat-value">{tasks.filter((t: any) => t.status === 'COMPLETED').length}</div></div>
+                <div className="gx-stat-card gold"><div className="gx-stat-label">Photos</div><div className="gx-stat-value">{stats?.photosUploaded || 0}</div></div>
+              </div>
+              {tasks.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No activity logged yet this season.</div>
+              ) : tasks.slice(0, 10).map((t: any, idx: number) => (
+                <div key={t.id || idx} className="gx-activity-item">
+                  <div className="gx-act-icon" style={{ background: t.status === 'COMPLETED' ? 'var(--gx-green-dim)' : 'var(--gx-orange-dim)' }}>
+                    {t.status === 'COMPLETED' ? '✅' : '📋'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="gx-act-text"><strong>{t.title || t.operation_type || 'Activity'}</strong></div>
+                    <div className="gx-act-time">{t.due_date ? new Date(t.due_date).toLocaleDateString('en-IN') : ''} · {t.farm_code || t.farmId || ''}</div>
+                  </div>
+                  <span className={`gx-status ${t.status === 'COMPLETED' ? 'gx-s-done' : 'gx-s-pending'}`}>{t.status || 'Pending'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>)}
+      </div>
     </div>
+  );
+}
+
+function SideNavItem({ icon, label, active, onClick, badge, badgeColor }: {
+  icon: string; label: string; active?: boolean; onClick?: () => void;
+  badge?: string; badgeColor?: 'red' | 'green' | 'gold' | 'blue';
+}) {
+  return (
+    <button className={`gx-nav-item${active ? ' active' : ''}`} onClick={onClick}>
+      <span className="gx-nav-icon">{icon}</span>
+      {label}
+      {badge && <span className={`gx-nav-badge gx-badge-${badgeColor || 'green'}`}>{badge}</span>}
+    </button>
   );
 }

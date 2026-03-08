@@ -26,7 +26,7 @@ export default function AdminWeather() {
       ) : (
         <div className="space-y-6">
           {farms.map((farm: any) => (
-            <div key={farm.id}>
+            <div key={farm.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4">
               <p className="text-sm font-medium text-foreground mb-2">{farm.name} — {farm.village} {farm.crop ? `(${farm.crop})` : ''}</p>
               <WeatherWidget village={farm.village} pincode={farm.pincode} />
             </div>

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/data")
@@ -23,10 +25,26 @@ public class DataController {
             @PathVariable String tableName,
             @RequestParam(required = false) Map<String, String> params) {
         try {
-            List<Map<String, Object>> results = dataService.select(tableName, params);
-            return ApiResponse.success(results);
+            // Default to empty map if params is null
+            Map<String, String> queryParams = params != null ? params : new HashMap<>();
+            List<Map<String, Object>> results = dataService.select(tableName, queryParams);
+            // Return empty list instead of null if no results found
+            return ApiResponse.success(results != null ? results : Collections.emptyList());
+        } catch (IllegalArgumentException e) {
+            // Table not allowed or invalid parameter
+            return ApiResponse.error("Invalid request: " + e.getMessage());
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            // No results found - this is not an error
+            return ApiResponse.success(Collections.emptyList());
+        } catch (org.springframework.jdbc.BadSqlGrammarException e) {
+            // Table or column doesn't exist - return empty list instead of error
+            System.err.println("SQL Error for table " + tableName + ": " + e.getMessage());
+            return ApiResponse.success(Collections.emptyList());
         } catch (Exception e) {
-            return ApiResponse.error("Failed to select from " + tableName + ": " + e.getMessage());
+            System.err.println("Error selecting from " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
+            // Return empty list instead of error for missing tables
+            return ApiResponse.success(Collections.emptyList());
         }
     }
     

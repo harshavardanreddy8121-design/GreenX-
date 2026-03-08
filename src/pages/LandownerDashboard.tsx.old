@@ -1,0 +1,661 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { landOwner } from '@/lib/api';
+import { GreenXLogo } from '@/components/GreenXLogo';
+import WeatherWidget from '@/components/WeatherWidget';
+import { AIAnalysisPanel } from '@/components/ai/AIAnalysisPanel';
+import { LogOut, Sprout, MapPin, User, ChevronLeft, ChevronRight, FlaskConical, Droplets, Leaf, Waves, DollarSign, FileText, Image, Clock, CheckCircle, XCircle, Upload, Calendar, TrendingUp, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { UserInfoCard } from '@/components/UserInfoCard';
+
+
+export default function LandownerDashboard() {
+  const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [farmIndex, setFarmIndex] = useState(0);
+  const [farmSearch, setFarmSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'profit' | 'soil' | 'crops' | 'harvest' | 'documents' | 'photos' | 'timeline' | 'health'>('overview');
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  // Get farms assigned to this landowner
+  const { data: myFarms = [], isLoading } = useQuery({
+    queryKey: ['landowner-farms', user?.id],
+    queryFn: () => landOwner.getFarms().catch(() => []),
+    enabled: !!user?.id,
+  });
+
+  const filteredFarms = useMemo(() => {
+    const search = farmSearch.trim().toLowerCase();
+    if (!search) return myFarms;
+    return myFarms.filter((f: any) =>
+      String(f.farmCode || '').toLowerCase().includes(search) ||
+      String(f.id || '').toLowerCase().includes(search)
+    );
+  }, [myFarms, farmSearch]);
+
+
+  useEffect(() => {
+    setFarmIndex(0);
+  }, [farmSearch]);
+
+  // Get assigned workers for current farm
+  const farm = filteredFarms[farmIndex];
+  const { data: assignedWorkers = [] } = useQuery({
+    queryKey: ['landowner-workers', farm?.id],
+    queryFn: () => Promise.resolve([]),
+    enabled: !!farm?.id,
+  });
+
+  // Get soil reports from new API
+  const { data: costs = [] } = useQuery({
+    queryKey: ['farm-costs', farm?.id],
+    queryFn: () => landOwner.getFinanceSummary().catch(() => ({})),
+    enabled: !!farm?.id,
+  });
+
+  const { data: cropPlans = [] } = useQuery({
+    queryKey: ['crop-plans', farm?.id],
+    queryFn: () => landOwner.getCropSuggestions().catch(() => []),
+    enabled: !!farm?.id,
+  });
+
+  const { data: harvests = [] } = useQuery({
+    queryKey: ['harvests', farm?.id],
+    queryFn: () => Promise.resolve([]),
+    enabled: !!farm?.id,
+  });
+
+  const { data: documents = [] } = useQuery({
+    queryKey: ['farm-documents', farm?.id],
+    queryFn: () => Promise.resolve([]),
+    enabled: !!farm?.id,
+  });
+
+  const { data: photos = [] } = useQuery({
+    queryKey: ['farm-photos', farm?.id],
+    queryFn: () => Promise.resolve([]),
+    enabled: !!farm?.id,
+  });
+
+  const { data: timeline = [] } = useQuery({
+    queryKey: ['farm-timeline', farm?.id],
+    queryFn: () => landOwner.getOperationsFeed().catch(() => []),
+    enabled: !!farm?.id,
+  });
+
+  // Mutation for approving/selecting crop suggestions
+  const approveCropPlan = useMutation({
+    mutationFn: ({ planId, approved }: { planId: string; approved: boolean }) => {
+      if (!approved) return Promise.resolve(null);
+      return landOwner.selectCrop(planId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crop-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['farm-timeline'] });
+      toast({ title: 'Crop plan updated successfully' });
+    },
+  });
+
+  // Calculate total costs and profit
+  const totalCosts = costs.reduce((sum: number, cost: any) => sum + (parseFloat(cost.amount) || 0), 0);
+  const totalRevenue = harvests.reduce((sum: number, h: any) => sum + (parseFloat(h.revenue) || 0), 0);
+  const totalProfit = totalRevenue - totalCosts;
+  const landownerShare = totalProfit * 0.7;
+  const greenxShare = totalProfit * 0.3;
+
+  const handlePrev = () => { setFarmIndex(i => Math.max(0, i - 1)); setActiveTab('overview'); };
+  const handleNext = () => { setFarmIndex(i => Math.min(filteredFarms.length - 1, i + 1)); setActiveTab('overview'); };
+
+  return (
+    <div className="dashboard-shell min-h-screen bg-background flex">
+      <aside className="admin-sidebar hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border">
+        <div className="p-4 border-b border-border">
+          <GreenXLogo size="sm" />
+          <p className="text-xs text-muted-foreground mt-2">Landowner</p>
+        </div>
+        <nav className="p-2 space-y-0.5 flex-1 overflow-y-auto">
+          <button type="button" onClick={() => setActiveTab('overview')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'overview' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <MapPin className="w-4 h-4" />
+            <span>Overview</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('profit')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'profit' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <DollarSign className="w-4 h-4" />
+            <span>Profit</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('soil')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'soil' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <FlaskConical className="w-4 h-4" />
+            <span>Soil</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('crops')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'crops' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Sprout className="w-4 h-4" />
+            <span>Crop Plans</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('timeline')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'timeline' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Clock className="w-4 h-4" />
+            <span>Timeline</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('health')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'health' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <TrendingUp className="w-4 h-4" />
+            <span>Health</span>
+          </button>
+        </nav>
+        <div className="p-3 border-t border-border">
+          <button onClick={handleLogout} className="dashboard-logout-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="sticky top-0 z-20 bg-card/90 backdrop-blur-lg border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="lg:hidden"><GreenXLogo size="sm" /></div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">{profile?.full_name || user?.email}</span>
+              <button onClick={handleLogout} className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"><LogOut className="w-4 h-4" /></button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-4 space-y-4 max-w-2xl mx-auto pb-8 lg:max-w-none lg:mx-0 lg:p-6">
+          <UserInfoCard profile={profile} size="md" />
+
+
+          {isLoading ? (
+            <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
+          ) : myFarms.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
+              <Sprout className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No farms assigned to your account yet.</p>
+              <p className="text-xs mt-1">Contact your administrator to get access.</p>
+            </div>
+          ) : (
+            <>
+              <input
+                value={farmSearch}
+                onChange={(e) => setFarmSearch(e.target.value)}
+                placeholder="Search by Farm ID (e.g. 7281183326)"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm"
+              />
+
+              {filteredFarms.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground border border-dashed border-border rounded-xl">
+                  <p className="text-sm">No farm found for ID: <strong>{farmSearch}</strong></p>
+                </div>
+              ) : (
+                <>
+                  {/* Farm Navigation */}
+                  <div className="flex items-center justify-between bg-card rounded-xl border border-border p-3">
+                    <button onClick={handlePrev} disabled={farmIndex === 0}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-30">
+                      <ChevronLeft className="w-5 h-5 text-foreground" />
+                    </button>
+                    <div className="text-center flex-1">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <h2 className="text-lg font-bold text-foreground">{farm?.name}</h2>
+                        {farm?.farm_code && (
+                          <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-mono font-bold">
+                            #{farm.farm_code}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{farm?.village} · {farm?.crop || '—'} · {farm?.growth_stage || '—'}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Farm {farmIndex + 1} of {filteredFarms.length}</p>
+                    </div>
+                    <button onClick={handleNext} disabled={farmIndex === filteredFarms.length - 1}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-30">
+                      <ChevronRight className="w-5 h-5 text-foreground" />
+                    </button>
+                  </div>
+
+                  {/* Weather */}
+                  {farm && <WeatherWidget village={farm.village} pincode={farm.pincode} compact />}
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <SummaryCard icon={<MapPin className="w-5 h-5" />} label="Land" value={`${farm?.total_land || 0} Acres`} variant="ops" />
+                    <SummaryCard icon={<Sprout className="w-5 h-5" />} label="Health" value={`${farm?.crop_health_score || 0}/100`} variant="health" />
+                    <SummaryCard icon={<User className="w-5 h-5" />} label="Revenue" value={farm?.expected_revenue > 0 ? `₹${(farm.expected_revenue / 1000).toFixed(0)}K` : '—'} variant="finance" />
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex overflow-x-auto border-b border-border -mx-1 px-1">
+                    {(['overview', 'profit', 'soil', 'crops', 'harvest', 'documents', 'photos', 'health', 'timeline'] as const).map(tab => (
+                      <button key={tab} onClick={() => setActiveTab(tab)}
+                        className={`flex-shrink-0 px-3 py-2 text-xs font-medium capitalize transition-colors whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
+                        {tab === 'crops' ? 'Crop Plans' : tab === 'health' ? 'Health' : tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activeTab === 'overview' && (
+                    <div className="space-y-3">
+                      {farm?.farm_code && (
+                        <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+                          <p className="text-xs text-muted-foreground mb-1">Farm Reference ID</p>
+                          <p className="text-2xl font-bold font-mono text-primary">#{farm.farm_code}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">Use this ID for all future data submissions</p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        <InfoRow label="Total Land" value={`${farm?.total_land || 0} Acres`} />
+                        <InfoRow label="Expected Revenue" value={farm?.expected_revenue > 0 ? `₹${(farm.expected_revenue / 1000).toFixed(0)}K` : '—'} />
+                        <InfoRow label="Profit Share" value={farm?.profit_share > 0 ? `${farm.profit_share}%` : '—'} />
+                        <InfoRow label="Growth Stage" value={farm?.growth_stage || '—'} />
+                      </div>
+                      {farm?.contract_summary && (
+                        <p className="text-xs text-muted-foreground">{farm.contract_summary}</p>
+                      )}
+
+                      {assignedWorkers.length > 0 && (
+                        <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+                          <p className="text-xs font-medium text-foreground">Assigned Workers</p>
+                          {assignedWorkers.map((w: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between">
+                              <p className="text-sm text-foreground">{w.full_name}</p>
+                              {w.phone && <span className="text-xs text-primary">{w.phone}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'soil' && (
+                    <div className="rounded-lg bg-muted/50 p-3">
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <SoilCard icon={<FlaskConical className="w-4 h-4" />} label="pH" value={String(farm?.soil_ph || '—')} />
+                        <SoilCard icon={<Leaf className="w-4 h-4" />} label="Nitrogen (kg/ha)" value={String(farm?.soil_nitrogen || '—')} />
+                        <SoilCard icon={<Leaf className="w-4 h-4" />} label="Phosphorus (kg/ha)" value={String(farm?.soil_phosphorus || '—')} />
+                        <SoilCard icon={<Leaf className="w-4 h-4" />} label="Potassium (kg/ha)" value={String(farm?.soil_potassium || '—')} />
+                        <SoilCard icon={<Waves className="w-4 h-4" />} label="Organic Carbon (%)" value={String(farm?.soil_organic_carbon || '—')} />
+                        <SoilCard icon={<Droplets className="w-4 h-4" />} label="Moisture (%)" value={String(farm?.soil_moisture || '—')} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'profit' && (
+                    <div className="space-y-4">
+                      {/* Profit Summary Cards */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="rounded-lg border border-border bg-card p-3">
+                          <div className="flex items-center gap-2 text-green-600 mb-1">
+                            <TrendingUp className="w-4 h-4" />
+                            <span className="text-xs font-medium">Total Revenue</span>
+                          </div>
+                          <p className="text-xl font-bold">₹{(totalRevenue / 1000).toFixed(1)}K</p>
+                        </div>
+                        <div className="rounded-lg border border-border bg-card p-3">
+                          <div className="flex items-center gap-2 text-red-600 mb-1">
+                            <Package className="w-4 h-4" />
+                            <span className="text-xs font-medium">Total Costs</span>
+                          </div>
+                          <p className="text-xl font-bold">₹{(totalCosts / 1000).toFixed(1)}K</p>
+                        </div>
+                      </div>
+
+                      {/* Profit Split */}
+                      <div className="rounded-lg border-2 border-primary bg-primary/5 p-4">
+                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Profit Distribution (70/30)
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">Total Profit:</span>
+                            <span className="text-lg font-bold text-primary">₹{(totalProfit / 1000).toFixed(1)}K</span>
+                          </div>
+                          <div className="h-px bg-border" />
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium">Your Share (70%):</span>
+                            <span className="text-xl font-bold text-green-600">₹{(landownerShare / 1000).toFixed(1)}K</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs">GreenX Share (30%):</span>
+                            <span className="text-sm font-semibold">₹{(greenxShare / 1000).toFixed(1)}K</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cost Breakdown */}
+                      <div className="rounded-lg border border-border bg-card p-3">
+                        <h4 className="text-xs font-semibold mb-2">Cost Breakdown</h4>
+                        {costs.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2">No costs recorded yet</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {costs.slice(0, 5).map((cost: any) => (
+                              <div key={cost.id} className="flex justify-between items-start text-xs">
+                                <div className="flex-1">
+                                  <p className="font-medium">{cost.description || cost.cost_category}</p>
+                                  <p className="text-[10px] text-muted-foreground">{new Date(cost.date_incurred).toLocaleDateString()}</p>
+                                </div>
+                                <span className="font-semibold">₹{parseFloat(cost.amount).toLocaleString()}</span>
+                              </div>
+                            ))}
+                            {costs.length > 5 && (
+                              <p className="text-[10px] text-muted-foreground text-center pt-1">and {costs.length - 5} more...</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'crops' && (
+                    <div className="space-y-3">
+                      {cropPlans.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Sprout className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">No crop plans submitted yet</p>
+                        </div>
+                      ) : (
+                        cropPlans.map((plan: any) => (
+                          <div key={plan.id} className={`rounded-lg border-2 p-3 ${plan.status === 'pending' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20' :
+                            plan.status === 'approved' ? 'border-green-500 bg-green-50 dark:bg-green-950/20' :
+                              'border-red-500 bg-red-50 dark:bg-red-950/20'
+                            }`}>
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-sm">{plan.crop_name}</h4>
+                                <p className="text-xs text-muted-foreground">{plan.season} Season</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {plan.status === 'pending' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-[10px] font-medium">
+                                    Pending
+                                  </span>
+                                )}
+                                {plan.status === 'approved' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] font-medium flex items-center gap-1">
+                                    <CheckCircle className="w-3 h-3" /> Approved
+                                  </span>
+                                )}
+                                {plan.status === 'rejected' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-[10px] font-medium flex items-center gap-1">
+                                    <XCircle className="w-3 h-3" /> Rejected
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="space-y-1 text-xs mb-3">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Planting:</span>
+                                <span>{plan.planting_date ? new Date(plan.planting_date).toLocaleDateString() : '—'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Expected Harvest:</span>
+                                <span>{plan.expected_harvest_date ? new Date(plan.expected_harvest_date).toLocaleDateString() : '—'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Expected Yield:</span>
+                                <span className="font-medium">{plan.expected_yield} {plan.yield_unit || 'kg'}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Expected Revenue:</span>
+                                <span className="font-semibold text-green-600">₹{parseFloat(plan.expected_revenue || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+
+                            {plan.rationale && (
+                              <div className="mb-3 p-2 bg-card/50 rounded text-xs">
+                                <p className="text-muted-foreground font-medium mb-1">Expert Recommendation:</p>
+                                <p>{plan.rationale}</p>
+                              </div>
+                            )}
+
+                            {plan.status === 'pending' && (
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={() => approveCropPlan.mutate({ planId: plan.id, approved: true })}
+                                  className="flex-1 h-8 text-xs"
+                                >
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => approveCropPlan.mutate({ planId: plan.id, approved: false })}
+                                  className="flex-1 h-8 text-xs"
+                                >
+                                  <XCircle className="w-3 h-3 mr-1" /> Reject
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'harvest' && (
+                    <div className="space-y-3">
+                      {harvests.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">No harvest records yet</p>
+                        </div>
+                      ) : (
+                        harvests.map((harvest: any) => (
+                          <div key={harvest.id} className="rounded-lg border border-border bg-card p-3">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-sm">{harvest.crop_name}</h4>
+                                <p className="text-xs text-muted-foreground">{new Date(harvest.harvest_date).toLocaleDateString()}</p>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${harvest.payment_status === 'paid' ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                                harvest.payment_status === 'partial' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                                  'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                                }`}>
+                                {harvest.payment_status}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                              <div>
+                                <p className="text-muted-foreground">Yield</p>
+                                <p className="font-semibold">{harvest.yield_quantity} {harvest.yield_unit}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Quality</p>
+                                <p className="font-semibold">{harvest.quality_grade || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Buyer</p>
+                                <p className="font-semibold truncate">{harvest.buyer_name || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Sale Price</p>
+                                <p className="font-semibold text-green-600">₹{parseFloat(harvest.sale_price || 0).toLocaleString()}</p>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-border">
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="text-muted-foreground">Your Share (70%):</span>
+                                <span className="font-bold text-green-600">₹{parseFloat(harvest.landowner_share || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'documents' && (
+                    <div className="space-y-3">
+                      <Button size="sm" className="w-full" variant="outline">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Document
+                      </Button>
+
+                      {documents.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">No documents uploaded yet</p>
+                        </div>
+                      ) : (
+                        documents.map((doc: any) => (
+                          <div key={doc.id} className="rounded-lg border border-border bg-card p-3">
+                            <div className="flex items-start gap-3">
+                              <FileText className="w-8 h-8 text-primary flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-sm truncate">{doc.document_name}</h4>
+                                <p className="text-xs text-muted-foreground capitalize">{doc.document_type?.replace('_', ' ')}</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">{new Date(doc.created_at).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                {doc.verified === 'Y' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] font-medium">
+                                    <CheckCircle className="w-3 h-3" /> Verified
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-[10px] font-medium">
+                                    <Clock className="w-3 h-3" /> Pending
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'photos' && (
+                    <div className="space-y-3">
+                      <Button size="sm" className="w-full" variant="outline">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photo
+                      </Button>
+
+                      {photos.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Image className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">No photos uploaded yet</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2">
+                          {photos.map((photo: any) => (
+                            <div key={photo.id} className="rounded-lg overflow-hidden border border-border bg-card">
+                              <div className="aspect-square bg-muted flex items-center justify-center">
+                                <Image className="w-12 h-12 text-muted-foreground opacity-30" />
+                              </div>
+                              <div className="p-2">
+                                <p className="text-xs font-medium truncate">{photo.caption || 'Field Photo'}</p>
+                                <p className="text-[10px] text-muted-foreground">{new Date(photo.created_at).toLocaleDateString()}</p>
+                                {photo.photo_type && (
+                                  <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px]">
+                                    {photo.photo_type}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'health' && (
+                    <div className="space-y-3">
+                      {!farm ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">Select a farm to view AI health analysis</p>
+                        </div>
+                      ) : (
+                        <AIAnalysisPanel
+                          farmId={farm.id}
+                          farmData={farm}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === 'timeline' && (
+                    <div className="space-y-3">
+                      {timeline.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                          <p className="text-xs">No activity recorded yet</p>
+                        </div>
+                      ) : (
+                        timeline.map((event: any, idx: number) => (
+                          <div key={event.id} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${event.event_type === 'crop_approved' ? 'bg-green-100 dark:bg-green-900 text-green-600' :
+                                event.event_type === 'harvest' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600' :
+                                  event.event_type === 'pest_detected' || event.event_type === 'disease_detected' ? 'bg-red-100 dark:bg-red-900 text-red-600' :
+                                    'bg-primary/10 text-primary'
+                                }`}>
+                                {event.event_type === 'crop_approved' && <CheckCircle className="w-4 h-4" />}
+                                {event.event_type === 'harvest' && <Package className="w-4 h-4" />}
+                                {event.event_type === 'photo_uploaded' && <Image className="w-4 h-4" />}
+                                {!['crop_approved', 'harvest', 'photo_uploaded'].includes(event.event_type) && <Calendar className="w-4 h-4" />}
+                              </div>
+                              {idx < timeline.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                            </div>
+                            <div className="flex-1 pb-4">
+                              <h4 className="font-semibold text-sm">{event.event_title}</h4>
+                              <p className="text-xs text-muted-foreground">{event.event_description}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                {event.user_name && (
+                                  <span className="text-[10px] text-muted-foreground">{event.user_name}</span>
+                                )}
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(event.created_at).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function SummaryCard({ icon, label, value, variant = 'ops' }: { icon: React.ReactNode; label: string; value: string; variant?: 'ops' | 'health' | 'finance' | 'alert' }) {
+  return (
+    <div className={`rounded-xl border border-border bg-card dashboard-card dashboard-card-${variant} p-3 text-center space-y-1`}>
+      <div className="flex justify-center text-primary">{icon}</div>
+      <p className="text-lg font-bold text-foreground">{value}</p>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function SoilCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-card dashboard-card dashboard-card-health p-2.5">
+      <div className="flex items-center gap-1.5 text-primary mb-1">{icon}<span className="text-[10px] text-muted-foreground">{label}</span></div>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}

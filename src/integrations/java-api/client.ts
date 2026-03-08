@@ -1,7 +1,7 @@
 // Java API Client for Oracle Database Backend
 // Replaces Supabase with direct Java backend API calls
 
-const API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_JAVA_API_URL || '/api';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -26,6 +26,20 @@ export interface DatabaseRow {
 class JavaApiClient {
   private baseUrl: string;
   private token: string | null = null;
+
+  private normalizeKeys(value: any): any {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.normalizeKeys(item));
+    }
+    if (value && typeof value === 'object') {
+      const out: Record<string, any> = {};
+      Object.entries(value).forEach(([k, v]) => {
+        out[k.toLowerCase()] = this.normalizeKeys(v);
+      });
+      return out;
+    }
+    return value;
+  }
 
   constructor() {
     this.baseUrl = API_BASE_URL;
@@ -53,18 +67,55 @@ class JavaApiClient {
 
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, config);
-      const data = await response.json();
+
+      // Check if response has content
+      const contentType = response.headers.get('content-type');
+      let data: any;
+
+      if (response.status === 204 || !contentType?.includes('application/json')) {
+        // No content or non-JSON response
+        if (!response.ok) {
+          return {
+            success: false,
+            error: `HTTP ${response.status}: ${response.statusText}`,
+          };
+        }
+        data = {};
+      } else {
+        // Parse JSON response
+        const text = await response.text();
+        if (!text) {
+          if (!response.ok) {
+            return {
+              success: false,
+              error: `HTTP ${response.status}: Empty response`,
+            };
+          }
+          data = {};
+        } else {
+          data = JSON.parse(text);
+        }
+      }
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || data.message || 'Request failed',
+          error: data.error || data.message || `HTTP ${response.status}`,
         };
+      }
+
+      // Backend already returns ApiResponse format, so unwrap if needed
+      if (data && typeof data === 'object' && 'success' in data) {
+        const apiResp = data as ApiResponse<T>;
+        return {
+          ...apiResp,
+          data: this.normalizeKeys(apiResp.data),
+        } as ApiResponse<T>;
       }
 
       return {
         success: true,
-        data: data,
+        data: this.normalizeKeys(data),
       };
     } catch (error) {
       return {
@@ -75,6 +126,28 @@ class JavaApiClient {
   }
 
   // Authentication
+  public async register(
+    email: string,
+    password: string,
+    name: string,
+    role: string,
+    options?: { persistSession?: boolean }
+  ) {
+    const response = await this.request<AuthResponse>('/auth/register', 'POST', {
+      email,
+      password,
+      name,
+      role,
+    });
+
+    if (response.success && response.data && options?.persistSession !== false) {
+      this.token = response.data.token;
+      localStorage.setItem('javaApiToken', response.data.token);
+    }
+
+    return response;
+  }
+
   public async signInWithPassword(email: string, password: string) {
     const response = await this.request<AuthResponse>('/auth/login', 'POST', {
       email,
@@ -99,6 +172,11 @@ class JavaApiClient {
     return this.request('/auth/me', 'GET');
   }
 
+  // Public escape hatch for non-CRUD API routes.
+  public async call<T>(endpoint: string, method: string = 'GET', body?: any) {
+    return this.request<T>(endpoint, method, body);
+  }
+
   // Generic data operations for Oracle tables
   public async select(tableName: string, options?: any) {
     const queryParams = new URLSearchParams();
@@ -110,6 +188,12 @@ class JavaApiClient {
     if (options?.gte) {
       Object.entries(options.gte).forEach(([key, value]) => {
         queryParams.append(`${key}__gte`, String(value));
+      });
+    }
+    if (options?.in) {
+      Object.entries(options.in).forEach(([key, value]) => {
+        const inValues = Array.isArray(value) ? value.join(',') : String(value);
+        queryParams.append(`${key}__in`, inValues);
       });
     }
     if (options?.order) {

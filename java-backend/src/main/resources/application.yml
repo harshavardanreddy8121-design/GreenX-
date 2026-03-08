@@ -4,10 +4,15 @@ spring:
   
   # Oracle Database Configuration
   datasource:
-    url: jdbc:oracle:thin:@172.18.64.92:1521/XEPDB1
+    url: jdbc:oracle:thin:@172.18.64.92:1521/XE
     username: system
     password: greenx@300cr
     driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
   
   # JPA/Hibernate Configuration
   jpa:
@@ -31,19 +36,26 @@ spring:
       write-dates-as-timestamps: false
       indent-output: true
 
+  # File Upload configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+
 # Logging Configuration
 logging:
   level:
     root: INFO
     com.greenx: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: WARN
     org.hibernate.SQL: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Server Configuration
 server:
-  port: 8080
+  port: 8082
   servlet:
     context-path: /api
 
@@ -51,3 +63,9 @@ server:
 jwt:
   secret: your-secret-key-change-this-in-production-at-least-32-characters-long!
   expiration: 86400000 # 24 hours in milliseconds
+
+# File upload directory
+app:
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}
+

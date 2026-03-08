@@ -1,89 +1,87 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { javaApi } from "@/integrations/java-api/client";
-import type { AppRole } from "@/types/database";
+import { auth as apiAuth, setToken, clearToken, getToken } from "@/lib/api";
+import type { AppRole, Profile } from "@/types/database";
 
-interface Profile {
+export interface AuthUser {
   id: string;
-  full_name: string;
-  phone: string | null;
-  avatar_url: string | null;
+  email: string;
+  name: string;
+  role: string;
+  clusterId?: string;
 }
 
 interface AuthContextType {
-  user: any;
+  user: AuthUser | null;
   profile: Profile | null;
   isAuthenticated: boolean;
   role: AppRole | null;
   loading: boolean;
-  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, name: string, role: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function normalizeRole(rawRole: unknown): AppRole | null {
+  const role = String(rawRole || '').trim().toUpperCase();
+  if (!role) return null;
+  if (role === 'CLUSTER_ADMIN' || role === 'ADMIN') return 'admin';
+  if (role === 'FIELD_MANAGER' || role === 'FIELDMANAGER') return 'fieldmanager';
+  if (role === 'LAND_OWNER' || role === 'LANDOWNER') return 'landowner';
+  if (role === 'EXPERT') return 'expert';
+  if (role === 'WORKER' || role === 'USER') return 'worker';
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserData = async (sessionUser: any) => {
-    if (!sessionUser) {
-      setUser(null);
-      setProfile(null);
-      setRole(null);
-      setLoading(false);
-      return;
-    }
-
-    setUser(sessionUser);
-
-    try {
-      const [roleResponse, profileResponse] = await Promise.all([
-        javaApi.select('user_roles', { eq: { user_id: sessionUser.id } }),
-        javaApi.select('profiles', { eq: { id: sessionUser.id } }),
-      ]);
-
-      const roleData = roleResponse.success && roleResponse.data && (roleResponse.data as any[]).length > 0
-        ? (roleResponse.data as any[])[0]?.role
-        : null;
-      const profileData = profileResponse.success && profileResponse.data && (profileResponse.data as any[]).length > 0
-        ? (profileResponse.data as any[])[0]
-        : null;
-
-      setRole(roleData ?? null);
-      setProfile(profileData as Profile | null);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    // Check if user is already logged in (token in localStorage)
-    const token = localStorage.getItem('javaApiToken');
-    if (token) {
-      // Fetch current user from backend
-      javaApi.getCurrentUser().then(response => {
-        if (response.success && response.data) {
-          fetchUserData((response.data as any).user ?? (response.data as any));
-        } else {
-          setLoading(false);
-        }
-      });
-    } else {
-      setLoading(false);
-    }
+    const token = getToken();
+    if (!token) { setLoading(false); return; }
+    apiAuth.me()
+      .then(u => {
+        setUser(u);
+        setRole(normalizeRole(u.role));
+      })
+      .catch(() => clearToken())
+      .finally(() => setLoading(false));
   }, []);
 
-  const logout = async () => {
-    await javaApi.signOut();
+  const login = async (email: string, password: string) => {
+    const res = await apiAuth.login(email, password);
+    setToken(res.token);
+    setUser(res.user);
+    setRole(normalizeRole(res.user.role));
+  };
+
+  const register = async (email: string, password: string, name: string, rawRole: string) => {
+    const res = await apiAuth.register(email, password, name, rawRole);
+    setToken(res.token);
+    setUser(res.user);
+    setRole(normalizeRole(res.user.role));
+  };
+
+  const logout = () => {
+    clearToken();
     setUser(null);
-    setProfile(null);
     setRole(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, isAuthenticated: !!user, role, loading, logout }}>
+    <AuthContext.Provider value={{
+      user,
+      profile: null,
+      isAuthenticated: !!user,
+      role,
+      loading,
+      login,
+      register,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );

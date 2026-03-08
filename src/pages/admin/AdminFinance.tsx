@@ -25,21 +25,21 @@ export default function AdminFinance() {
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-finance p-4 text-center">
               <p className="text-2xl font-bold text-foreground">₹{(totalRevenue / 100000).toFixed(1)}L</p>
               <p className="text-xs text-muted-foreground">Total Expected Revenue</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{farms.length}</p>
               <p className="text-xs text-muted-foreground">Active Farms</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center">
               <p className="text-2xl font-bold text-primary">{farms.reduce((s: number, f: any) => s + (f.total_land || 0), 0)} Ac</p>
               <p className="text-xs text-muted-foreground">Total Land</p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-finance p-4">
             <h3 className="text-sm font-semibold text-foreground mb-3">Revenue by Farm</h3>
             <div className="space-y-2">
               {farms.map((f: any) => (

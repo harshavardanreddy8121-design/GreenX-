@@ -1,235 +1,338 @@
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
-import { GreenXLogo } from '@/components/GreenXLogo';
-import WeatherWidget from '@/components/WeatherWidget';
-import { LogOut, CheckCircle2, Circle, Clock, Package, Send, X } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { upsertWorkflowEvent } from '@/utils/workflowEvents';
+
+type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests';
 
 export default function WorkerDashboard() {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [reqItem, setReqItem] = useState('');
-  const [reqCategory, setReqCategory] = useState('chemical');
-  const [reqQty, setReqQty] = useState('1');
-  const [reqUrgency, setReqUrgency] = useState('medium');
-  const [reqNote, setReqNote] = useState('');
+  const [activeTab, setActiveTab] = useState<Tab>('attendance');
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoType, setPhotoType] = useState('crop_progress');
 
   const handleLogout = () => { logout(); navigate('/'); };
-
-  // Check today's attendance
   const today = new Date().toISOString().split('T')[0];
-  const { data: attended = false } = useQuery({
+
+  const { data: todayAttendance = null } = useQuery({
     queryKey: ['worker-attendance', user?.id, today],
     queryFn: async () => {
-      const response = await javaApi.select('attendance', {
-        eq: { user_id: user?.id },
-        gte: { check_in: today }
-      });
-      return response.success && response.data && (response.data as any[]).length > 0;
+      const r = await javaApi.select('attendance', { eq: { user_id: user?.id }, gte: { check_in: today } });
+      return r.success && r.data && (r.data as any[]).length > 0 ? (r.data as any[])[0] : null;
     },
     enabled: !!user?.id,
   });
 
-  // Get assigned tasks
   const { data: myTasks = [] } = useQuery({
     queryKey: ['worker-tasks', user?.id],
     queryFn: async () => {
-      const response = await javaApi.select('tasks', {
-        eq: { assigned_to: user?.id },
-        order: { field: 'due_date', ascending: false }
-      });
-      return response.success && response.data ? response.data as any[] : [];
+      const r = await javaApi.select('tasks', { eq: { assigned_to: user?.id }, order: { field: 'due_date', ascending: false } });
+      return r.success && r.data ? r.data as any[] : [];
     },
     enabled: !!user?.id,
   });
 
-  // Get assigned farms
   const { data: myFarms = [] } = useQuery({
     queryKey: ['worker-farms', user?.id],
     queryFn: async () => {
-      const assignResponse = await javaApi.select('farm_assignments', {
-        eq: { user_id: user?.id, role: 'worker' }
-      });
-
-      if (!assignResponse.success || !assignResponse.data) return [];
-
-      const assignments = assignResponse.data as any[];
-      if (!assignments.length) return [];
-
-      const farmIds = assignments.map((a: any) => a.farm_id);
-      const farmsResponse = await javaApi.select('farms', {
-        in: { id: farmIds }
-      });
-
-      return farmsResponse.success && farmsResponse.data ? farmsResponse.data as any[] : [];
+      const aR = await javaApi.select('farm_assignments', { eq: { user_id: user?.id, role: 'worker' } });
+      if (aR.success && aR.data) {
+        const ids = (aR.data as any[]).map((a: any) => a.farm_id);
+        if (ids.length) {
+          const fR = await javaApi.select('farms', { in: { id: ids } });
+          if (fR.success && fR.data) return fR.data as any[];
+        }
+      }
+      return [];
     },
     enabled: !!user?.id,
   });
 
   const markAttendance = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (type: 'checkin' | 'checkout') => {
       const farmId = myFarms.length > 0 ? myFarms[0].id : null;
-      const response = await javaApi.insert('attendance', {
-        user_id: user?.id,
-        farm_id: farmId,
-        note: 'Daily check-in',
-      });
-      if (!response.success) throw new Error(response.error);
+      if (type === 'checkin') {
+        const r = await javaApi.insert('attendance', { id: crypto.randomUUID(), user_id: user?.id, farm_id: farmId, check_in: new Date().toISOString(), note: 'Daily check-in' });
+        if (!r.success) throw new Error(r.error);
+      } else {
+        if (!todayAttendance) throw new Error('No check-in found');
+        const r = await javaApi.update('attendance', todayAttendance.id, { check_out: new Date().toISOString() });
+        if (!r.success) throw new Error(r.error);
+      }
     },
-    onSuccess: () => {
-      toast.success('Attendance marked');
+    onSuccess: (_, type) => {
+      toast.success(type === 'checkin' ? 'Checked in!' : 'Checked out!');
       queryClient.invalidateQueries({ queryKey: ['worker-attendance'] });
     },
-    onError: (err: any) => toast.error(err.message),
   });
 
   const toggleTask = useMutation({
     mutationFn: async (task: any) => {
-      const newStatus = task.status === 'pending' ? 'completed' : 'pending';
-      const response = await javaApi.update('tasks', task.id, { status: newStatus });
-      if (!response.success) throw new Error(response.error);
+      const newStatus = task.status === 'pending' ? 'in_progress' : task.status === 'in_progress' ? 'completed' : 'pending';
+      await javaApi.update('tasks', task.id, { status: newStatus, updated_at: new Date().toISOString() });
+      await upsertWorkflowEvent({ farmId: task.farm_id, eventKey: 'field_operation_logged', status: newStatus === 'completed' ? 'completed' : 'in-progress', doneBy: 'worker', note: `Worker set task to ${newStatus}.` });
     },
     onSuccess: () => {
+      toast.success('Task updated!');
       queryClient.invalidateQueries({ queryKey: ['worker-tasks'] });
     },
-    onError: (err: any) => toast.error(err.message),
   });
 
-  const submitRequest = useMutation({
-    mutationFn: async () => {
-      const response = await javaApi.insert('equipment_requests', {
-        user_id: user?.id,
-        farm_id: myFarms.length > 0 ? myFarms[0].id : null,
-        equipment_type: reqCategory,
-        item: reqItem,
-        quantity: reqQty,
-        priority: reqUrgency,
-        note: reqNote,
-      });
-      if (!response.success) throw new Error(response.error);
-    },
-    onSuccess: () => {
-      toast.success('Request submitted');
-      setShowRequestModal(false);
-      setReqItem('');
-      setReqNote('');
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
+  const userName = profile?.full_name || user?.email?.split('@')[0] || 'Worker';
+  const pendingTasks = myTasks.filter((t: any) => t.status !== 'completed');
+  const completedTasks = myTasks.filter((t: any) => t.status === 'completed');
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 bg-card/90 backdrop-blur-lg border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          <GreenXLogo size="sm" />
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">{profile?.full_name || user?.email}</span>
-            <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-muted"><LogOut className="w-4 h-4 text-muted-foreground" /></button>
+    <div className="gx-dashboard" style={{ '--role-accent': '#22c55e', '--role-accent-dim': 'rgba(34,197,94,.12)' } as React.CSSProperties}>
+      {/* ── SIDEBAR ── */}
+      <div className="gx-sidebar">
+        <div className="gx-sidebar-user">
+          <div className="gx-sidebar-avatar" style={{ background: 'rgba(34,197,94,.15)' }}>👷</div>
+          <div className="gx-sidebar-name">{userName}</div>
+          <div className="gx-sidebar-role">WORKER · FIELD</div>
+        </div>
+
+        <div className="gx-nav-group-label">Daily</div>
+        <SideNavItem icon="⏰" label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+        <SideNavItem icon="📋" label="My Tasks" active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} badge={pendingTasks.length > 0 ? String(pendingTasks.length) : undefined} badgeColor="red" />
+
+        <div className="gx-nav-group-label">Farm</div>
+        <SideNavItem icon="🌾" label="Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
+        <SideNavItem icon="📷" label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
+
+        <div className="gx-nav-group-label">Support</div>
+        <SideNavItem icon="📦" label="Material Request" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
+
+        <div className="gx-sidebar-logout">
+          <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div className="gx-main">
+        <div className="gx-page-header">
+          <div className="gx-page-title">Worker Dashboard — {userName} 👷</div>
+          <div className="gx-page-sub">{pendingTasks.length} tasks pending · {myFarms.length} farms</div>
+        </div>
+
+        {/* Stats Row — always visible */}
+        <div className="gx-stats-row">
+          <div className="gx-stat-card green">
+            <div className="gx-stat-label">Attendance</div>
+            <div className="gx-stat-value">{todayAttendance ? (todayAttendance.check_out ? '✅ Done' : '🟢 In') : '⬜ Not Yet'}</div>
+            <div className="gx-stat-change gx-neutral">Today</div>
+          </div>
+          <div className="gx-stat-card orange">
+            <div className="gx-stat-label">Pending Tasks</div>
+            <div className="gx-stat-value">{pendingTasks.length}</div>
+            <div className="gx-stat-change gx-down">{pendingTasks.length > 0 ? 'Needs attention' : 'All done!'}</div>
+          </div>
+          <div className="gx-stat-card blue">
+            <div className="gx-stat-label">Completed</div>
+            <div className="gx-stat-value">{completedTasks.length}</div>
+            <div className="gx-stat-change gx-up">This season</div>
+          </div>
+          <div className="gx-stat-card gold">
+            <div className="gx-stat-label">Assigned Farms</div>
+            <div className="gx-stat-value">{myFarms.length}</div>
+            <div className="gx-stat-change gx-neutral">Active</div>
           </div>
         </div>
-      </header>
 
-      <main className="p-4 space-y-4 max-w-lg mx-auto pb-8">
-        {/* Weather */}
-        {myFarms.length > 0 && <WeatherWidget village={myFarms[0].village} pincode={myFarms[0].pincode} compact />}
-
-        {/* Attendance */}
-        <button onClick={() => markAttendance.mutate()} disabled={attended || markAttendance.isPending}
-          className={`w-full py-4 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 transition-all disabled:opacity-70 ${attended ? 'bg-primary text-primary-foreground' : 'btn-gradient text-primary-foreground'
-            }`}>
-          <Clock className="w-6 h-6" />
-          {attended ? '✓ Attendance Marked' : markAttendance.isPending ? 'Marking...' : 'Mark Attendance'}
-        </button>
-
-        {/* My Farms */}
-        {myFarms.length > 0 && (
-          <>
-            <h2 className="text-lg font-semibold text-foreground">My Farms</h2>
-            {myFarms.map((farm: any) => (
-              <div key={farm.id} className="rounded-xl border border-border bg-card p-4">
-                <h3 className="font-semibold text-foreground">{farm.name}</h3>
-                <p className="text-xs text-muted-foreground">{farm.village} · {farm.total_land} acres · {farm.crop || '—'}</p>
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* Equipment Request Button */}
-        <button onClick={() => setShowRequestModal(true)}
-          className="w-full py-3 rounded-xl border border-border bg-card flex items-center justify-center gap-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors">
-          <Package className="w-5 h-5 text-primary" /> Request Equipment / Supplies
-        </button>
-
-        {/* Today's Tasks */}
-        <h2 className="text-lg font-semibold text-foreground">My Tasks</h2>
-        {myTasks.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No tasks assigned yet</p>
+        {/* ═══ ATTENDANCE TAB ═══ */}
+        {activeTab === 'attendance' && (<>
+          <div className="gx-section-divider">⏰ Daily Attendance</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header">
+              <div className="gx-card-title">⏰ Today's Attendance — {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+              <span className={`gx-status ${todayAttendance ? 'gx-s-done' : 'gx-s-pending'}`}>{todayAttendance ? 'Checked In' : 'Not Checked In'}</span>
+            </div>
+            <div className="gx-card-body">
+              {!todayAttendance ? (
+                <div style={{ textAlign: 'center', padding: 30 }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>⏰</div>
+                  <div style={{ marginBottom: 16, opacity: .7 }}>You haven't checked in today. Tap the button to mark attendance.</div>
+                  <button className="gx-btn gx-btn-green" onClick={() => markAttendance.mutate('checkin')}>✅ Check In Now</button>
+                </div>
+              ) : !todayAttendance.check_out ? (
+                <div style={{ textAlign: 'center', padding: 30 }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🟢</div>
+                  <div style={{ marginBottom: 8, color: 'var(--gx-green)' }}>Checked in at {new Date(todayAttendance.check_in).toLocaleTimeString('en-IN')}</div>
+                  <div style={{ marginBottom: 16, opacity: .5 }}>Working... Tap below when shift is done.</div>
+                  <button className="gx-btn gx-btn-orange" onClick={() => markAttendance.mutate('checkout')}>🔴 Check Out</button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 30 }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+                  <div style={{ color: 'var(--gx-green)', marginBottom: 4 }}>In: {new Date(todayAttendance.check_in).toLocaleTimeString('en-IN')}</div>
+                  <div style={{ color: 'var(--gx-orange)', marginBottom: 8 }}>Out: {new Date(todayAttendance.check_out).toLocaleTimeString('en-IN')}</div>
+                  <div style={{ opacity: .5 }}>Attendance complete for today.</div>
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          myTasks.map((task: any) => (
-            <div key={task.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
-              <div className="flex items-start gap-3">
-                <button onClick={() => toggleTask.mutate(task)} disabled={toggleTask.isPending} className="mt-0.5 shrink-0">
-                  {task.status === 'completed'
-                    ? <CheckCircle2 className="w-6 h-6 text-primary" />
-                    : <Circle className="w-6 h-6 text-muted-foreground" />}
-                </button>
-                <div className="flex-1">
-                  <p className={`text-base font-medium ${task.status === 'completed' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{task.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{task.farms?.name} · {task.due_date}</p>
+        </>)}
+
+        {/* ═══ TASKS TAB ═══ */}
+        {activeTab === 'tasks' && (<>
+          <div className="gx-section-divider">📋 My Tasks</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header">
+              <div className="gx-card-title">📋 Assigned Tasks</div>
+              <span className="gx-status gx-s-pending">{myTasks.length} Total</span>
+            </div>
+            <div className="gx-card-body">
+              <table className="gx-data-table">
+                <thead><tr><th>#</th><th>Task</th><th>Farm</th><th>Due Date</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {myTasks.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 20, opacity: .5 }}>No tasks assigned yet</td></tr>
+                  ) : myTasks.map((t: any, i: number) => (
+                    <tr key={t.id || i}>
+                      <td>{i + 1}</td>
+                      <td>{t.title || 'Task'}</td>
+                      <td>{t.farmId || '—'}</td>
+                      <td>{t.scheduledDate ? new Date(t.scheduledDate).toLocaleDateString('en-IN') : '—'}</td>
+                      <td><span className={`gx-status ${t.status === 'completed' ? 'gx-s-done' : t.status === 'in_progress' ? 'gx-s-pending' : 'gx-s-alert'}`}>{t.status || 'pending'}</span></td>
+                      <td>
+                        {t.status !== 'completed' && (
+                          <button className="gx-btn gx-btn-green" style={{ padding: '4px 12px', fontSize: 11 }}
+                            onClick={() => toggleTask.mutate(t)}>
+                            {t.status === 'pending' ? '▶ Start' : '✅ Done'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ FARMS TAB ═══ */}
+        {activeTab === 'farms' && (<>
+          <div className="gx-section-divider">🌾 Assigned Farms</div>
+          <div className="gx-card">
+            <div className="gx-card-header">
+              <div className="gx-card-title">🌾 My Farms</div>
+              <span className="gx-status gx-s-done">{myFarms.length} Active</span>
+            </div>
+            <div className="gx-card-body">
+              {myFarms.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 30, opacity: .5 }}>No farms assigned yet. Contact your Field Manager.</div>
+              ) : (
+                <table className="gx-data-table">
+                  <thead><tr><th>#</th><th>Farm Code</th><th>Location</th><th>Area (acres)</th><th>Crop</th></tr></thead>
+                  <tbody>
+                    {myFarms.map((f: any, i: number) => (
+                      <tr key={f.id || i}>
+                        <td>{i + 1}</td>
+                        <td>{f.farmCode || f.id}</td>
+                        <td>{f.village || f.district || '—'}</td>
+                        <td>{f.totalLand || '—'}</td>
+                        <td>{f.currentCrop || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ UPLOAD PHOTOS TAB ═══ */}
+        {activeTab === 'photos' && (<>
+          <div className="gx-section-divider">📷 Upload Field Photos</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📷 Photo Upload</div></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select">
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Photo Type</label>
+                  <select className="gx-select" value={photoType} onChange={e => setPhotoType(e.target.value)}>
+                    <option value="crop_progress">Crop Progress</option>
+                    <option value="pest_damage">Pest / Disease</option>
+                    <option value="soil_condition">Soil Condition</option>
+                    <option value="irrigation">Irrigation</option>
+                    <option value="post_operation">Post-Operation</option>
+                  </select>
                 </div>
               </div>
+              <div className="gx-upload-box" style={{ marginTop: 14 }}>
+                <div className="gx-upload-label">📷 Select or Capture Photos</div>
+                <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Caption / Notes</label>
+                <textarea className="gx-textarea" value={photoCaption} onChange={e => setPhotoCaption(e.target.value)} placeholder="Describe what the photo shows..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-green">📤 Upload Photos</button>
+              </div>
             </div>
-          ))
-        )}
-      </main>
-
-      {/* Equipment Request Modal */}
-      {showRequestModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Request Equipment</h3>
-              <button onClick={() => setShowRequestModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
-            </div>
-            <select value={reqCategory} onChange={e => setReqCategory(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-              <option value="chemical">Pesticide / Chemical</option>
-              <option value="fertilizer">Fertilizer</option>
-              <option value="drone">Drone Service</option>
-              <option value="tool">Tools / Equipment</option>
-              <option value="motor">Motor / Pump</option>
-              <option value="irrigation">Irrigation Parts</option>
-              <option value="other">Other</option>
-            </select>
-            <input value={reqItem} onChange={e => setReqItem(e.target.value)}
-              placeholder="Item name" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-            <div className="grid grid-cols-2 gap-3">
-              <input value={reqQty} onChange={e => setReqQty(e.target.value)}
-                placeholder="Quantity" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              <select value={reqUrgency} onChange={e => setReqUrgency(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <textarea value={reqNote} onChange={e => setReqNote(e.target.value)} rows={2}
-              placeholder="Note (optional)" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm resize-none" />
-            <button onClick={() => submitRequest.mutate()} disabled={submitRequest.isPending || !reqItem}
-              className="w-full py-2.5 rounded-lg btn-gradient text-primary-foreground text-sm font-medium disabled:opacity-50">
-              <Send className="w-4 h-4 inline mr-2" /> {submitRequest.isPending ? 'Sending...' : 'Submit Request'}
-            </button>
           </div>
-        </div>
-      )}
+        </>)}
+
+        {/* ═══ MATERIAL REQUEST TAB ═══ */}
+        {activeTab === 'requests' && (<>
+          <div className="gx-section-divider">📦 Material Request</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📦 Request Materials / Supplies</div></div>
+            <div className="gx-card-body">
+              <div className="gx-form-grid three">
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select">
+                    <option value="">Select Farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Material Type</label>
+                  <select className="gx-select">
+                    <option>Seeds</option><option>Fertilizer</option><option>Pesticide</option><option>Tools</option><option>Fuel</option><option>Other</option>
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Quantity</label><input type="text" className="gx-input" placeholder="e.g. 50 kg, 2 litres" /></div>
+              </div>
+              <div className="gx-form-group full" style={{ marginTop: 12 }}>
+                <label className="gx-label">Reason / Notes</label>
+                <textarea className="gx-textarea" placeholder="Explain why the material is needed, urgency level..." />
+              </div>
+              <div className="gx-btn-row">
+                <button className="gx-btn gx-btn-green">📤 Submit Request</button>
+              </div>
+            </div>
+          </div>
+        </>)}
+      </div>
     </div>
+  );
+}
+
+function SideNavItem({ icon, label, active, onClick, badge, badgeColor }: {
+  icon: string; label: string; active?: boolean; onClick?: () => void;
+  badge?: string; badgeColor?: 'red' | 'green' | 'gold' | 'blue';
+}) {
+  return (
+    <button className={`gx-nav-item${active ? ' active' : ''}`} onClick={onClick}>
+      <span className="gx-nav-icon">{icon}</span>
+      {label}
+      {badge && <span className={`gx-nav-badge gx-badge-${badgeColor || 'green'}`}>{badge}</span>}
+    </button>
   );
 }

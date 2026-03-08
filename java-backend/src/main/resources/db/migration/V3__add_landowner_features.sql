@@ -1,0 +1,334 @@
+-- Migration V3: Add core Landowner Interface features
+-- Priority: MOST IMPORTANT per requirements
+
+-- ============================================
+-- 1. LAND_DOCUMENTS - Store land ownership documents
+-- ============================================
+CREATE TABLE LAND_DOCUMENTS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    DOCUMENT_TYPE VARCHAR2(100) NOT NULL,  -- 'ownership_deed', 'tax_receipt', 'survey_map', 'lease_agreement', 'other'
+    DOCUMENT_NAME VARCHAR2(255) NOT NULL,
+    FILE_URL VARCHAR2(1000) NOT NULL,
+    FILE_SIZE NUMBER(12),  -- bytes
+    MIME_TYPE VARCHAR2(100),
+    UPLOADED_BY VARCHAR2(36) NOT NULL,
+    VERIFIED CHAR(1) DEFAULT 'N',  -- N=pending, Y=verified by admin
+    VERIFIED_BY VARCHAR2(36),
+    VERIFIED_AT TIMESTAMP,
+    NOTES VARCHAR2(500),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (UPLOADED_BY) REFERENCES USERS(ID),
+    FOREIGN KEY (VERIFIED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_LAND_DOCS_FARM_ID ON LAND_DOCUMENTS(FARM_ID);
+CREATE INDEX IDX_LAND_DOCS_TYPE ON LAND_DOCUMENTS(DOCUMENT_TYPE);
+CREATE INDEX IDX_LAND_DOCS_VERIFIED ON LAND_DOCUMENTS(VERIFIED);
+
+COMMENT ON TABLE LAND_DOCUMENTS IS 'Stores land ownership and registration documents uploaded by landowners';
+COMMENT ON COLUMN LAND_DOCUMENTS.DOCUMENT_TYPE IS 'Type: ownership_deed, tax_receipt, survey_map, lease_agreement, other';
+COMMENT ON COLUMN LAND_DOCUMENTS.VERIFIED IS 'N=pending verification, Y=verified by admin';
+
+-- ============================================
+-- 2. FARM_PHOTOS - Field images and progress photos
+-- ============================================
+CREATE TABLE FARM_PHOTOS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    PHOTO_URL VARCHAR2(1000) NOT NULL,
+    PHOTO_TYPE VARCHAR2(100),  -- 'crop_progress', 'pest_damage', 'disease', 'harvest', 'general', 'before', 'after'
+    CAPTION VARCHAR2(500),
+    UPLOADED_BY VARCHAR2(36) NOT NULL,
+    UPLOADER_ROLE VARCHAR2(50),  -- 'fieldmanager', 'worker', 'expert', 'landowner'
+    LATITUDE NUMBER(10, 7),
+    LONGITUDE NUMBER(10, 7),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (UPLOADED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_FARM_PHOTOS_FARM_ID ON FARM_PHOTOS(FARM_ID);
+CREATE INDEX IDX_FARM_PHOTOS_TYPE ON FARM_PHOTOS(PHOTO_TYPE);
+CREATE INDEX IDX_FARM_PHOTOS_DATE ON FARM_PHOTOS(CREATED_AT);
+
+COMMENT ON TABLE FARM_PHOTOS IS 'Stores field photos uploaded by field managers, workers, and experts';
+COMMENT ON COLUMN FARM_PHOTOS.PHOTO_TYPE IS 'Categories: crop_progress, pest_damage, disease, harvest, general, before, after';
+
+-- ============================================
+-- 3. COSTS - Expense tracking per farm
+-- ============================================
+CREATE TABLE COSTS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    COST_CATEGORY VARCHAR2(100) NOT NULL,  -- 'seeds', 'fertilizers', 'pesticides', 'labor', 'equipment', 'transport', 'other'
+    DESCRIPTION VARCHAR2(500),
+    AMOUNT NUMBER(15, 2) NOT NULL,
+    CURRENCY VARCHAR2(10) DEFAULT 'INR',
+    DATE_INCURRED DATE NOT NULL,
+    RECEIPT_URL VARCHAR2(1000),
+    APPROVED CHAR(1) DEFAULT 'N',  -- N=pending, Y=approved, R=rejected
+    APPROVED_BY VARCHAR2(36),
+    APPROVED_AT TIMESTAMP,
+    ENTERED_BY VARCHAR2(36) NOT NULL,
+    NOTES VARCHAR2(1000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (ENTERED_BY) REFERENCES USERS(ID),
+    FOREIGN KEY (APPROVED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_COSTS_FARM_ID ON COSTS(FARM_ID);
+CREATE INDEX IDX_COSTS_CATEGORY ON COSTS(COST_CATEGORY);
+CREATE INDEX IDX_COSTS_DATE ON COSTS(DATE_INCURRED);
+CREATE INDEX IDX_COSTS_APPROVED ON COSTS(APPROVED);
+
+COMMENT ON TABLE COSTS IS 'Tracks all expenses per farm for profit calculation';
+COMMENT ON COLUMN COSTS.COST_CATEGORY IS 'Categories: seeds, fertilizers, pesticides, labor, equipment, transport, other';
+COMMENT ON COLUMN COSTS.APPROVED IS 'N=pending, Y=approved, R=rejected';
+
+-- ============================================
+-- 4. CROP_PLANS - Expert recommendations with landowner approval
+-- ============================================
+CREATE TABLE CROP_PLANS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    EXPERT_ID VARCHAR2(36) NOT NULL,
+    CROP_NAME VARCHAR2(255) NOT NULL,
+    SEASON VARCHAR2(50),  -- 'kharif', 'rabi', 'zaid'
+    PLANTING_DATE DATE,
+    EXPECTED_HARVEST_DATE DATE,
+    EXPECTED_YIELD NUMBER(12, 2),
+    EXPECTED_REVENUE NUMBER(15, 2),
+    FERTILIZER_PLAN VARCHAR2(2000),
+    PESTICIDE_PLAN VARCHAR2(2000),
+    IRRIGATION_PLAN VARCHAR2(2000),
+    RATIONALE VARCHAR2(2000),  -- Why this crop is recommended
+    STATUS VARCHAR2(50) DEFAULT 'pending',  -- 'pending', 'approved', 'rejected', 'active', 'completed'
+    APPROVED_BY VARCHAR2(36),  -- Landowner who approved
+    APPROVED_AT TIMESTAMP,
+    REJECTION_REASON VARCHAR2(1000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (EXPERT_ID) REFERENCES USERS(ID),
+    FOREIGN KEY (APPROVED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_CROP_PLANS_FARM_ID ON CROP_PLANS(FARM_ID);
+CREATE INDEX IDX_CROP_PLANS_STATUS ON CROP_PLANS(STATUS);
+CREATE INDEX IDX_CROP_PLANS_EXPERT_ID ON CROP_PLANS(EXPERT_ID);
+
+COMMENT ON TABLE CROP_PLANS IS 'Expert crop recommendations requiring landowner approval';
+COMMENT ON COLUMN CROP_PLANS.STATUS IS 'pending=awaiting approval, approved=landowner approved, rejected=landowner rejected, active=currently growing, completed=harvested';
+COMMENT ON COLUMN CROP_PLANS.SEASON IS 'Indian farming seasons: kharif (monsoon), rabi (winter), zaid (summer)';
+
+-- ============================================
+-- 5. HARVESTS - Yield recording and sales tracking
+-- ============================================
+CREATE TABLE HARVESTS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    CROP_PLAN_ID VARCHAR2(36),  -- Link to approved crop plan
+    CROP_NAME VARCHAR2(255) NOT NULL,
+    HARVEST_DATE DATE NOT NULL,
+    YIELD_QUANTITY NUMBER(12, 2) NOT NULL,  -- kg or tons
+    YIELD_UNIT VARCHAR2(20) DEFAULT 'kg',
+    YIELD_PER_ACRE NUMBER(12, 2),
+    QUALITY_GRADE VARCHAR2(50),  -- 'A', 'B', 'C', 'premium', 'standard'
+    SALE_PRICE NUMBER(15, 2),  -- Total sale price
+    SALE_PRICE_PER_UNIT NUMBER(12, 2),
+    BUYER_NAME VARCHAR2(255),
+    BUYER_TYPE VARCHAR2(100),  -- 'local_market', 'mandi', 'contract_buyer', 'export', 'processing_unit'
+    EXPORT_COUNTRY VARCHAR2(100),
+    STORAGE_LOCATION VARCHAR2(500),
+    TRANSPORT_COST NUMBER(12, 2),
+    TOTAL_COSTS NUMBER(15, 2),  -- Sum of all costs for this farm/crop
+    REVENUE NUMBER(15, 2),  -- Sale price
+    PROFIT NUMBER(15, 2),  -- Revenue - Total costs
+    LANDOWNER_SHARE NUMBER(15, 2),  -- 70% of profit
+    GREENX_SHARE NUMBER(15, 2),  -- 30% of profit
+    PAYMENT_STATUS VARCHAR2(50) DEFAULT 'pending',  -- 'pending', 'paid', 'partial'
+    PAYMENT_DATE DATE,
+    RECORDED_BY VARCHAR2(36) NOT NULL,
+    NOTES VARCHAR2(2000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (CROP_PLAN_ID) REFERENCES CROP_PLANS(ID),
+    FOREIGN KEY (RECORDED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_HARVESTS_FARM_ID ON HARVESTS(FARM_ID);
+CREATE INDEX IDX_HARVESTS_DATE ON HARVESTS(HARVEST_DATE);
+CREATE INDEX IDX_HARVESTS_CROP_PLAN ON HARVESTS(CROP_PLAN_ID);
+CREATE INDEX IDX_HARVESTS_PAYMENT_STATUS ON HARVESTS(PAYMENT_STATUS);
+
+COMMENT ON TABLE HARVESTS IS 'Records harvest yields, sales, and profit distribution (70% landowner, 30% GreenX)';
+COMMENT ON COLUMN HARVESTS.BUYER_TYPE IS 'Types: local_market, mandi, contract_buyer, export, processing_unit';
+COMMENT ON COLUMN HARVESTS.LANDOWNER_SHARE IS 'Calculated as 70% of profit';
+COMMENT ON COLUMN HARVESTS.GREENX_SHARE IS 'Calculated as 30% of profit';
+
+-- ============================================
+-- 6. FARM_TIMELINE - Activity log and live updates
+-- ============================================
+CREATE TABLE FARM_TIMELINE (
+    ID VARCHAR2(36) PRIMARY KEY,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    EVENT_TYPE VARCHAR2(100) NOT NULL,  -- 'soil_test', 'crop_planned', 'crop_approved', 'planting', 'fertilizer_applied', 'pest_detected', 'disease_detected', 'irrigation', 'harvest', 'cost_added', 'photo_uploaded', 'task_completed', 'other'
+    EVENT_TITLE VARCHAR2(255) NOT NULL,
+    EVENT_DESCRIPTION VARCHAR2(2000),
+    REFERENCE_ID VARCHAR2(36),  -- ID of related record (task, cost, photo, etc)
+    REFERENCE_TABLE VARCHAR2(100),  -- Which table the reference_id points to
+    ICON VARCHAR2(50),  -- Icon name for UI display
+    USER_ID VARCHAR2(36),  -- Who triggered this event
+    USER_NAME VARCHAR2(255),
+    USER_ROLE VARCHAR2(50),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (USER_ID) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_TIMELINE_FARM_ID ON FARM_TIMELINE(FARM_ID);
+CREATE INDEX IDX_TIMELINE_EVENT_TYPE ON FARM_TIMELINE(EVENT_TYPE);
+CREATE INDEX IDX_TIMELINE_DATE ON FARM_TIMELINE(CREATED_AT);
+
+COMMENT ON TABLE FARM_TIMELINE IS 'Activity log showing all farm events in chronological order for transparency';
+COMMENT ON COLUMN FARM_TIMELINE.EVENT_TYPE IS 'Event categories for filtering and icons';
+
+-- ============================================
+-- 7. INVENTORY - Stock management for inputs
+-- ============================================
+CREATE TABLE INVENTORY (
+    ID VARCHAR2(36) PRIMARY KEY,
+    ITEM_TYPE VARCHAR2(100) NOT NULL,  -- 'seed', 'fertilizer', 'pesticide', 'equipment'
+    ITEM_NAME VARCHAR2(255) NOT NULL,
+    ITEM_CODE VARCHAR2(50),
+    BRAND VARCHAR2(255),
+    UNIT VARCHAR2(50),  -- 'kg', 'liters', 'bags', 'pieces', 'units'
+    QUANTITY_IN_STOCK NUMBER(12, 2) DEFAULT 0,
+    REORDER_LEVEL NUMBER(12, 2),  -- Alert when stock falls below this
+    UNIT_COST NUMBER(12, 2),
+    STORAGE_LOCATION VARCHAR2(255),
+    EXPIRY_DATE DATE,
+    SUPPLIER_NAME VARCHAR2(255),
+    SUPPLIER_CONTACT VARCHAR2(100),
+    NOTES VARCHAR2(1000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL
+);
+
+CREATE INDEX IDX_INVENTORY_TYPE ON INVENTORY(ITEM_TYPE);
+CREATE INDEX IDX_INVENTORY_NAME ON INVENTORY(ITEM_NAME);
+CREATE INDEX IDX_INVENTORY_CODE ON INVENTORY(ITEM_CODE);
+
+COMMENT ON TABLE INVENTORY IS 'Centralized inventory management for seeds, fertilizers, pesticides, and equipment';
+COMMENT ON COLUMN INVENTORY.ITEM_TYPE IS 'Categories: seed, fertilizer, pesticide, equipment';
+
+-- ============================================
+-- 8. INVENTORY_TRANSACTIONS - Track usage and restocking
+-- ============================================
+CREATE TABLE INVENTORY_TRANSACTIONS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    INVENTORY_ID VARCHAR2(36) NOT NULL,
+    FARM_ID VARCHAR2(36),  -- Which farm used the item (for 'out' transactions)
+    TRANSACTION_TYPE VARCHAR2(20) NOT NULL,  -- 'in' (purchase/restock) or 'out' (usage)
+    QUANTITY NUMBER(12, 2) NOT NULL,
+    UNIT VARCHAR2(50),
+    COST_TOTAL NUMBER(12, 2),  -- Total cost for this transaction
+    TRANSACTION_DATE TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    PERFORMED_BY VARCHAR2(36) NOT NULL,
+    PURPOSE VARCHAR2(500),  -- What was it used for
+    REFERENCE_TASK_ID VARCHAR2(36),  -- Link to task if used for a specific task
+    NOTES VARCHAR2(1000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (INVENTORY_ID) REFERENCES INVENTORY(ID) ON DELETE CASCADE,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID),
+    FOREIGN KEY (PERFORMED_BY) REFERENCES USERS(ID),
+    FOREIGN KEY (REFERENCE_TASK_ID) REFERENCES TASKS(ID)
+);
+
+CREATE INDEX IDX_INV_TRANS_INVENTORY ON INVENTORY_TRANSACTIONS(INVENTORY_ID);
+CREATE INDEX IDX_INV_TRANS_FARM ON INVENTORY_TRANSACTIONS(FARM_ID);
+CREATE INDEX IDX_INV_TRANS_DATE ON INVENTORY_TRANSACTIONS(TRANSACTION_DATE);
+CREATE INDEX IDX_INV_TRANS_TYPE ON INVENTORY_TRANSACTIONS(TRANSACTION_TYPE);
+
+COMMENT ON TABLE INVENTORY_TRANSACTIONS IS 'Tracks all inventory movements (restocking and usage)';
+COMMENT ON COLUMN INVENTORY_TRANSACTIONS.TRANSACTION_TYPE IS 'in=purchase/restock, out=usage on farm';
+
+-- ============================================
+-- 9. LAB_SAMPLES - Sample tracking for diagnostic lab
+-- ============================================
+CREATE TABLE LAB_SAMPLES (
+    ID VARCHAR2(36) PRIMARY KEY,
+    SAMPLE_CODE VARCHAR2(50) UNIQUE NOT NULL,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    SAMPLE_TYPE VARCHAR2(100) NOT NULL,  -- 'soil', 'plant_tissue', 'water', 'pest', 'disease'
+    COLLECTION_DATE DATE NOT NULL,
+    COLLECTED_BY VARCHAR2(36) NOT NULL,
+    SUBMITTED_DATE DATE,
+    LOCATION_DESCRIPTION VARCHAR2(500),  -- Where in the farm was this collected
+    TEST_REQUESTED VARCHAR2(500),  -- What tests are needed
+    PRIORITY VARCHAR2(50) DEFAULT 'normal',  -- 'urgent', 'high', 'normal', 'low'
+    STATUS VARCHAR2(50) DEFAULT 'collected',  -- 'collected', 'submitted', 'in_progress', 'completed', 'reported'
+    ASSIGNED_TECHNICIAN VARCHAR2(255),
+    EXPECTED_COMPLETION_DATE DATE,
+    ACTUAL_COMPLETION_DATE DATE,
+    NOTES VARCHAR2(2000),
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (COLLECTED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_LAB_SAMPLES_FARM_ID ON LAB_SAMPLES(FARM_ID);
+CREATE INDEX IDX_LAB_SAMPLES_CODE ON LAB_SAMPLES(SAMPLE_CODE);
+CREATE INDEX IDX_LAB_SAMPLES_STATUS ON LAB_SAMPLES(STATUS);
+CREATE INDEX IDX_LAB_SAMPLES_TYPE ON LAB_SAMPLES(SAMPLE_TYPE);
+
+COMMENT ON TABLE LAB_SAMPLES IS 'Tracks all lab samples from collection to report completion';
+COMMENT ON COLUMN LAB_SAMPLES.SAMPLE_TYPE IS 'Types: soil, plant_tissue, water, pest, disease';
+COMMENT ON COLUMN LAB_SAMPLES.STATUS IS 'Workflow: collected → submitted → in_progress → completed → reported';
+
+-- ============================================
+-- 10. LAB_REPORTS - Test results and recommendations
+-- ============================================
+CREATE TABLE LAB_REPORTS (
+    ID VARCHAR2(36) PRIMARY KEY,
+    SAMPLE_ID VARCHAR2(36) NOT NULL,
+    FARM_ID VARCHAR2(36) NOT NULL,
+    REPORT_DATE DATE NOT NULL,
+    TEST_RESULTS CLOB,  -- JSON or structured text with all test values
+    NPK_NITROGEN NUMBER(10, 2),
+    NPK_PHOSPHORUS NUMBER(10, 2),
+    NPK_POTASSIUM NUMBER(10, 2),
+    SOIL_PH NUMBER(4, 2),
+    ORGANIC_CARBON NUMBER(10, 2),
+    SOIL_TEXTURE VARCHAR2(100),
+    PATHOGEN_DETECTED VARCHAR2(500),
+    DISEASE_NAME VARCHAR2(255),
+    SEVERITY VARCHAR2(50),  -- 'low', 'moderate', 'high', 'critical'
+    RECOMMENDATIONS CLOB,  -- Detailed recommendations
+    FERTILIZER_PRESCRIPTION VARCHAR2(2000),
+    TREATMENT_PRESCRIPTION VARCHAR2(2000),
+    GENERATED_BY VARCHAR2(255),  -- Lab technician/expert
+    REVIEWED_BY VARCHAR2(36),  -- Expert who reviewed
+    REPORT_URL VARCHAR2(1000),  -- PDF report link
+    CREATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    UPDATED_AT TIMESTAMP DEFAULT SYSDATE NOT NULL,
+    FOREIGN KEY (SAMPLE_ID) REFERENCES LAB_SAMPLES(ID) ON DELETE CASCADE,
+    FOREIGN KEY (FARM_ID) REFERENCES FARMS(ID) ON DELETE CASCADE,
+    FOREIGN KEY (REVIEWED_BY) REFERENCES USERS(ID)
+);
+
+CREATE INDEX IDX_LAB_REPORTS_SAMPLE_ID ON LAB_REPORTS(SAMPLE_ID);
+CREATE INDEX IDX_LAB_REPORTS_FARM_ID ON LAB_REPORTS(FARM_ID);
+CREATE INDEX IDX_LAB_REPORTS_DATE ON LAB_REPORTS(REPORT_DATE);
+
+COMMENT ON TABLE LAB_REPORTS IS 'Stores lab test results, diagnoses, and prescriptions';
+COMMENT ON COLUMN LAB_REPORTS.TEST_RESULTS IS 'Complete test results in JSON or structured format';
+
+COMMIT;

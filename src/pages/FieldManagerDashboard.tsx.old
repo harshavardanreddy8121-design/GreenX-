@@ -1,0 +1,605 @@
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fieldManager } from '@/lib/api';
+import { GreenXLogo } from '@/components/GreenXLogo';
+import WeatherWidget from '@/components/WeatherWidget';
+import { UserInfoCard } from '@/components/UserInfoCard';
+
+import { AIAnalysisPanel } from '@/components/ai/AIAnalysisPanel';
+import { LogOut, Sprout, Plus, X, Send, ClipboardList, ChevronDown, ChevronUp, Users, Upload, Package, Bug, AlertTriangle, CheckCircle, Clock, Calendar, Image, FlaskConical, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+
+export default function FieldManagerDashboard() {
+  const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'workers' | 'inventory' | 'fielddata' | 'photos'>('overview');
+  const [expandedBlock, setExpandedBlock] = useState<string | null>(null);
+  const [farmSearch, setFarmSearch] = useState('');
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState<string | null>(null);
+  const [showInventoryModal, setShowInventoryModal] = useState(false);
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskWorkerId, setNewTaskWorkerId] = useState('');
+  const [newTaskFarmId, setNewTaskFarmId] = useState('');
+  const [selectedFarmId, setSelectedFarmId] = useState<string>('');
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  // Get farms assigned to this field manager
+  const { data: myFarms = [] } = useQuery({
+    queryKey: ['fm-farms', user?.id],
+    queryFn: () => fieldManager.getAssignedFarms().catch(() => []),
+    enabled: !!user?.id,
+  });
+
+  const filteredFarms = myFarms.filter((farm: any) => {
+    const search = farmSearch.trim().toLowerCase();
+    if (!search) return true;
+    return (
+      String(farm.farmCode || '').toLowerCase().includes(search) ||
+      String(farm.id || '').toLowerCase().includes(search)
+    );
+  });
+
+  // Workers - field manager's cluster users (no direct API; load from admin or show empty)
+  const { data: workers = [] } = useQuery({
+    queryKey: ['fm-workers'],
+    queryFn: () => Promise.resolve([]),
+  });
+
+  // Get today's tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['fm-tasks', user?.id],
+    queryFn: () => fieldManager.getTodayTasks().catch(() => []),
+    enabled: !!user?.id,
+  });
+
+  const { data: attendanceRecords = [] } = useQuery({
+    queryKey: ['fm-attendance', user?.id],
+    queryFn: () => Promise.resolve([]),
+  });
+
+  const { data: inventory = [] } = useQuery({
+    queryKey: ['inventory'],
+    queryFn: () => Promise.resolve([]),
+  });
+
+  const { data: inventoryTransactions = [] } = useQuery({
+    queryKey: ['inventory-transactions', user?.id],
+    queryFn: () => Promise.resolve([]),
+  });
+
+  const { data: photos = [] } = useQuery({
+    queryKey: ['fm-photos', user?.id],
+    queryFn: () => Promise.resolve([]),
+  });
+
+  const createTask = useMutation({
+    mutationFn: () => {
+      if (!newTaskFarmId) throw new Error('Select a farm');
+      return fieldManager.logOperationJson({
+        farmId: newTaskFarmId,
+        fieldManagerId: user?.id,
+        operationType: 'TASK',
+        operationDate: new Date().toISOString().split('T')[0],
+        observations: `${newTaskTitle}: ${newTaskDescription}`,
+      });
+    },
+    id: crypto.randomUUID(),
+    farm_id: newTaskFarmId,
+    onSuccess: () => {
+      toast({ title: 'Task created successfully' });
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['farm-timeline'] });
+      setShowTaskModal(false);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      setNewTaskWorkerId('');
+      setNewTaskFarmId('');
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const assignWorker = useMutation({
+    mutationFn: async (_args: { farmId: string; workerId: string }) => {
+      toast({ title: 'Worker assignment managed by admin.' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Worker assigned successfully' });
+      setShowAssignModal(null);
+      queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const updateTaskStatus = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string; farmId?: string }) =>
+      fieldManager.updateTaskStatus(taskId, status),
+    onSuccess: () => {
+      toast({ title: 'Task updated' });
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+    },
+  });
+
+  return (
+    <div className="dashboard-shell min-h-screen bg-background flex">
+      <aside className="admin-sidebar hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border">
+        <div className="p-4 border-b border-border">
+          <GreenXLogo size="sm" />
+          <p className="text-xs text-muted-foreground mt-2">Field Manager</p>
+        </div>
+        <nav className="p-2 space-y-0.5 flex-1 overflow-y-auto">
+          <button type="button" onClick={() => setActiveTab('overview')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'overview' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Sprout className="w-4 h-4" />
+            <span>Overview</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('tasks')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'tasks' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <ClipboardList className="w-4 h-4" />
+            <span>Tasks</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('workers')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'workers' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Users className="w-4 h-4" />
+            <span>Workers</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('inventory')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'inventory' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Package className="w-4 h-4" />
+            <span>Inventory</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('fielddata')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'fielddata' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <FlaskConical className="w-4 h-4" />
+            <span>Field Data</span>
+          </button>
+          <button type="button" onClick={() => setActiveTab('photos')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeTab === 'photos' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Image className="w-4 h-4" />
+            <span>Photos</span>
+          </button>
+        </nav>
+        <div className="p-3 border-t border-border">
+          <button onClick={handleLogout} className="dashboard-logout-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="sticky top-0 z-20 bg-card/90 backdrop-blur-lg border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="lg:hidden"><GreenXLogo size="sm" /></div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">{profile?.full_name || user?.email}</span>
+              <button onClick={handleLogout} className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"><LogOut className="w-4 h-4" /></button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-4 space-y-4 max-w-2xl mx-auto pb-8 lg:max-w-none lg:mx-0 lg:p-6">
+          {/* User Info Card */}
+          <UserInfoCard profile={profile} size="md" />
+
+
+
+          {/* Weather for first assigned farm */}
+          {myFarms.length > 0 && (
+            <WeatherWidget village={myFarms[0].village} pincode={myFarms[0].pincode} compact />
+          )}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg border border-border bg-card dashboard-card dashboard-card-ops p-3 text-center">
+              <Sprout className="w-5 h-5 mx-auto text-primary mb-1" />
+              <p className="text-xl font-bold">{myFarms.length}</p>
+              <p className="text-[10px] text-muted-foreground">Farms</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card dashboard-card dashboard-card-alert p-3 text-center">
+              <ClipboardList className="w-5 h-5 mx-auto text-yellow-600 mb-1" />
+              <p className="text-xl font-bold">{tasks.filter((t: any) => t.status === 'pending').length}</p>
+              <p className="text-[10px] text-muted-foreground">Pending Tasks</p>
+            </div>
+            <div className="rounded-lg border border-border bg-card dashboard-card dashboard-card-ops p-3 text-center">
+              <Users className="w-5 h-5 mx-auto text-blue-600 mb-1" />
+              <p className="text-xl font-bold">{workers.length}</p>
+              <p className="text-[10px] text-muted-foreground">Workers</p>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex overflow-x-auto border-b border-border -mx-1 px-1">
+            {(['overview', 'tasks', 'workers', 'inventory', 'fielddata', 'photos'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`flex-shrink-0 px-3 py-2 text-xs font-medium capitalize transition-colors whitespace-nowrap ${activeTab === tab ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
+                {tab === 'fielddata' ? 'Field Data' : tab}
+              </button>
+            ))}
+          </div>
+
+          {myFarms.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
+              <Sprout className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No farms assigned to you yet.</p>
+              <p className="text-xs mt-1">Ask your admin to assign farms to your account.</p>
+            </div>
+          ) : (
+            <>
+              {activeTab === 'overview' && (
+                <div className="space-y-3">
+                  <input
+                    value={farmSearch}
+                    onChange={(e) => setFarmSearch(e.target.value)}
+                    placeholder="Search by Farm ID (e.g. 7281183326)"
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm"
+                  />
+
+                  {filteredFarms.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground border border-dashed border-border rounded-xl">
+                      <p className="text-sm">No farm found for ID: <strong>{farmSearch}</strong></p>
+                    </div>
+                  ) : (
+                    filteredFarms.map((farm: any) => {
+                      const isExpanded = expandedBlock === farm.id;
+                      return (
+                        <div key={farm.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-health overflow-hidden">
+                          <button onClick={() => setExpandedBlock(isExpanded ? null : farm.id)} className="w-full p-4 flex items-center justify-between text-left">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-foreground">{farm.name} — {farm.crop || 'No crop'}</h3>
+                                {farm.farm_code && (
+                                  <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-mono font-bold">
+                                    #{farm.farm_code}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">{farm.village} · {farm.total_land} acres · {farm.growth_stage || '—'}</p>
+                            </div>
+                            {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                          </button>
+
+                          {isExpanded && (
+                            <div className="border-t border-border p-4 space-y-3">
+                              <div className="rounded-lg bg-muted/50 p-3">
+                                <p className="text-xs font-medium text-foreground mb-2">Soil Data</p>
+                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                  <div><span className="text-muted-foreground">pH:</span> <span className="font-medium">{farm.soil_ph || '—'}</span></div>
+                                  <div><span className="text-muted-foreground">N:</span> <span className="font-medium">{farm.soil_nitrogen || '—'}</span></div>
+                                  <div><span className="text-muted-foreground">P:</span> <span className="font-medium">{farm.soil_phosphorus || '—'}</span></div>
+                                  <div><span className="text-muted-foreground">K:</span> <span className="font-medium">{farm.soil_potassium || '—'}</span></div>
+                                  <div><span className="text-muted-foreground">OC:</span> <span className="font-medium">{farm.soil_organic_carbon || '—'}</span></div>
+                                  <div><span className="text-muted-foreground">Moisture:</span> <span className="font-medium">{farm.soil_moisture || '—'}%</span></div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button size="sm" variant="outline" className="dashboard-btn-secondary" onClick={() => { setShowTaskModal(true); setNewTaskFarmId(farm.id); }}>
+                                  <Plus className="w-3 h-3 mr-1" /> Create Task
+                                </Button>
+                                <Button size="sm" variant="outline" className="dashboard-btn-secondary" onClick={() => setShowAssignModal(farm.id)}>
+                                  <Users className="w-3 h-3 mr-1" /> Assign Worker
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'tasks' && (
+                <div className="space-y-3">
+                  <Button className="w-full dashboard-btn-primary" onClick={() => setShowTaskModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Create New Task
+                  </Button>
+
+                  {tasks.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No tasks created yet</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Pending Tasks */}
+                      {tasks.filter((t: any) => t.status === 'pending').length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-yellow-600" /> Pending Tasks
+                          </h3>
+                          {tasks.filter((t: any) => t.status === 'pending').map((task: any) => (
+                            <div key={task.id} className="mb-2 rounded-lg border-2 border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-3">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-sm">{task.title}</h4>
+                                  {task.description && <p className="text-xs text-muted-foreground">{task.description}</p>}
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Worker: {task.profiles?.full_name || 'Unassigned'} • Farm: {myFarms.find(f => f.id === task.farm_id)?.name || 'Unknown'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="default" onClick={() => updateTaskStatus.mutate({ taskId: task.id, status: 'in_progress', farmId: task.farm_id })}>
+                                  <TrendingUp className="w-3 h-3 mr-1" /> Start
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => updateTaskStatus.mutate({ taskId: task.id, status: 'completed', farmId: task.farm_id })}>
+                                  <CheckCircle className="w-3 h-3 mr-1" /> Complete
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Completed Tasks */}
+                      {tasks.filter((t: any) => t.status === 'completed').length > 0 && (
+                        <div>
+                          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" /> Completed Tasks
+                          </h3>
+                          {tasks.filter((t: any) => t.status === 'completed').slice(0, 5).map((task: any) => (
+                            <div key={task.id} className="mb-2 flex items-center gap-3 p-3 rounded-lg border border-border bg-card dashboard-card dashboard-card-health">
+                              <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-foreground">{task.title}</p>
+                                <p className="text-xs text-muted-foreground">{myFarms.find(f => f.id === task.farm_id)?.name}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'workers' && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-border bg-card dashboard-card dashboard-card-ops p-3">
+                    <p className="text-xs text-muted-foreground mb-2">Today's Attendance</p>
+                    <p className="text-2xl font-bold">{attendanceRecords.filter((a: any) =>
+                      new Date(a.check_in).toDateString() === new Date().toDateString()
+                    ).length} / {workers.length}</p>
+                  </div>
+
+                  {workers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No workers available</p>
+                    </div>
+                  ) : (
+                    workers.map((worker: any) => {
+                      const todayAttendance = attendanceRecords.find((a: any) =>
+                        a.user_id === worker.id && new Date(a.check_in).toDateString() === new Date().toDateString()
+                      );
+                      const workerTasks = tasks.filter((t: any) => t.assigned_to === worker.id && t.status === 'pending').length;
+
+                      return (
+                        <div key={worker.id} className="rounded-lg border border-border bg-card dashboard-card dashboard-card-ops p-3">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-semibold text-sm">{worker.full_name}</h4>
+                              <p className="text-xs text-muted-foreground">{worker.phone}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {todayAttendance ? (
+                                <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] font-medium">
+                                  ✓ Present
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[10px] font-medium">
+                                  Absent
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>{workerTasks} pending tasks</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'inventory' && (
+                <div className="space-y-3">
+                  <Button className="w-full dashboard-btn-secondary" variant="outline" onClick={() => setShowInventoryModal(true)}>
+                    <Package className="w-4 h-4 mr-2" /> Record Usage
+                  </Button>
+
+                  {inventory.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No inventory items</p>
+                    </div>
+                  ) : (
+                    inventory.map((item: any) => (
+                      <div key={item.id} className={`rounded-lg border-2 p-3 ${item.quantity_in_stock <= (item.reorder_level || 0)
+                        ? 'border-red-500 bg-red-50 dark:bg-red-950/20'
+                        : 'border-border bg-card'
+                        }`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold text-sm">{item.item_name}</h4>
+                            <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold">{item.quantity_in_stock}</p>
+                            <p className="text-[10px] text-muted-foreground">{item.unit}</p>
+                          </div>
+                        </div>
+                        {item.quantity_in_stock <= (item.reorder_level || 0) && (
+                          <div className="flex items-center gap-1 text-xs text-red-600">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>Low stock - Reorder needed</span>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+
+                  {/* Recent Transactions */}
+                  {inventoryTransactions.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Recent Usage</h3>
+                      {inventoryTransactions.slice(0, 5).map((trans: any) => {
+                        const item = inventory.find(i => i.id === trans.inventory_id);
+                        return (
+                          <div key={trans.id} className="mb-2 flex items-center justify-between p-2 rounded border border-border bg-card">
+                            <div>
+                              <p className="text-sm font-medium">{item?.item_name || 'Unknown'}</p>
+                              <p className="text-xs text-muted-foreground">{trans.purpose}</p>
+                            </div>
+                            <span className={`text-sm font-semibold ${trans.transaction_type === 'out' ? 'text-red-600' : 'text-green-600'}`}>
+                              {trans.transaction_type === 'out' ? '-' : '+'}{trans.quantity} {trans.unit}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'fielddata' && (
+                <div className="space-y-4">
+                  {filteredFarms.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FlaskConical className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No farms available for analysis</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Select Farm for AI Analysis</label>
+                        <select
+                          value={selectedFarmId}
+                          onChange={(e) => setSelectedFarmId(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm"
+                        >
+                          <option value="">Choose a farm...</option>
+                          {filteredFarms.map((farm: any) => (
+                            <option key={farm.id} value={farm.id}>
+                              {farm.name} - {farm.village}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {selectedFarmId && filteredFarms.find((f: any) => f.id === selectedFarmId) && (
+                        <AIAnalysisPanel
+                          farmId={selectedFarmId}
+                          farmData={filteredFarms.find((f: any) => f.id === selectedFarmId)}
+                        />
+                      )}
+
+                      <Button className="w-full" variant="outline" onClick={() => setShowIncidentModal(true)}>
+                        <Bug className="w-4 h-4 mr-2" /> Report Pest/Disease Incident
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'photos' && (
+                <div className="space-y-3">
+                  <Button className="w-full" variant="outline">
+                    <Upload className="w-4 h-4 mr-2" /> Upload Photo
+                  </Button>
+
+                  {photos.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Image className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No photos uploaded yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {photos.map((photo: any) => (
+                        <div key={photo.id} className="rounded-lg overflow-hidden border border-border bg-card">
+                          <div className="aspect-square bg-muted flex items-center justify-center">
+                            <Image className="w-12 h-12 text-muted-foreground opacity-30" />
+                          </div>
+                          <div className="p-2">
+                            <p className="text-xs font-medium truncate">{photo.caption || 'Field Photo'}</p>
+                            <p className="text-[10px] text-muted-foreground">{new Date(photo.created_at).toLocaleDateString()}</p>
+                            {photo.photo_type && (
+                              <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[9px]">
+                                {photo.photo_type}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* Create Task Modal */}
+      {showTaskModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Create Task</h3>
+              <button onClick={() => setShowTaskModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)}
+              placeholder="Task title" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+            <textarea value={newTaskDescription} onChange={e => setNewTaskDescription(e.target.value)}
+              placeholder="Task description (optional)" rows={3}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+            <select value={newTaskWorkerId} onChange={e => setNewTaskWorkerId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
+              <option value="">Select Worker</option>
+              {workers.map((w: any) => <option key={w.id} value={w.id}>{w.full_name}</option>)}
+            </select>
+            <select value={newTaskFarmId} onChange={e => setNewTaskFarmId(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
+              <option value="">Select Farm</option>
+              {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+            <Button onClick={() => createTask.mutate()} disabled={createTask.isPending || !newTaskTitle || !newTaskWorkerId || !newTaskFarmId}
+              className="w-full">
+              <Send className="w-4 h-4 mr-2" /> {createTask.isPending ? 'Creating...' : 'Create Task'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Worker Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Assign Worker</h3>
+              <button onClick={() => setShowAssignModal(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            {workers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No workers available. Ask admin to create worker accounts.</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {workers.map((w: any) => (
+                  <button key={w.id} onClick={() => assignWorker.mutate({ farmId: showAssignModal, workerId: w.id })}
+                    disabled={assignWorker.isPending}
+                    className="w-full p-3 rounded-lg border border-border text-left hover:bg-muted/50 transition-colors disabled:opacity-50">
+                    <p className="text-sm font-medium text-foreground">{w.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{w.phone}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

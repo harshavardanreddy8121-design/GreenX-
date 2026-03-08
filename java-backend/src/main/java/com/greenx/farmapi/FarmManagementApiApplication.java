@@ -1,49 +1,36 @@
 package com.greenx.farmapi;
 
+import com.greenx.farmapi.model.User;
+import com.greenx.farmapi.repository.UserRepository;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication
 public class FarmManagementApiApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(FarmManagementApiApplication.class, args);
     }
 
-    /**
-     * Password encoder bean for secure password handling
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * CORS configuration to allow requests from frontend
-     */
     @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                    .allowedOrigins(
-                        "http://localhost:5173",
-                        "http://localhost:3000",
-                        "http://localhost:8080",
-                        "http://localhost:8081"
-                    )
-                    .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                    .allowedHeaders("*")
-                    .allowCredentials(true)
-                    .maxAge(3600);
-            }
+    CommandLineRunner fixAdminPassword(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        return args -> {
+            userRepository.findByEmail("admin@farmapp.com").ifPresent(admin -> {
+                if (!passwordEncoder.matches("admin123", admin.getPasswordHash())) {
+                    admin.setPasswordHash(passwordEncoder.encode("admin123"));
+                    userRepository.save(admin);
+                    System.out.println(">>> Fixed admin@farmapp.com password hash");
+                }
+            });
         };
     }
 }

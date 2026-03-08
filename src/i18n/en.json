@@ -3,13 +3,18 @@
     "home": "Home",
     "about": "About",
     "features": "Features",
+    "problem": "Problem",
+    "solution": "Solution",
+    "platform": "Platform",
     "contact": "Contact",
     "login": "Login"
   },
   "hero": {
     "title": "GreenX",
     "subtitle": "WHERE LAND MEETS INTELLIGENCE.",
-    "cta": "Get Started"
+    "cta": "Get Started",
+    "land_register": "Register Your Land",
+    "explore_model": "Explore Our Model"
   },
   "about": {
     "title": "What is GreenX?",
@@ -39,11 +44,157 @@
     "phone": "Phone",
     "address": "Address",
     "email_val": "greenxagritech@gmail.com",
-    "phone_val": "+91 81217 10210",
-    "address_val": "Hyderabad, Telangana, India"
+    "phone_val": "8121710210",
+    "address_val": "Tadipatri, Andhra Pradesh, India"
   },
   "social": {
     "title": "Follow Us"
+  },
+  "landing": {
+    "problem": {
+      "heading": "The Structural Crisis in Modern Agriculture",
+      "items": {
+        "fragmented": {
+          "title": "Fragmented Farmland",
+          "text": "Small disconnected plots reduce scale and efficiency."
+        },
+        "labor": {
+          "title": "Labor Shortage",
+          "text": "Skilled farm labor is harder to find each season."
+        },
+        "management": {
+          "title": "Declining Management",
+          "text": "Farms lack daily supervision and planning discipline."
+        },
+        "unmanaged": {
+          "title": "Unmanaged Land",
+          "text": "Many owners cannot operate land full-time from cities."
+        }
+      }
+    },
+    "solution": {
+      "heading": "The GreenX Cluster Farming Model",
+      "tagline": "Connected farms. Scientific decisions. Professional operations. Transparent outcomes.",
+      "items": {
+        "aggregation": {
+          "title": "Land Aggregation",
+          "text": "Connected farm clusters managed as one operational unit."
+        },
+        "soil": {
+          "title": "Scientific Soil Diagnosis",
+          "text": "NPK, pH, moisture, and lab-backed crop planning."
+        },
+        "management": {
+          "title": "Expert Farm Management",
+          "text": "Field managers run labor, operations, and execution."
+        },
+        "monitoring": {
+          "title": "Digital Monitoring",
+          "text": "Live updates, dashboards, photos, and milestone tracking."
+        }
+      }
+    },
+    "process": {
+      "heading": "How It Works",
+      "step": "Step {{count}}",
+      "items": {
+        "registration": "Land Registration",
+        "soil": "Soil Testing and Diagnosis",
+        "crop": "Crop Planning by Experts",
+        "operations": "Farm Operations by Field Managers",
+        "monitoring": "Real-Time Monitoring",
+        "harvest": "Harvest and Market Distribution"
+      }
+    },
+    "transparency": {
+      "kicker": "Core Intelligence Layer",
+      "heading": "Operational Transparency",
+      "tagline": "The GreenX intelligence engine turns daily field noise into decision-grade insights that landowners can trust.",
+      "points": {
+        "live": "Live farm updates",
+        "crop": "Crop growth tracking",
+        "input": "Input usage transparency",
+        "profit": "Profit calculation dashboard"
+      },
+      "cards": {
+        "live": {
+          "label": "Live Updates",
+          "value": "23 Events",
+          "headline": "Live Farm Feed",
+          "subline": "Every field event becomes an instant signal."
+        },
+        "crop": {
+          "label": "Crop Status",
+          "value": "Healthy",
+          "headline": "Growth Intelligence",
+          "subline": "Crop health patterns predicted before stress appears."
+        },
+        "input": {
+          "label": "Input Audit",
+          "value": "92% Logged",
+          "headline": "Input Transparency",
+          "subline": "Spend, usage, and waste mapped with precision."
+        },
+        "profit": {
+          "label": "Profit View",
+          "value": "Real-time",
+          "headline": "Profit Forecast",
+          "subline": "Revenue confidence in motion, not after harvest."
+        }
+      }
+    },
+    "vision": {
+      "heading": "Vision",
+      "description": "GreenX aims to become the operating system for professionally managed agriculture.",
+      "subline": "Technology + agronomy + operations in one platform."
+    },
+    "contact": {
+      "heading": "Contact GreenX",
+      "cards": {
+        "email": {
+          "title": "Email",
+          "value": "greenxagritech@gmail.com"
+        },
+        "phone": {
+          "title": "Phone",
+          "value": "8121710210"
+        },
+        "address": {
+          "title": "Address",
+          "value": "Tadipatri, Andhra Pradesh, India"
+        }
+      }
+    },
+    "social": {
+      "heading": "Follow GreenX"
+    },
+    "platform": {
+      "features": {
+        "landowner": {
+          "title": "Landowner Dashboard",
+          "text": "Profit, costs, crop plans, and farm timelines."
+        },
+        "manager": {
+          "title": "Field Manager Operations",
+          "text": "Task assignment, attendance, and daily execution."
+        },
+        "soil": {
+          "title": "Soil Analysis Lab",
+          "text": "Structured diagnostics and recommendation workflows."
+        },
+        "monitoring": {
+          "title": "Farm Monitoring System",
+          "text": "Drone observations and field-level status visibility."
+        },
+        "inventory": {
+          "title": "Inventory and Labor Management",
+          "text": "Inputs, usage, worker coordination, and alerts."
+        }
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 GreenX. Where land meets intelligence."
   },
   "login_page": {
     "title": "Login to GreenX",
@@ -71,7 +222,9 @@
   "language": {
     "en": "English",
     "hi": "हिन्दी",
-    "te": "తెలుగు"
+    "te": "తెలుగు",
+    "kn": "ಕನ್ನಡ",
+    "ta": "தமிழ்"
   },
   "dashboard": {
     "title": "Dashboard",

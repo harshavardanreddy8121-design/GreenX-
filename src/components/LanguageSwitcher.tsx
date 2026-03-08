@@ -6,6 +6,8 @@ const langs = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'हिन्दी' },
   { code: 'te', label: 'తెలుగు' },
+  { code: 'kn', label: 'ಕನ್ನಡ' },
+  { code: 'ta', label: 'தமிழ்' },
 ];
 
 export function LanguageSwitcher({ compact }: { compact?: boolean }) {

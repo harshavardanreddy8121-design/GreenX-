@@ -25,19 +25,19 @@ export default function AdminLand() {
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{farms.reduce((s: number, f: any) => s + (f.total_land || 0), 0)}</p>
               <p className="text-xs text-muted-foreground">Total Acres</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{farms.length}</p>
               <p className="text-xs text-muted-foreground">Total Farms</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{new Set(farms.map((f: any) => f.village).filter(Boolean)).size}</p>
               <p className="text-xs text-muted-foreground">Villages</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <div className="rounded-xl border border-border bg-card dashboard-card dashboard-card-health p-4 text-center">
               <p className="text-2xl font-bold text-foreground">{new Set(farms.map((f: any) => f.crop).filter(Boolean)).size}</p>
               <p className="text-xs text-muted-foreground">Crop Types</p>
             </div>
@@ -45,7 +45,7 @@ export default function AdminLand() {
 
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {farms.map((farm: any) => (
-              <div key={farm.id} className="rounded-xl border border-border bg-card p-4 text-center space-y-1">
+              <div key={farm.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 text-center space-y-1">
                 <p className="text-sm font-bold text-foreground">{farm.name}</p>
                 <p className="text-xs text-muted-foreground">{farm.village}</p>
                 <p className="text-sm font-semibold text-primary">{farm.total_land} Acres</p>

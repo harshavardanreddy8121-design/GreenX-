@@ -2,9 +2,11 @@ export type AppRole = 'admin' | 'landowner' | 'fieldmanager' | 'expert' | 'worke
 
 export interface Profile {
   id: string;
+  uid: string;
   full_name: string;
   phone: string;
   avatar_url: string;
+  photo_url: string;
   created_at: string;
 }
 
