@@ -1,0 +1,13 @@
+[build]
+# Tell Railway the Dockerfile is inside java-backend/
+dockerfilePath = "java-backend/Dockerfile"
+# Build context is java-backend/ so COPY pom.xml / COPY src/ resolve correctly
+buildContext = "java-backend"
+
+[deploy]
+# Railway will set PORT automatically; Spring Boot reads ${PORT:-8082}
+startCommand = ""
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
