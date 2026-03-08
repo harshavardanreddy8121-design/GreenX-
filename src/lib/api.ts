@@ -73,6 +73,10 @@ export interface LoginResponse {
     user: AuthUser;
 }
 
+export const health = {
+    check: () => request<{ status: string; timestamp: string; service: string; version: string }>('/health'),
+};
+
 export const auth = {
     login: (email: string, password: string) =>
         request<LoginResponse>('/auth/login', 'POST', { email, password }),

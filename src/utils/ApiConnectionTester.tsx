@@ -16,7 +16,7 @@ export function useApiConnectionTest() {
         setResult(null);
 
         try {
-            const apiUrl = import.meta.env.VITE_JAVA_API_URL || 'http://localhost:8080/api';
+            const apiUrl = (import.meta.env.VITE_API_URL || '') + '/api';
 
             // Test 1: Health check
             const healthResponse = await fetch(`${apiUrl}/health`, {
@@ -49,7 +49,7 @@ export function useApiConnectionTest() {
                 success: false,
                 message: error instanceof Error ? error.message : 'Connection failed',
                 details: {
-                    apiUrl: import.meta.env.VITE_JAVA_API_URL || 'http://localhost:8080/api',
+                    apiUrl: (import.meta.env.VITE_API_URL || '') + '/api',
                 },
             });
         } finally {
@@ -85,8 +85,8 @@ export function ApiConnectionTester() {
             {result && (
                 <div
                     className={`p-4 rounded-lg border flex gap-3 ${result.success
-                            ? 'bg-green-50 border-green-200 text-green-900'
-                            : 'bg-red-50 border-red-200 text-red-900'
+                        ? 'bg-green-50 border-green-200 text-green-900'
+                        : 'bg-red-50 border-red-200 text-red-900'
                         }`}
                 >
                     {result.success ? (
