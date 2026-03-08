@@ -14,7 +14,7 @@ import java.util.List;
  * recommendations
  */
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/ai")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AiAnalysisController {
