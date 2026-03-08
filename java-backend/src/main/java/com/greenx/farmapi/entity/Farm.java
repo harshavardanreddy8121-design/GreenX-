@@ -20,7 +20,7 @@ public class Farm {
     @Column(name = "ID", length = 36)
     private String id;
 
-    @Column(name = "FARM_CODE", unique = true, length = 30, columnDefinition = "VARCHAR2(30)")
+    @Column(name = "FARM_CODE", unique = true, length = 30)
     private String farmCode;
 
     @Column(name = "OWNER_ID", length = 36)
