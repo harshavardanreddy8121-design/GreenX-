@@ -1,0 +1,16 @@
+# Railway deployment configuration for the GreenX React/Vite frontend.
+# Docs: https://docs.railway.com/reference/config-as-code
+
+[build]
+# Nixpacks detects Node.js automatically; see nixpacks.toml for build settings.
+builder = "NIXPACKS"
+
+[deploy]
+# After `npm run build`, serve the compiled dist/ folder as a static SPA.
+# `serve` is a devDependency. -s enables single-page-app mode (all 404s → index.html)
+# so that React Router client-side routes work correctly.
+# Railway sets $PORT automatically; --host 0.0.0.0 ensures Railway can reach the process.
+startCommand = "npx serve -s dist -l $PORT"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

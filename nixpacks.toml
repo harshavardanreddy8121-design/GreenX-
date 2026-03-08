@@ -1,0 +1,11 @@
+# Nixpacks build configuration for the GreenX React/Vite frontend.
+# Docs: https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["nodejs_18"]
+
+[phases.build]
+cmds = ["npm ci", "npm run build"]
+
+[start]
+cmd = "npx serve -s dist -l $PORT"
