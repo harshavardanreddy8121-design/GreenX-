@@ -4,7 +4,7 @@
  * Token is read from localStorage (`greenx_token`) and sent automatically.
  */
 
-const BASE = '/api';
+const BASE = (import.meta.env.VITE_API_URL || '') + '/api';
 const TOKEN_KEY = 'greenx_token';
 
 export function getToken(): string | null {
