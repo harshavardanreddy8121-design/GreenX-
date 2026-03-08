@@ -1,6 +1,7 @@
 package com.greenx.farmapi.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -26,6 +28,12 @@ import java.util.List;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
+    // production
+    // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
+    @Value("${ALLOWED_ORIGINS:*}")
+    private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
     private final UserDetailsServiceImpl userDetailsService;
@@ -71,7 +79,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        // If ALLOWED_ORIGINS=* use pattern wildcard (supports credentials); otherwise
+        // use explicit list
+        if ("*".equals(allowedOrigins)) {
+            config.setAllowedOriginPatterns(List.of("*"));
+        } else {
+            config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

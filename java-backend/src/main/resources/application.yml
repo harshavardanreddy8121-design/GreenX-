@@ -58,15 +58,17 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Server Configuration
+# PORT env var is injected by Railway/Render automatically
 server:
-  port: 8082
+  port: ${PORT:8082}
   servlet:
     context-path: /api
 
 # JWT Configuration
+# Set JWT_SECRET env var in Railway/Render to a strong random string
 jwt:
-  secret: your-secret-key-change-this-in-production-at-least-32-characters-long!
-  expiration: 86400000 # 24 hours in milliseconds
+  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-at-least-32-characters-long!}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours default
 
 # File upload directory
 app:
