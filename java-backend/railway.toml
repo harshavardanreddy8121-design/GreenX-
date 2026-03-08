@@ -1,0 +1,15 @@
+# Railway deployment configuration for the GreenX Java/Spring Boot backend.
+# Docs: https://docs.railway.com/reference/config-as-code
+
+[build]
+# Build the Docker image defined in java-backend/Dockerfile
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Railway injects the PORT environment variable at runtime.
+# The Dockerfile ENTRYPOINT already reads $PORT via application.yml: server.port=${PORT:8082}
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300          # Spring Boot + DB startup can take up to ~90 s
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
