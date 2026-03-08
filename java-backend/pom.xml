@@ -15,7 +15,7 @@
     <artifactId>farm-management-api</artifactId>
     <version>1.0.0</version>
     <name>Farm Management API</name>
-    <description>Java Backend with Oracle Database for Farm Management System</description>
+    <description>Java Backend with PostgreSQL Database for Farm Management System</description>
 
     <properties>
         <java.version>21</java.version>
@@ -48,18 +48,10 @@
         </dependency>
 
 
-        <!-- H2 Database (for development) -->
+<!-- PostgreSQL Driver -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- Oracle Database Driver (for production) -->
-        <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <version>23.2.0.0</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
