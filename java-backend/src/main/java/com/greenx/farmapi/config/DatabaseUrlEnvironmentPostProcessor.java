@@ -22,7 +22,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment,
-                                       SpringApplication application) {
+            SpringApplication application) {
 
         // If SPRING_DATASOURCE_URL is already set (e.g. manual Railway var or
         // AWS RDS), leave everything alone.
@@ -45,8 +45,8 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             URI uri = new URI(normalised);
 
             String host = uri.getHost();
-            int    port = uri.getPort() == -1 ? 5432 : uri.getPort();
-            String db   = uri.getPath(); // "/railway" — keep leading slash
+            int port = uri.getPort() == -1 ? 5432 : uri.getPort();
+            String db = uri.getPath(); // "/railway" — keep leading slash
 
             String jdbcUrl = "jdbc:postgresql://" + host + ":" + port + db;
 

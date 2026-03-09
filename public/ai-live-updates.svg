@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-label="Live farm updates">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="100%" stop-color="#166534"/>
+    </linearGradient>
+    <radialGradient id="pulse" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#86efac" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#86efac" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="700" fill="url(#bg)"/>
+  <rect width="1200" height="700" fill="url(#pulse)"/>
+  
+  <!-- Farm field terrain -->
+  <path d="M0 480 Q300 460 600 470 T1200 480 L1200 700 L0 700 Z" fill="#065f46" opacity="0.3"/>
+  <path d="M0 520 Q300 510 600 515 T1200 520 L1200 700 L0 700 Z" fill="#047857" opacity="0.25"/>
+  
+  <!-- Growing plants/crops -->
+  <g fill="#22c55e" opacity="0.4">
+    <path d="M200 540 Q195 520 200 500 Q205 520 200 540 M200 500 Q185 510 170 505 M200 500 Q215 510 230 505"/>
+    <path d="M450 560 Q445 540 450 520 Q455 540 450 560 M450 520 Q435 530 420 525 M450 520 Q465 530 480 525"/>
+    <path d="M750 550 Q745 530 750 510 Q755 530 750 550 M750 510 Q735 520 720 515 M750 510 Q765 520 780 515"/>
+    <path d="M1000 530 Q995 510 1000 490 Q1005 510 1000 530 M1000 490 Q985 500 970 495 M1000 490 Q1015 500 1030 495"/>
+  </g>
+  
+  <!-- Live update stream -->
+  <g stroke="#22c55e" stroke-opacity="0.65" fill="none">
+    <path d="M100 420 L280 330 L470 380 L650 260 L830 310 L1020 200" stroke-width="5"/>
+    <circle cx="280" cy="330" r="10" fill="#bbf7d0"/>
+    <circle cx="470" cy="380" r="10" fill="#bbf7d0"/>
+    <circle cx="650" cy="260" r="10" fill="#bbf7d0"/>
+    <circle cx="830" cy="310" r="10" fill="#bbf7d0"/>
+    <circle cx="1020" cy="200" r="10" fill="#bbf7d0"/>
+  </g>
+  
+  <g fill="#dcfce7" font-family="Arial, sans-serif" font-weight="700">
+    <text x="80" y="95" font-size="44">LIVE FARM UPDATES</text>
+    <text x="80" y="142" font-size="24" fill="#86efac">Every field action captured in real time</text>
+  </g>
+  <g stroke="#86efac" stroke-opacity="0.45">
+    <line x1="80" y1="180" x2="1120" y2="180"/>
+  </g>
+</svg>

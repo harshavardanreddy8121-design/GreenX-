@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fd1ff"/>
+      <stop offset="100%" stop-color="#4fa9dd"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bg)"/>
+  <rect y="320" width="1200" height="480" fill="#4b8e53"/>
+
+  <g fill="#f8f8f8" stroke="#3a4a59" stroke-width="6">
+    <rect x="180" y="140" width="460" height="330" rx="20"/>
+    <rect x="220" y="205" width="380" height="18" rx="8" fill="#dfe8ee" stroke="none"/>
+    <rect x="220" y="250" width="330" height="18" rx="8" fill="#dfe8ee" stroke="none"/>
+    <rect x="220" y="295" width="275" height="18" rx="8" fill="#dfe8ee" stroke="none"/>
+  </g>
+
+  <g stroke="#e84b4b" stroke-width="18" stroke-linecap="round">
+    <path d="M250 390L330 330L420 360L520 280"/>
+  </g>
+
+  <g fill="#2f6e37" opacity="0.75">
+    <rect x="730" y="360" width="380" height="26" rx="10"/>
+    <rect x="730" y="420" width="280" height="26" rx="10"/>
+    <rect x="730" y="480" width="320" height="26" rx="10"/>
+    <rect x="730" y="540" width="240" height="26" rx="10"/>
+  </g>
+</svg>
