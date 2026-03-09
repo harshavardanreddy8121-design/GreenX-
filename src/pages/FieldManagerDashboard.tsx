@@ -177,6 +177,10 @@ export default function FieldManagerDashboard() {
           <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-orange-dim)' }}>🚜</div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">FIELD MANAGER · OPS</div>
+          <div className="gx-theme-switch">
+            <span>Theme</span>
+            <ThemeToggle className="gx-theme-toggle" />
+          </div>
         </div>
 
         <div className="gx-nav-group-label">My Work</div>

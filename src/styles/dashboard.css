@@ -97,6 +97,26 @@
     font-family: 'JetBrains Mono', monospace;
 }
 
+.gx-theme-switch {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--gx-text2);
+}
+
+.gx-theme-toggle {
+    background: var(--gx-surface2);
+    border-color: var(--gx-border2);
+    color: var(--gx-text);
+}
+
+.gx-theme-toggle:hover {
+    background: var(--gx-border2);
+}
+
 .gx-nav-group-label {
     font-size: 10px;
     font-weight: 700;

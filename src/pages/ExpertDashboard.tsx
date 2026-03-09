@@ -181,6 +181,10 @@ export default function ExpertDashboard() {
           <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-blue-dim)' }}>🔬</div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">EXPERT · SOIL & AGRONOMY</div>
+          <div className="gx-theme-switch">
+            <span>Theme</span>
+            <ThemeToggle className="gx-theme-toggle" />
+          </div>
         </div>
 
         <div className="gx-nav-group-label">Lab Work</div>

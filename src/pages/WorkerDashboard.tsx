@@ -99,6 +99,10 @@ export default function WorkerDashboard() {
           <div className="gx-sidebar-avatar" style={{ background: 'rgba(34,197,94,.15)' }}>👷</div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">WORKER · FIELD</div>
+          <div className="gx-theme-switch">
+            <span>Theme</span>
+            <ThemeToggle className="gx-theme-toggle" />
+          </div>
         </div>
 
         <div className="gx-nav-group-label">Daily</div>

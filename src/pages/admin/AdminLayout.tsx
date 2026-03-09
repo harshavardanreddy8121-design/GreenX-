@@ -37,6 +37,10 @@ export default function AdminLayout() {
           <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-green-dim)' }}>🏢</div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">CLUSTER ADMIN</div>
+          <div className="gx-theme-switch">
+            <span>Theme</span>
+            <ThemeToggle className="gx-theme-toggle" />
+          </div>
         </div>
 
         <div className="gx-nav-group-label">Management</div>

@@ -73,6 +73,10 @@ export default function LandownerDashboard() {
           <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-gold-dim)' }}>🏡</div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">LAND OWNER</div>
+          <div className="gx-theme-switch">
+            <span>Theme</span>
+            <ThemeToggle className="gx-theme-toggle" />
+          </div>
         </div>
 
         <div className="gx-nav-group-label">My Farm</div>
