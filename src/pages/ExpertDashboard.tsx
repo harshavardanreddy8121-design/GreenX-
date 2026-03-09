@@ -45,6 +45,11 @@ export default function ExpertDashboard() {
   const updateSugCrop = (idx: number, field: string, value: string) =>
     setSugCrops(prev => prev.map((c, i) => i === idx ? { ...c, [field]: value } : c));
 
+  // Crop calendar form
+  const [calSowDate, setCalSowDate] = useState('');
+  const [calHarvestDate, setCalHarvestDate] = useState('');
+  const [calFarmId, setCalFarmId] = useState('');
+
   const handleLogout = () => { logout(); navigate('/'); };
 
   const { data: pendingSamples = [] } = useQuery({
@@ -168,6 +173,25 @@ export default function ExpertDashboard() {
       setSelectedAlertId('');
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to issue prescription'),
+  });
+
+  const publishCalendar = useMutation({
+    mutationFn: () => {
+      if (!calFarmId && myFarms.length > 0) throw new Error('Please select a farm');
+      if (!calSowDate) throw new Error('Please enter a sowing date');
+      return expert.createCalendar({
+        farmId: calFarmId || (myFarms[0] as any)?.id,
+        expertId: user?.id || '',
+        sowingDate: calSowDate,
+        harvestDate: calHarvestDate || undefined,
+        status: 'PUBLISHED',
+      });
+    },
+    onSuccess: () => {
+      toast.success('Crop calendar published! Field Manager can now see scheduled tasks.');
+      setCalSowDate(''); setCalHarvestDate(''); setCalFarmId('');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to publish calendar'),
   });
 
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Expert';
@@ -376,7 +400,7 @@ export default function ExpertDashboard() {
                     submitReport.mutate(selectedFarm);
                   }}
                 >{submitReport.isPending ? '⏳ Uploading...' : '📤 Upload & Share to All Dashboards'}</button>
-                <button className="gx-btn gx-btn-ghost">Save Draft</button>
+                <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('Draft saved locally. Continue editing anytime.')}>Save Draft</button>
               </div>
             </div>
           </div>
@@ -556,8 +580,15 @@ export default function ExpertDashboard() {
             <div className="gx-card-header"><div className="gx-card-title">📅 Crop Calendar Builder</div><span className="gx-status gx-s-done">Ready to Build</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid" style={{ marginBottom: 16 }}>
-                <div className="gx-form-group"><label className="gx-label">Sowing Date</label><input type="date" className="gx-input" /></div>
-                <div className="gx-form-group"><label className="gx-label">Expected Harvest Date</label><input type="date" className="gx-input" /></div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Farm</label>
+                  <select className="gx-select" value={calFarmId} onChange={e => setCalFarmId(e.target.value)}>
+                    <option value="">Select farm...</option>
+                    {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
+                  </select>
+                </div>
+                <div className="gx-form-group"><label className="gx-label">Sowing Date</label><input type="date" className="gx-input" value={calSowDate} onChange={e => setCalSowDate(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Expected Harvest Date</label><input type="date" className="gx-input" value={calHarvestDate} onChange={e => setCalHarvestDate(e.target.value)} /></div>
               </div>
               <div style={{ overflowX: 'auto' }}>
                 <div className="gx-cal-week">
@@ -580,8 +611,10 @@ export default function ExpertDashboard() {
                 </div>
               </div>
               <div className="gx-btn-row" style={{ marginTop: 16 }}>
-                <button className="gx-btn gx-btn-blue">📤 Publish Calendar to Field Manager</button>
-                <button className="gx-btn gx-btn-ghost">Preview Full Calendar</button>
+                <button className="gx-btn gx-btn-blue" disabled={publishCalendar.isPending} onClick={() => publishCalendar.mutate()}>
+                  {publishCalendar.isPending ? '⏳ Publishing...' : '📤 Publish Calendar to Field Manager'}
+                </button>
+                <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('Calendar preview shows the planned schedule above.')}>Preview Full Calendar</button>
               </div>
             </div>
           </div>

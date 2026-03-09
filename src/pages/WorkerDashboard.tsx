@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
+import { files } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
@@ -18,6 +19,13 @@ export default function WorkerDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('attendance');
   const [photoCaption, setPhotoCaption] = useState('');
   const [photoType, setPhotoType] = useState('crop_progress');
+  const [workerPhotoFarmId, setWorkerPhotoFarmId] = useState('');
+  const [workerPhotoFiles, setWorkerPhotoFiles] = useState<File[]>([]);
+  // Material request
+  const [reqFarmId, setReqFarmId] = useState('');
+  const [reqMaterial, setReqMaterial] = useState('Seeds');
+  const [reqQuantity, setReqQuantity] = useState('');
+  const [reqNotes, setReqNotes] = useState('');
 
   const handleLogout = () => { logout(); navigate('/'); };
   const today = new Date().toISOString().split('T')[0];
@@ -84,6 +92,46 @@ export default function WorkerDashboard() {
       toast.success('Task updated!');
       queryClient.invalidateQueries({ queryKey: ['worker-tasks'] });
     },
+  });
+
+  const uploadWorkerPhotos = useMutation({
+    mutationFn: async () => {
+      if (!workerPhotoFarmId) throw new Error('Please select a farm');
+      if (!workerPhotoFiles.length) throw new Error('Please select at least one photo');
+      const oversized = workerPhotoFiles.find(f => f.size > 10 * 1024 * 1024);
+      if (oversized) throw new Error(`File too large: ${oversized.name}. Max 10MB.`);
+      for (const file of workerPhotoFiles) {
+        await files.upload(file, photoType, workerPhotoFarmId);
+      }
+    },
+    onSuccess: () => {
+      toast.success(`Uploaded ${workerPhotoFiles.length} photo(s) successfully`);
+      setWorkerPhotoFiles([]); setPhotoCaption('');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to upload photos'),
+  });
+
+  const submitMaterialRequest = useMutation({
+    mutationFn: async () => {
+      if (!reqFarmId) throw new Error('Please select a farm');
+      if (!reqQuantity) throw new Error('Please enter quantity');
+      const r = await javaApi.insert('equipment_requests', {
+        id: crypto.randomUUID(),
+        user_id: user?.id,
+        farm_id: reqFarmId,
+        material_type: reqMaterial,
+        quantity: reqQuantity,
+        notes: reqNotes || undefined,
+        status: 'PENDING',
+        created_at: new Date().toISOString(),
+      });
+      if (!r.success) throw new Error(r.error || 'Failed to submit request');
+    },
+    onSuccess: () => {
+      toast.success('Material request submitted to Field Manager!');
+      setReqQuantity(''); setReqNotes('');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to submit request'),
   });
 
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Worker';
@@ -263,7 +311,7 @@ export default function WorkerDashboard() {
               <div className="gx-form-grid">
                 <div className="gx-form-group">
                   <label className="gx-label">Farm</label>
-                  <select className="gx-select">
+                  <select className="gx-select" value={workerPhotoFarmId} onChange={e => setWorkerPhotoFarmId(e.target.value)}>
                     <option value="">Select Farm...</option>
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
@@ -282,13 +330,30 @@ export default function WorkerDashboard() {
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
                 <div className="gx-upload-label">📷 Select or Capture Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.files || []).slice(0, 5);
+                    setWorkerPhotoFiles(selected);
+                  }}
+                  style={{ marginTop: 10 }}
+                />
+                {workerPhotoFiles.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gx-text2)' }}>
+                    Selected: {workerPhotoFiles.map(f => f.name).join(', ')}
+                  </div>
+                )}
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Caption / Notes</label>
                 <textarea className="gx-textarea" value={photoCaption} onChange={e => setPhotoCaption(e.target.value)} placeholder="Describe what the photo shows..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-green">📤 Upload Photos</button>
+                <button className="gx-btn gx-btn-green" disabled={uploadWorkerPhotos.isPending} onClick={() => uploadWorkerPhotos.mutate()}>
+                  {uploadWorkerPhotos.isPending ? '⏳ Uploading...' : '📤 Upload Photos'}
+                </button>
               </div>
             </div>
           </div>
@@ -303,25 +368,27 @@ export default function WorkerDashboard() {
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
                   <label className="gx-label">Farm</label>
-                  <select className="gx-select">
+                  <select className="gx-select" value={reqFarmId} onChange={e => setReqFarmId(e.target.value)}>
                     <option value="">Select Farm...</option>
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
                 </div>
                 <div className="gx-form-group">
                   <label className="gx-label">Material Type</label>
-                  <select className="gx-select">
+                  <select className="gx-select" value={reqMaterial} onChange={e => setReqMaterial(e.target.value)}>
                     <option>Seeds</option><option>Fertilizer</option><option>Pesticide</option><option>Tools</option><option>Fuel</option><option>Other</option>
                   </select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Quantity</label><input type="text" className="gx-input" placeholder="e.g. 50 kg, 2 litres" /></div>
+                <div className="gx-form-group"><label className="gx-label">Quantity</label><input type="text" className="gx-input" value={reqQuantity} onChange={e => setReqQuantity(e.target.value)} placeholder="e.g. 50 kg, 2 litres" /></div>
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Reason / Notes</label>
-                <textarea className="gx-textarea" placeholder="Explain why the material is needed, urgency level..." />
+                <textarea className="gx-textarea" value={reqNotes} onChange={e => setReqNotes(e.target.value)} placeholder="Explain why the material is needed, urgency level..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-green">📤 Submit Request</button>
+                <button className="gx-btn gx-btn-green" disabled={submitMaterialRequest.isPending} onClick={() => submitMaterialRequest.mutate()}>
+                  {submitMaterialRequest.isPending ? '⏳ Submitting...' : '📤 Submit Request'}
+                </button>
               </div>
             </div>
           </div>

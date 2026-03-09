@@ -38,6 +38,20 @@ export default function FieldManagerDashboard() {
   const [photoType, setPhotoType] = useState('Crop Progress');
   const [photoNotes, setPhotoNotes] = useState('');
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  // Operation photos
+  const [opPhotos, setOpPhotos] = useState<File[]>([]);
+  // Pest report form
+  const [pestName, setPestName] = useState('');
+  const [pestSeverity, setPestSeverity] = useState('Low');
+  const [pestArea, setPestArea] = useState('');
+  const [pestCropStage, setPestCropStage] = useState('');
+  const [pestNotes, setPestNotes] = useState('');
+  const [pestPhotos, setPestPhotos] = useState<File[]>([]);
+  // Assign task form
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskPriority, setTaskPriority] = useState('Normal');
+  const [taskWorker, setTaskWorker] = useState('');
+  const [taskDesc, setTaskDesc] = useState('');
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -73,22 +87,31 @@ export default function FieldManagerDashboard() {
   });
 
   const logOperation = useMutation({
-    mutationFn: () => fieldManager.logOperationJson({
-      farmId: opFarmId,
-      fieldManagerId: user?.id || '',
-      operationType: opType,
-      operationDate: new Date().toISOString(),
-      areaCoveredAcres: parseFloat(opArea) || undefined,
-      workersDeployed: parseInt(opLabour) || undefined,
-      productUsed: opChemical || undefined,
-      quantityUsed: opDose || undefined,
-      costIncurred: parseFloat(opCost) || undefined,
-      observations: opNotes,
-    }),
+    mutationFn: (overrideType: string | undefined) => {
+      const payload = {
+        farmId: opFarmId,
+        fieldManagerId: user?.id || '',
+        operationType: overrideType || opType,
+        operationDate: new Date().toISOString(),
+        areaCoveredAcres: parseFloat(opArea) || undefined,
+        workersDeployed: parseInt(opLabour) || undefined,
+        productUsed: opChemical || undefined,
+        quantityUsed: opDose || undefined,
+        costIncurred: parseFloat(opCost) || undefined,
+        observations: opNotes,
+      };
+      if (opPhotos.length > 0) {
+        const fd = new FormData();
+        fd.append('data', JSON.stringify(payload));
+        opPhotos.forEach(f => fd.append('photos', f));
+        return fieldManager.logOperation(fd);
+      }
+      return fieldManager.logOperationJson(payload);
+    },
     onSuccess: () => {
       toast.success('Operation logged! Visible to Land Owner & Cluster Admin.');
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
-      setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost('');
+      setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost(''); setOpPhotos([]);
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to log operation'),
   });
@@ -120,6 +143,31 @@ export default function FieldManagerDashboard() {
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to upload photos'),
+  });
+
+  const reportPest = useMutation({
+    mutationFn: () => {
+      if (!opFarmId) throw new Error('Please select a farm');
+      if (!pestName) throw new Error('Please enter the pest/disease name');
+      const fd = new FormData();
+      fd.append('data', JSON.stringify({
+        farmId: opFarmId,
+        reportedBy: user?.id || '',
+        pestName,
+        severity: pestSeverity,
+        affectedAreaPct: parseFloat(pestArea) || undefined,
+        fieldLocation: pestCropStage || undefined,
+        description: pestNotes || undefined,
+      }));
+      pestPhotos.forEach(f => fd.append('photos', f));
+      return fieldManager.reportPest(fd);
+    },
+    onSuccess: () => {
+      toast.success('Pest alert sent to Expert! They will prescribe treatment.');
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+      setPestName(''); setPestSeverity('Low'); setPestArea(''); setPestCropStage(''); setPestNotes(''); setPestPhotos([]);
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to report pest'),
   });
 
   const logSample = useMutation({
@@ -468,9 +516,24 @@ export default function FieldManagerDashboard() {
               <div className="gx-upload-box">
                 <div className="gx-upload-label">📷 Attach Field Photos (optional)</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>Drag & drop or click · JPEG/PNG · Max 10MB</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.files || []).slice(0, 5);
+                    setOpPhotos(selected);
+                  }}
+                  style={{ marginTop: 10 }}
+                />
+                {opPhotos.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gx-text2)' }}>
+                    Selected: {opPhotos.map(f => f.name).join(', ')}
+                  </div>
+                )}
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" onClick={() => opFarmId && logOperation.mutate()}>📤 Log Operation & Notify</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate(undefined); }}>{logOperation.isPending ? '⏳ Saving...' : '📤 Log Operation & Notify'}</button>
                 <button className="gx-btn gx-btn-ghost">Save Draft</button>
               </div>
             </div>
@@ -544,25 +607,42 @@ export default function FieldManagerDashboard() {
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Pest / Disease Name</label><input type="text" className="gx-input" placeholder="e.g. Fall Armyworm, Aphids" /></div>
+                <div className="gx-form-group"><label className="gx-label">Pest / Disease Name</label><input type="text" className="gx-input" value={pestName} onChange={e => setPestName(e.target.value)} placeholder="e.g. Fall Armyworm, Aphids" /></div>
                 <div className="gx-form-group">
                   <label className="gx-label">Severity</label>
-                  <select className="gx-select"><option>Low (&lt;10%)</option><option>Moderate (10-25%)</option><option>High (&gt;25%)</option><option>Critical</option></select>
+                  <select className="gx-select" value={pestSeverity} onChange={e => setPestSeverity(e.target.value)}><option value="Low">Low (&lt;10%)</option><option value="Moderate">Moderate (10-25%)</option><option value="High">High (&gt;25%)</option><option value="Critical">Critical</option></select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Affected Area (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
-                <div className="gx-form-group"><label className="gx-label">Crop Stage</label><input type="text" className="gx-input" placeholder="e.g. Vegetative, Flowering" /></div>
+                <div className="gx-form-group"><label className="gx-label">Affected Area (acres)</label><input type="number" step="0.5" className="gx-input" value={pestArea} onChange={e => setPestArea(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Crop Stage</label><input type="text" className="gx-input" value={pestCropStage} onChange={e => setPestCropStage(e.target.value)} placeholder="e.g. Vegetative, Flowering" /></div>
                 <div className="gx-form-group"><label className="gx-label">Date Detected</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
               </div>
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
                 <div className="gx-upload-label">📷 Attach Pest / Damage Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>Photos help expert identify and prescribe accurately</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.files || []).slice(0, 5);
+                    setPestPhotos(selected);
+                  }}
+                  style={{ marginTop: 10 }}
+                />
+                {pestPhotos.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gx-text2)' }}>
+                    Selected: {pestPhotos.map(f => f.name).join(', ')}
+                  </div>
+                )}
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Field Manager Observations</label>
-                <textarea className="gx-textarea" placeholder="Describe symptoms, affected parts, spread pattern..." />
+                <textarea className="gx-textarea" value={pestNotes} onChange={e => setPestNotes(e.target.value)} placeholder="Describe symptoms, affected parts, spread pattern..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange">🐛 Send Pest Alert to Expert</button>
+                <button className="gx-btn gx-btn-orange" disabled={reportPest.isPending} onClick={() => reportPest.mutate()}>
+                  {reportPest.isPending ? '⏳ Sending...' : '🐛 Send Pest Alert to Expert'}
+                </button>
               </div>
             </div>
           </div>
@@ -596,7 +676,7 @@ export default function FieldManagerDashboard() {
                 <textarea className="gx-textarea" placeholder="Soil moisture level before irrigation, any issues observed..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" onClick={() => { if (opFarmId) { setOpType('Irrigation'); logOperation.mutate(); } }}>💧 Log Irrigation</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate('Irrigation'); }}>{logOperation.isPending ? '⏳ Saving...' : '💧 Log Irrigation'}</button>
               </div>
             </div>
           </div>
@@ -632,7 +712,7 @@ export default function FieldManagerDashboard() {
                 <textarea className="gx-textarea" placeholder="Seed treatment done, soil moisture was adequate..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" onClick={() => { if (opFarmId) { setOpType('Sowing'); logOperation.mutate(); } }}>🌱 Log Sowing & Notify</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate('Sowing'); }}>{logOperation.isPending ? '⏳ Saving...' : '🌱 Log Sowing & Notify'}</button>
               </div>
             </div>
           </div>
@@ -652,20 +732,25 @@ export default function FieldManagerDashboard() {
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Task Title</label><input type="text" className="gx-input" placeholder="e.g. Apply Urea to Field A" /></div>
+                <div className="gx-form-group"><label className="gx-label">Task Title</label><input type="text" className="gx-input" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="e.g. Apply Urea to Field A" /></div>
                 <div className="gx-form-group">
                   <label className="gx-label">Priority</label>
-                  <select className="gx-select"><option>Normal</option><option>HIGH</option><option>Urgent</option></select>
+                  <select className="gx-select" value={taskPriority} onChange={e => setTaskPriority(e.target.value)}><option>Normal</option><option>HIGH</option><option>Urgent</option></select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Assign To (Worker)</label><input type="text" className="gx-input" placeholder="Worker name or ID" /></div>
+                <div className="gx-form-group"><label className="gx-label">Assign To (Worker)</label><input type="text" className="gx-input" value={taskWorker} onChange={e => setTaskWorker(e.target.value)} placeholder="Worker name or ID" /></div>
                 <div className="gx-form-group"><label className="gx-label">Due Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Task Description</label>
-                <textarea className="gx-textarea" placeholder="Detailed instructions for the worker..." />
+                <textarea className="gx-textarea" value={taskDesc} onChange={e => setTaskDesc(e.target.value)} placeholder="Detailed instructions for the worker..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange">📤 Assign Task</button>
+                <button className="gx-btn gx-btn-orange" onClick={() => {
+                  if (!opFarmId) { toast.error('Please select a farm'); return; }
+                  if (!taskTitle) { toast.error('Please enter a task title'); return; }
+                  logOperation.mutate(undefined);
+                  setTaskTitle(''); setTaskWorker(''); setTaskDesc('');
+                }}>📤 Assign Task</button>
               </div>
             </div>
           </div>

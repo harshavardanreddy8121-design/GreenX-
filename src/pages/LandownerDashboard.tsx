@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { landOwner } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
@@ -292,7 +293,7 @@ export default function LandownerDashboard() {
                 </div>
               )}
               <div className="gx-btn-row" style={{ marginTop: 16 }}>
-                <button className="gx-btn gx-btn-ghost">📄 Download PDF Report</button>
+                <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('PDF report download will be available soon.')}>📄 Download PDF Report</button>
               </div>
             </div>
           </div>
