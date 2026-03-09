@@ -46,9 +46,10 @@ export default function ExpertDashboard() {
   const handleLogout = () => { logout(); navigate('/'); };
 
   const { data: pendingSamples = [] } = useQuery({
-    queryKey: ['expert-pending-samples'],
+    queryKey: ['expert-pending-samples', user?.id],
     queryFn: () => expert.getPendingSamples().catch(() => []),
     enabled: !!user?.id,
+    refetchInterval: 15000,
   });
 
   const { data: myFarms = [] } = useQuery({

@@ -25,6 +25,7 @@ public class FieldManagerController {
     private final FieldOperationRepository fieldOperationRepository;
     private final PrescriptionRepository prescriptionRepository;
     private final CalendarTaskRepository calendarTaskRepository;
+    private final SoilSampleRepository soilSampleRepository;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
@@ -110,6 +111,29 @@ public class FieldManagerController {
             return ApiResponse.success(fieldOperationRepository.findByFarmIdOrderByOperationDateDesc(farmId));
         }
         return ApiResponse.success(fieldOperationRepository.findByFieldManagerId(user.getId()));
+    }
+
+    @GetMapping("/samples")
+    public ApiResponse<List<SoilSample>> getSamples(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByFieldManagerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<SoilSample> samples = soilSampleRepository.findByFarmIdIn(farmIds);
+        samples.sort((a, b) -> {
+            java.time.LocalDateTime ad = a.getCreatedAt();
+            java.time.LocalDateTime bd = b.getCreatedAt();
+            if (ad == null && bd == null)
+                return 0;
+            if (ad == null)
+                return 1;
+            if (bd == null)
+                return -1;
+            return bd.compareTo(ad);
+        });
+        return ApiResponse.success(samples);
     }
 
     @PostMapping(value = "/samples", consumes = { "multipart/form-data" })

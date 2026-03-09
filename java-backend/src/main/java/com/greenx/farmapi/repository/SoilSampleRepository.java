@@ -10,6 +10,8 @@ import java.util.List;
 public interface SoilSampleRepository extends JpaRepository<SoilSample, String> {
     List<SoilSample> findByFarmId(String farmId);
 
+    List<SoilSample> findByFarmIdIn(List<String> farmIds);
+
     List<SoilSample> findByAssignedExpertId(String expertId);
 
     List<SoilSample> findByAssignedExpertIdAndStatus(String expertId, String status);

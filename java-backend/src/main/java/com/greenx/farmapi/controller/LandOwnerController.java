@@ -22,6 +22,7 @@ public class LandOwnerController {
     private final CropCalendarRepository cropCalendarRepository;
     private final CalendarTaskRepository calendarTaskRepository;
     private final FarmRepository farmRepository;
+    private final SoilSampleRepository soilSampleRepository;
     private final NotificationService notificationService;
 
     @GetMapping("/farms")
@@ -74,6 +75,29 @@ public class LandOwnerController {
     public ApiResponse<List<FieldOperation>> getOperationsFeed(Authentication auth) {
         User user = (User) auth.getPrincipal();
         return ApiResponse.success(landOwnerService.getOperationsFeed(user.getId()));
+    }
+
+    @GetMapping("/samples")
+    public ApiResponse<List<SoilSample>> getSamples(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByOwnerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<SoilSample> samples = soilSampleRepository.findByFarmIdIn(farmIds);
+        samples.sort((a, b) -> {
+            java.time.LocalDateTime ad = a.getCreatedAt();
+            java.time.LocalDateTime bd = b.getCreatedAt();
+            if (ad == null && bd == null)
+                return 0;
+            if (ad == null)
+                return 1;
+            if (bd == null)
+                return -1;
+            return bd.compareTo(ad);
+        });
+        return ApiResponse.success(samples);
     }
 
     @GetMapping("/finance/summary")

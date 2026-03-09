@@ -234,6 +234,8 @@ export const fieldManager = {
     logSampleCollection: (data: FormData) =>
         request<SoilSample>('/fieldmanager/samples', 'POST', data, true),
 
+    getSamples: () => request<SoilSample[]>('/fieldmanager/samples'),
+
     reportPest: (data: FormData | Partial<PestAlert>) =>
         data instanceof FormData
             ? request<PestAlert>('/fieldmanager/pest-alerts', 'POST', data, true)
@@ -264,6 +266,8 @@ export const landOwner = {
     getCalendarTasks: () => request<CalendarTask[]>('/landowner/calendar-tasks'),
 
     getOperationsFeed: () => request<FieldOperation[]>('/landowner/operations'),
+
+    getSamples: () => request<SoilSample[]>('/landowner/samples'),
 
     getFinanceSummary: () => request<FinanceSummary>('/landowner/finance/summary'),
 

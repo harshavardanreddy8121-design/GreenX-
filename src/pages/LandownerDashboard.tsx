@@ -43,6 +43,13 @@ export default function LandownerDashboard() {
     enabled: !!farm?.id,
   });
 
+  const { data: sampleTrack = [] } = useQuery({
+    queryKey: ['landowner-samples', user?.id],
+    queryFn: () => landOwner.getSamples().catch(() => []),
+    enabled: !!user?.id,
+    refetchInterval: 15000,
+  });
+
   const approveCropPlan = useMutation({
     mutationFn: ({ planId }: { planId: string }) => landOwner.selectCrop(planId),
     onSuccess: () => {
@@ -117,7 +124,7 @@ export default function LandownerDashboard() {
             <div className="gx-stat-card gold"><div className="gx-stat-label">Total Land Area</div><div className="gx-stat-value">{farm?.totalLand || 0}<span className="gx-stat-unit"> ac</span></div><div className="gx-stat-change gx-up">✓ {myFarms.length} field(s) active</div></div>
             <div className="gx-stat-card green"><div className="gx-stat-label">Predicted Yield</div><div className="gx-stat-value">{farm?.expected_yield ? (farm.expected_yield / 1000).toFixed(1) : '—'}<span className="gx-stat-unit"> T</span></div><div className="gx-stat-change gx-up">↑ Based on soil analysis</div></div>
             <div className="gx-stat-card blue"><div className="gx-stat-label">Input Costs So Far</div><div className="gx-stat-value">₹{totalCosts > 0 ? `${(totalCosts / 1000).toFixed(0)}K` : '0'}</div><div className="gx-stat-change gx-neutral">Budget: ₹45,000</div></div>
-            <div className="gx-stat-card orange"><div className="gx-stat-label">Days to Harvest</div><div className="gx-stat-value">{farm?.days_to_harvest || '—'}</div><div className="gx-stat-change gx-neutral">{farm?.expected_harvest_date ? `Est. ${new Date(farm.expected_harvest_date).toLocaleDateString()}` : 'Not set'}</div></div>
+            <div className="gx-stat-card orange"><div className="gx-stat-label">Soil Samples</div><div className="gx-stat-value">{sampleTrack.length}</div><div className="gx-stat-change gx-neutral">Live tracking</div></div>
           </div>
 
           <div className="gx-content-grid">
@@ -156,6 +163,23 @@ export default function LandownerDashboard() {
           </div>
 
           <div className="gx-content-grid">
+            <div className="gx-card">
+              <div className="gx-card-header"><div className="gx-card-title">🧪 Soil Sample Live Track</div><span className="gx-status gx-s-pending">{sampleTrack.length}</span></div>
+              <div className="gx-card-body">
+                {sampleTrack.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No samples logged for your farms yet.</div>
+                ) : sampleTrack.slice(0, 6).map((s: any) => (
+                  <div key={s.id} className="gx-activity-item">
+                    <div className="gx-act-icon" style={{ background: 'var(--gx-gold-dim)' }}>🧪</div>
+                    <div>
+                      <div className="gx-act-text"><strong>{s.sampleCode || s.id}</strong> · {s.status || 'PENDING'}</div>
+                      <div className="gx-act-time">{s.collectionDate || s.createdAt ? new Date(s.collectionDate || s.createdAt).toLocaleString() : ''}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="gx-card">
               <div className="gx-card-header"><div className="gx-card-title">📸 Live Field Updates</div><span style={{ fontSize: 12, color: 'var(--gx-text2)' }}>Auto-synced</span></div>
               <div className="gx-card-body">

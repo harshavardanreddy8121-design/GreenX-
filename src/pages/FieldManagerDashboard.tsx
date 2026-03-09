@@ -59,6 +59,13 @@ export default function FieldManagerDashboard() {
     enabled: !!user?.id,
   });
 
+  const { data: sampleTrack = [] } = useQuery({
+    queryKey: ['fm-samples', user?.id],
+    queryFn: () => fieldManager.getSamples().catch(() => []),
+    enabled: !!user?.id,
+    refetchInterval: 15000,
+  });
+
   const logOperation = useMutation({
     mutationFn: () => fieldManager.logOperationJson({
       farmId: opFarmId,
@@ -167,7 +174,7 @@ export default function FieldManagerDashboard() {
       <div className="gx-main">
         <div className="gx-page-header">
           <div className="gx-page-title">Field Operations — {userName} 🚜</div>
-          <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms</div>
+          <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms · {sampleTrack.length} samples tracked</div>
         </div>
 
         {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}
@@ -183,7 +190,33 @@ export default function FieldManagerDashboard() {
             <div className="gx-stat-card orange"><div className="gx-stat-label">Today's Tasks</div><div className="gx-stat-value">{tasks.length}</div><div className="gx-stat-change gx-down">{tasks.filter((t: any) => t.status === 'COMPLETED').length} completed</div></div>
             <div className="gx-stat-card green"><div className="gx-stat-label">Assigned Farms</div><div className="gx-stat-value">{myFarms.length}</div><div className="gx-stat-change gx-up">Active management</div></div>
             <div className="gx-stat-card blue"><div className="gx-stat-label">Operations Logged</div><div className="gx-stat-value">{stats?.operationsLogged || 0}</div><div className="gx-stat-change gx-up">This season</div></div>
-            <div className="gx-stat-card gold"><div className="gx-stat-label">Photos Uploaded</div><div className="gx-stat-value">{stats?.photosUploaded || 0}</div><div className="gx-stat-change gx-neutral">Field docs</div></div>
+            <div className="gx-stat-card gold"><div className="gx-stat-label">Samples Tracked</div><div className="gx-stat-value">{sampleTrack.length}</div><div className="gx-stat-change gx-neutral">Live status</div></div>
+          </div>
+
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header"><div className="gx-card-title">🧪 Soil Sample Live Track</div><span className="gx-status gx-s-pending">{sampleTrack.length}</span></div>
+            <div className="gx-card-body">
+              {sampleTrack.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '18px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No samples tracked yet for your farms.</div>
+              ) : (
+                <table className="gx-data-table">
+                  <thead><tr><th>Sample</th><th>Farm</th><th>Expert</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {sampleTrack.slice(0, 8).map((s: any) => {
+                      const farm = (myFarms as any[]).find((f: any) => f.id === s.farmId);
+                      return (
+                        <tr key={s.id}>
+                          <td>{s.sampleCode || s.id}</td>
+                          <td>{farm?.farmCode || farm?.name || s.farmId}</td>
+                          <td>{s.assignedExpertId ? 'Assigned' : 'Unassigned'}</td>
+                          <td><span className={`gx-status ${s.status === 'COMPLETED' ? 'gx-s-done' : 'gx-s-pending'}`}>{s.status || 'PENDING'}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
 
           <div className="gx-section-divider">📋 Today's Task List</div>
