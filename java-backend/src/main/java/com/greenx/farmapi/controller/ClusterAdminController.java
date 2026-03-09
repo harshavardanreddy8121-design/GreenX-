@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/admin")
@@ -211,6 +212,7 @@ public class ClusterAdminController {
             String tempPassword = mobile + "@GreenX";
             User owner = User.builder()
                     .email(email)
+                    .uid(generateUniqueUid())
                     .passwordHash(passwordEncoder.encode(tempPassword))
                     .name(fullName)
                     .phone(mobile)
@@ -222,7 +224,11 @@ public class ClusterAdminController {
 
             // 2. Create farm record
             Double area = null;
-            try { if (totalArea != null) area = Double.parseDouble(totalArea); } catch (NumberFormatException ignored) {}
+            try {
+                if (totalArea != null)
+                    area = Double.parseDouble(totalArea);
+            } catch (NumberFormatException ignored) {
+            }
 
             String contractInfo = String.join(" | ",
                     "Survey: " + (surveyNumber != null ? surveyNumber : ""),
@@ -271,11 +277,22 @@ public class ClusterAdminController {
             result.put("farmId", farm.getId());
             result.put("farmCode", farm.getFarmCode());
             result.put("ownerId", owner.getId());
+            result.put("ownerUid", owner.getUid());
             result.put("ownerEmail", owner.getEmail());
             result.put("tempPassword", tempPassword);
             return ApiResponse.success(result);
         } catch (Exception e) {
             return ApiResponse.error("Registration failed: " + e.getMessage());
         }
+    }
+
+    private String generateUniqueUid() {
+        for (int i = 0; i < 10000; i++) {
+            String uid = String.format("%04d", ThreadLocalRandom.current().nextInt(0, 10000));
+            if (!userRepository.existsByUid(uid)) {
+                return uid;
+            }
+        }
+        throw new RuntimeException("Unable to generate unique 4-digit UID");
     }
 }

@@ -152,8 +152,10 @@ export default function AdminDashboard() {
           </div>
           {uidSearch.length === 4 && searchedUser && (
             <div style={{ marginTop: 12, padding: 12, background: 'var(--gx-green-dim)', borderRadius: 8 }}>
-              <div style={{ fontWeight: 600, color: 'var(--gx-green)' }}>{(searchedUser as any).name || (searchedUser as any).email}</div>
-              <div style={{ fontSize: 12, opacity: .7 }}>Role: {(searchedUser as any).role} · Email: {(searchedUser as any).email}</div>
+              <div style={{ fontWeight: 600, color: 'var(--gx-green)' }}>{(searchedUser as any).name || (searchedUser as any).full_name || (searchedUser as any).email}</div>
+              <div style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>UID: {(searchedUser as any).uid || '—'} · Role: {(searchedUser as any).role || '—'}</div>
+              <div style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>Email: {(searchedUser as any).email || '—'} · Phone: {(searchedUser as any).phone || '—'}</div>
+              <div style={{ fontSize: 12, opacity: .8, marginTop: 2 }}>Status: {(searchedUser as any).isActive === false ? 'Inactive' : 'Active'} · User ID: {(searchedUser as any).id || '—'}</div>
             </div>
           )}
           {uidSearch.length === 4 && !searchedUser && (

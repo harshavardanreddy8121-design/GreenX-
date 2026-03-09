@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,6 +29,7 @@ public class AuthController {
             }
             User user = User.builder()
                     .email(request.getEmail())
+                    .uid(generateUniqueUid())
                     .passwordHash(passwordEncoder.encode(request.getPassword()))
                     .name(request.getName())
                     .role(request.getRole() != null ? request.getRole().toUpperCase() : "LAND_OWNER")
@@ -92,6 +94,16 @@ public class AuthController {
     private String extractToken(HttpServletRequest req) {
         String h = req.getHeader("Authorization");
         return (h != null && h.startsWith("Bearer ")) ? h.substring(7) : null;
+    }
+
+    private String generateUniqueUid() {
+        for (int i = 0; i < 10000; i++) {
+            String uid = String.format("%04d", ThreadLocalRandom.current().nextInt(0, 10000));
+            if (!userRepository.existsByUid(uid)) {
+                return uid;
+            }
+        }
+        throw new RuntimeException("Unable to generate unique 4-digit UID");
     }
 
 }

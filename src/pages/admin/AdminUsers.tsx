@@ -131,99 +131,115 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-bold text-foreground">Users & Roles</h1>
-        <button onClick={() => setShowCreate(true)}
-          className="dashboard-btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium">
+    <div>
+      <div className="gx-page-header">
+        <div className="gx-page-title">Users & Roles 👥</div>
+        <div className="gx-page-sub">Manage platform users and their access roles</div>
+      </div>
+
+      <div className="gx-section-divider">👥 User Management</div>
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => setShowCreate(true)} className="gx-btn gx-btn-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <UserPlus className="w-4 h-4" /> Create User
         </button>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
       ) : users.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <UserPlus className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No users created yet.</p>
+        <div className="gx-card">
+          <div className="gx-card-body" style={{ textAlign: 'center', padding: '50px 0', color: 'var(--gx-text2)' }}>
+            <UserPlus className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p>No users created yet.</p>
+          </div>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {users.map((u: UserWithRole) => (
-            <div key={u.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4 flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-foreground">{u.full_name || 'Unnamed User'}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  {u.email && <span className="text-xs text-muted-foreground">{u.email}</span>}
-                  {u.role && (
-                    <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-medium ${roleBadgeColor[normalizeRoleKey(u.role)] || 'bg-muted text-muted-foreground'}`}>
-                      {roleLabels[normalizeRoleKey(u.role)] || u.role}
-                    </span>
-                  )}
-                  {u.phone && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Phone className="w-3 h-3" /> {u.phone}
-                    </span>
-                  )}
+        <div className="gx-card">
+          <div className="gx-card-header">
+            <div className="gx-card-title">👥 All Users</div>
+            <span className="gx-status gx-s-done">{users.length}</span>
+          </div>
+          <div className="gx-card-body" style={{ display: 'grid', gap: 10 }}>
+            {users.map((u: UserWithRole) => (
+              <div key={u.id} className="gx-card" style={{ marginBottom: 0 }}>
+                <div className="gx-card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
+                  <div>
+                    <h3 style={{ fontWeight: 600, color: 'var(--gx-text)' }}>{u.full_name || 'Unnamed User'}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
+                      {u.email && <span style={{ fontSize: 12, color: 'var(--gx-text2)' }}>{u.email}</span>}
+                      {u.role && (
+                        <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-medium ${roleBadgeColor[normalizeRoleKey(u.role)] || 'bg-muted text-muted-foreground'}`} style={{ letterSpacing: 0.4 }}>
+                          {roleLabels[normalizeRoleKey(u.role)] || u.role}
+                        </span>
+                      )}
+                      {u.phone && (
+                        <span style={{ fontSize: 12, color: 'var(--gx-text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <Phone className="w-3 h-3" /> {u.phone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={() => openEdit(u)} className="gx-btn gx-btn-ghost gx-btn-sm" title="Edit" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Pencil className="w-4 h-4" /> Edit
+                    </button>
+                    <button onClick={() => handleDeleteUser(u)} disabled={deleteUser.isPending}
+                      className="gx-btn gx-btn-ghost gx-btn-sm disabled:opacity-50" title="Delete" style={{ color: 'var(--gx-red)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <Trash2 className="w-4 h-4" /> Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button onClick={() => openEdit(u)} className="p-2 rounded-lg hover:bg-muted transition-colors" title="Edit">
-                  <Pencil className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <button onClick={() => handleDeleteUser(u)} disabled={deleteUser.isPending}
-                  className="p-2 rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-50" title="Delete">
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
       {/* Create User Modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl border border-border dashboard-card dashboard-card-ops p-6 w-full max-w-md space-y-4">
+          <div className="gx-card" style={{ width: '100%', maxWidth: 560 }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Create New User</h3>
-              <button onClick={() => setShowCreate(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+              <h3 className="gx-card-title" style={{ fontSize: 18 }}>Create New User</h3>
+              <button onClick={() => setShowCreate(false)} className="gx-btn gx-btn-ghost gx-btn-sm"><X className="w-5 h-5" /></button>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name</label>
-                <input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                  placeholder="e.g. Venkat Reddy" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Email</label>
-                <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  type="email" placeholder="user@example.com" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Password (min 6 chars)</label>
-                <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  type="password" placeholder="Min 6 characters" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
-                <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                  placeholder="+91 98765 43210" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Role</label>
-                <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-                  <option value="landowner">Land Owner</option>
-                  <option value="fieldmanager">Field Manager</option>
-                  <option value="expert">Expert</option>
-                  <option value="worker">Worker</option>
-                  <option value="admin">Admin</option>
-                </select>
+            <div className="gx-card-body" style={{ padding: 0 }}>
+              <div className="gx-form-grid" style={{ marginBottom: 14 }}>
+                <div className="gx-form-group">
+                  <label className="gx-label">Full Name</label>
+                  <input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
+                    placeholder="e.g. Venkat Reddy" className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Email</label>
+                  <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    type="email" placeholder="user@example.com" className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Password (min 6 chars)</label>
+                  <input value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                    type="password" placeholder="Min 6 characters" className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Phone</label>
+                  <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="+91 98765 43210" className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Role</label>
+                  <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value as AppRole }))}
+                    className="gx-select">
+                    <option value="landowner">Land Owner</option>
+                    <option value="fieldmanager">Field Manager</option>
+                    <option value="expert">Expert</option>
+                    <option value="worker">Worker</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
               </div>
             </div>
             <button onClick={() => createUser.mutate(form)} disabled={createUser.isPending || !form.email || !form.password || form.password.length < 6}
-              className="dashboard-btn-primary w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50">
+              className="gx-btn gx-btn-green w-full py-2.5 text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50">
               <UserPlus className="w-4 h-4" /> {createUser.isPending ? 'Creating...' : 'Create User'}
             </button>
             {form.password && form.password.length < 6 && (
@@ -236,36 +252,38 @@ export default function AdminUsers() {
       {/* Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-xl border border-border dashboard-card dashboard-card-ops p-6 w-full max-w-md space-y-4">
+          <div className="gx-card" style={{ width: '100%', maxWidth: 560 }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">Edit User</h3>
-              <button onClick={() => setEditingUser(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+              <h3 className="gx-card-title" style={{ fontSize: 18 }}>Edit User</h3>
+              <button onClick={() => setEditingUser(null)} className="gx-btn gx-btn-ghost gx-btn-sm"><X className="w-5 h-5" /></button>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name</label>
-                <input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Phone</label>
-                <input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Role</label>
-                <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value as AppRole }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
-                  <option value="landowner">Land Owner</option>
-                  <option value="fieldmanager">Field Manager</option>
-                  <option value="expert">Expert</option>
-                  <option value="worker">Worker</option>
-                  <option value="admin">Admin</option>
-                </select>
+            <div className="gx-card-body" style={{ padding: 0 }}>
+              <div className="gx-form-grid" style={{ marginBottom: 14 }}>
+                <div className="gx-form-group">
+                  <label className="gx-label">Full Name</label>
+                  <input value={editForm.full_name} onChange={e => setEditForm(f => ({ ...f, full_name: e.target.value }))}
+                    className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Phone</label>
+                  <input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    className="gx-input" />
+                </div>
+                <div className="gx-form-group">
+                  <label className="gx-label">Role</label>
+                  <select value={editForm.role} onChange={e => setEditForm(f => ({ ...f, role: e.target.value as AppRole }))}
+                    className="gx-select">
+                    <option value="landowner">Land Owner</option>
+                    <option value="fieldmanager">Field Manager</option>
+                    <option value="expert">Expert</option>
+                    <option value="worker">Worker</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
               </div>
             </div>
             <button onClick={saveEdit} disabled={updateProfile.isPending}
-              className="dashboard-btn-primary w-full py-2.5 rounded-lg text-sm font-medium disabled:opacity-50">
+              className="gx-btn gx-btn-green w-full py-2.5 text-sm font-medium disabled:opacity-50">
               {updateProfile.isPending ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

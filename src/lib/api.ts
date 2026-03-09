@@ -62,10 +62,12 @@ async function request<T>(
 
 export interface AuthUser {
     id: string;
+    uid?: string;
     email: string;
     name: string;
     role: string;
     clusterId?: string;
+    isActive?: boolean;
 }
 
 export interface LoginResponse {
@@ -164,7 +166,7 @@ export const admin = {
     deleteFarm: (farmId: string) => request<void>('/data/farms/' + farmId, 'DELETE'),
 
     registerFarm: (data: FormData) =>
-        request<{ farmId: string; farmCode: string; ownerId: string; ownerEmail: string; tempPassword: string }>('/admin/farms/register', 'POST', data, true),
+        request<{ farmId: string; farmCode: string; ownerId: string; ownerUid?: string; ownerEmail: string; tempPassword: string }>('/admin/farms/register', 'POST', data, true),
 };
 
 // ─── EXPERT ──────────────────────────────────────────────────────────────────
@@ -294,11 +296,13 @@ export const files = {
 
 export interface User {
     id: string;
+    uid?: string;
     email: string;
     name: string;
     role: string;
     phone?: string;
     clusterId?: string;
+    isActive?: boolean;
 }
 
 export interface Farm {

@@ -1,0 +1,18 @@
+-- Add 4-digit UID to users for admin search and identity lookup
+ALTER TABLE USERS ADD UID VARCHAR2(4);
+
+-- Backfill existing rows with deterministic 4-digit values.
+MERGE INTO USERS u
+USING (
+  SELECT ID, LPAD(TO_CHAR(ROW_NUMBER() OVER (ORDER BY CREATED_AT, ID)), 4, '0') AS GEN_UID
+  FROM USERS
+) t
+ON (u.ID = t.ID)
+WHEN MATCHED THEN
+  UPDATE SET u.UID = t.GEN_UID
+  WHERE u.UID IS NULL;
+
+ALTER TABLE USERS MODIFY (UID NOT NULL);
+ALTER TABLE USERS ADD CONSTRAINT UK_USERS_UID UNIQUE (UID);
+
+COMMIT;
