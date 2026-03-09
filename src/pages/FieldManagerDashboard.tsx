@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { MobileHeader } from '@/components/MobileHeader';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports';
 
@@ -168,6 +170,7 @@ export default function FieldManagerDashboard() {
 
   return (
     <div className="gx-dashboard fm-accent">
+      <MobileHeader title="Field Manager" roleIcon="🚜" />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">

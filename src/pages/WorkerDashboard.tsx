@@ -6,6 +6,8 @@ import { javaApi } from '@/integrations/java-api/client';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
+import { MobileHeader } from '@/components/MobileHeader';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests';
 
@@ -90,6 +92,7 @@ export default function WorkerDashboard() {
 
   return (
     <div className="gx-dashboard" style={{ '--role-accent': '#22c55e', '--role-accent-dim': 'rgba(34,197,94,.12)' } as React.CSSProperties}>
+      <MobileHeader title="Worker" roleIcon="👷" />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">

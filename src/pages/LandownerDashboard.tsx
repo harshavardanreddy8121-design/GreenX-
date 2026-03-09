@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { landOwner } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MobileHeader } from '@/components/MobileHeader';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings';
 
@@ -64,6 +66,7 @@ export default function LandownerDashboard() {
 
   return (
     <div className="gx-dashboard lo-accent">
+      <MobileHeader title="Land Owner" roleIcon="🏡" />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">

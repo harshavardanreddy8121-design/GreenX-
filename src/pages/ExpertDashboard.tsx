@@ -5,6 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { expert } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { MobileHeader } from '@/components/MobileHeader';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex';
 
@@ -172,6 +174,7 @@ export default function ExpertDashboard() {
 
   return (
     <div className="gx-dashboard ex-accent">
+      <MobileHeader title="Expert Lab" roleIcon="🔬" />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { MobileHeader } from '@/components/MobileHeader';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const adminNavItems = [
   { icon: '📊', label: 'Dashboard', path: '/admin' },
@@ -28,6 +30,7 @@ export default function AdminLayout() {
 
   return (
     <div className="gx-dashboard ca-accent">
+      <MobileHeader title="Cluster Admin" roleIcon="🏢" />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">
