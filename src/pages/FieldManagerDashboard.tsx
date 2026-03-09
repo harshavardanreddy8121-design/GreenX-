@@ -75,7 +75,7 @@ export default function FieldManagerDashboard() {
       farmId: opFarmId,
       fieldManagerId: user?.id || '',
       operationType: opType,
-      operationDate: new Date().toISOString().split('T')[0],
+      operationDate: new Date().toISOString(),
       areaCoveredAcres: parseFloat(opArea) || undefined,
       workersDeployed: parseInt(opLabour) || undefined,
       productUsed: opChemical || undefined,
@@ -103,7 +103,7 @@ export default function FieldManagerDashboard() {
       fd.append('data', JSON.stringify({
         farmId: photoFarmId,
         operationType: 'PHOTO_UPDATE',
-        operationDate: new Date().toISOString().split('T')[0],
+        operationDate: new Date().toISOString(),
         observations: `${photoType}${photoNotes ? `: ${photoNotes}` : ''}`,
       }));
       photoFiles.forEach((f) => fd.append('photos', f));
