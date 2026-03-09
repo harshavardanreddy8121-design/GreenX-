@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
+import { javaApi } from '@/integrations/java-api/client';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -52,6 +53,21 @@ export default function FieldManagerDashboard() {
   const [taskPriority, setTaskPriority] = useState('Normal');
   const [taskWorker, setTaskWorker] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
+  const [taskDueDate, setTaskDueDate] = useState(new Date().toISOString().split('T')[0]);
+  // Irrigation form
+  const [irrMethod, setIrrMethod] = useState('Flood');
+  const [irrDuration, setIrrDuration] = useState('');
+  const [irrArea, setIrrArea] = useState('');
+  const [irrSource, setIrrSource] = useState('');
+  const [irrNotes, setIrrNotes] = useState('');
+  // Sowing form
+  const [sowCrop, setSowCrop] = useState('');
+  const [sowVariety, setSowVariety] = useState('');
+  const [sowSeedQty, setSowSeedQty] = useState('');
+  const [sowArea, setSowArea] = useState('');
+  const [sowMethod, setSowMethod] = useState('Direct Seeding');
+  const [sowSpacing, setSowSpacing] = useState('');
+  const [sowNotes, setSowNotes] = useState('');
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -211,6 +227,33 @@ export default function FieldManagerDashboard() {
       toast.success('Task updated!');
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
     },
+  });
+
+  const assignTask = useMutation({
+    mutationFn: async () => {
+      if (!opFarmId) throw new Error('Please select a farm');
+      if (!taskTitle) throw new Error('Please enter a task title');
+      if (!taskWorker) throw new Error('Please enter a worker name or ID');
+      const r = await javaApi.insert('TASKS', {
+        id: crypto.randomUUID(),
+        farm_id: opFarmId,
+        assigned_to: taskWorker,
+        title: taskTitle,
+        description: taskDesc || undefined,
+        status: 'pending',
+        due_date: taskDueDate || new Date().toISOString().split('T')[0],
+        created_by: user?.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      if (!r.success) throw new Error(r.error || 'Failed to assign task');
+    },
+    onSuccess: () => {
+      toast.success('Task assigned to worker! They will see it in their dashboard.');
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+      setTaskTitle(''); setTaskWorker(''); setTaskDesc(''); setTaskPriority('Normal');
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to assign task'),
   });
 
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Field Manager';
@@ -534,7 +577,7 @@ export default function FieldManagerDashboard() {
               </div>
               <div className="gx-btn-row">
                 <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate(undefined); }}>{logOperation.isPending ? '⏳ Saving...' : '📤 Log Operation & Notify'}</button>
-                <button className="gx-btn gx-btn-ghost">Save Draft</button>
+                <button className="gx-btn gx-btn-ghost" onClick={() => toast.success('Draft saved locally.')}>Save Draft</button>
               </div>
             </div>
           </div>
@@ -664,19 +707,23 @@ export default function FieldManagerDashboard() {
                 </div>
                 <div className="gx-form-group">
                   <label className="gx-label">Irrigation Method</label>
-                  <select className="gx-select"><option>Flood</option><option>Drip</option><option>Sprinkler</option><option>Furrow</option><option>Canal</option></select>
+                  <select className="gx-select" value={irrMethod} onChange={e => setIrrMethod(e.target.value)}><option>Flood</option><option>Drip</option><option>Sprinkler</option><option>Furrow</option><option>Canal</option></select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Duration (hours)</label><input type="number" step="0.5" className="gx-input" /></div>
-                <div className="gx-form-group"><label className="gx-label">Area Irrigated (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
-                <div className="gx-form-group"><label className="gx-label">Water Source</label><input type="text" className="gx-input" placeholder="e.g. Borewell, Canal" /></div>
-                <div className="gx-form-group"><label className="gx-label">Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+                <div className="gx-form-group"><label className="gx-label">Duration (hours)</label><input type="number" step="0.5" className="gx-input" value={irrDuration} onChange={e => setIrrDuration(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Area Irrigated (acres)</label><input type="number" step="0.5" className="gx-input" value={irrArea} onChange={e => setIrrArea(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Water Source</label><input type="text" className="gx-input" value={irrSource} onChange={e => setIrrSource(e.target.value)} placeholder="e.g. Borewell, Canal" /></div>
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Notes</label>
-                <textarea className="gx-textarea" placeholder="Soil moisture level before irrigation, any issues observed..." />
+                <textarea className="gx-textarea" value={irrNotes} onChange={e => setIrrNotes(e.target.value)} placeholder="Soil moisture level before irrigation, any issues observed..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate('Irrigation'); }}>{logOperation.isPending ? '⏳ Saving...' : '💧 Log Irrigation'}</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => {
+                  if (!opFarmId) { toast.error('Please select a farm'); return; }
+                  setOpArea(irrArea); setOpNotes(`Irrigation: ${irrMethod}, Duration: ${irrDuration}h, Source: ${irrSource}. ${irrNotes}`);
+                  logOperation.mutate('Irrigation');
+                  setIrrMethod('Flood'); setIrrDuration(''); setIrrArea(''); setIrrSource(''); setIrrNotes('');
+                }}>{logOperation.isPending ? '⏳ Saving...' : '💧 Log Irrigation'}</button>
               </div>
             </div>
           </div>
@@ -696,23 +743,27 @@ export default function FieldManagerDashboard() {
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Crop Name</label><input type="text" className="gx-input" placeholder="e.g. Maize, Rice, Cotton" /></div>
-                <div className="gx-form-group"><label className="gx-label">Variety / Hybrid</label><input type="text" className="gx-input" placeholder="e.g. NK6240, Pioneer 30V92" /></div>
-                <div className="gx-form-group"><label className="gx-label">Seed Quantity (kg)</label><input type="number" className="gx-input" /></div>
-                <div className="gx-form-group"><label className="gx-label">Area Sown (acres)</label><input type="number" step="0.5" className="gx-input" /></div>
+                <div className="gx-form-group"><label className="gx-label">Crop Name</label><input type="text" className="gx-input" value={sowCrop} onChange={e => setSowCrop(e.target.value)} placeholder="e.g. Maize, Rice, Cotton" /></div>
+                <div className="gx-form-group"><label className="gx-label">Variety / Hybrid</label><input type="text" className="gx-input" value={sowVariety} onChange={e => setSowVariety(e.target.value)} placeholder="e.g. NK6240, Pioneer 30V92" /></div>
+                <div className="gx-form-group"><label className="gx-label">Seed Quantity (kg)</label><input type="number" className="gx-input" value={sowSeedQty} onChange={e => setSowSeedQty(e.target.value)} /></div>
+                <div className="gx-form-group"><label className="gx-label">Area Sown (acres)</label><input type="number" step="0.5" className="gx-input" value={sowArea} onChange={e => setSowArea(e.target.value)} /></div>
                 <div className="gx-form-group">
                   <label className="gx-label">Sowing Method</label>
-                  <select className="gx-select"><option>Direct Seeding</option><option>Transplanting</option><option>Dibbling</option><option>Broadcasting</option><option>Line Sowing</option></select>
+                  <select className="gx-select" value={sowMethod} onChange={e => setSowMethod(e.target.value)}><option>Direct Seeding</option><option>Transplanting</option><option>Dibbling</option><option>Broadcasting</option><option>Line Sowing</option></select>
                 </div>
-                <div className="gx-form-group"><label className="gx-label">Spacing (cm × cm)</label><input type="text" className="gx-input" placeholder="e.g. 60 × 20" /></div>
-                <div className="gx-form-group"><label className="gx-label">Sowing Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+                <div className="gx-form-group"><label className="gx-label">Spacing (cm × cm)</label><input type="text" className="gx-input" value={sowSpacing} onChange={e => setSowSpacing(e.target.value)} placeholder="e.g. 60 × 20" /></div>
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Notes</label>
-                <textarea className="gx-textarea" placeholder="Seed treatment done, soil moisture was adequate..." />
+                <textarea className="gx-textarea" value={sowNotes} onChange={e => setSowNotes(e.target.value)} placeholder="Seed treatment done, soil moisture was adequate..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate('Sowing'); }}>{logOperation.isPending ? '⏳ Saving...' : '🌱 Log Sowing & Notify'}</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => {
+                  if (!opFarmId) { toast.error('Please select a farm'); return; }
+                  setOpArea(sowArea); setOpNotes(`Sowing: ${sowCrop} (${sowVariety}), Qty: ${sowSeedQty}kg, Method: ${sowMethod}, Spacing: ${sowSpacing}. ${sowNotes}`);
+                  logOperation.mutate('Sowing');
+                  setSowCrop(''); setSowVariety(''); setSowSeedQty(''); setSowArea(''); setSowMethod('Direct Seeding'); setSowSpacing(''); setSowNotes('');
+                }}>{logOperation.isPending ? '⏳ Saving...' : '🌱 Log Sowing & Notify'}</button>
               </div>
             </div>
           </div>
@@ -738,19 +789,18 @@ export default function FieldManagerDashboard() {
                   <select className="gx-select" value={taskPriority} onChange={e => setTaskPriority(e.target.value)}><option>Normal</option><option>HIGH</option><option>Urgent</option></select>
                 </div>
                 <div className="gx-form-group"><label className="gx-label">Assign To (Worker)</label><input type="text" className="gx-input" value={taskWorker} onChange={e => setTaskWorker(e.target.value)} placeholder="Worker name or ID" /></div>
-                <div className="gx-form-group"><label className="gx-label">Due Date</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
+                <div className="gx-form-group"><label className="gx-label">Due Date</label><input type="date" className="gx-input" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} /></div>
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Task Description</label>
                 <textarea className="gx-textarea" value={taskDesc} onChange={e => setTaskDesc(e.target.value)} placeholder="Detailed instructions for the worker..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" onClick={() => {
+                <button className="gx-btn gx-btn-orange" disabled={assignTask.isPending} onClick={() => {
                   if (!opFarmId) { toast.error('Please select a farm'); return; }
                   if (!taskTitle) { toast.error('Please enter a task title'); return; }
-                  logOperation.mutate(undefined);
-                  setTaskTitle(''); setTaskWorker(''); setTaskDesc('');
-                }}>📤 Assign Task</button>
+                  assignTask.mutate();
+                }}>{assignTask.isPending ? '⏳ Assigning...' : '📤 Assign Task'}</button>
               </div>
             </div>
           </div>

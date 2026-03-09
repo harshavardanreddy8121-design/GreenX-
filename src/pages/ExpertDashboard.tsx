@@ -230,9 +230,9 @@ export default function ExpertDashboard() {
         <SideNavItem icon="📷" label="Field Photo Review" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
 
         <div className="gx-nav-group-label">Knowledge Base</div>
-        <SideNavItem icon="📚" label="Crop Database" />
-        <SideNavItem icon="🧬" label="Soil Reference Library" />
-        <SideNavItem icon="⚠️" label="Pest & Disease Index" />
+        <SideNavItem icon="📚" label="Crop Database" active={activeTab === 'cropdb'} onClick={() => setActiveTab('cropdb')} />
+        <SideNavItem icon="🧬" label="Soil Reference Library" active={activeTab === 'soillib'} onClick={() => setActiveTab('soillib')} />
+        <SideNavItem icon="⚠️" label="Pest & Disease Index" active={activeTab === 'pestindex'} onClick={() => setActiveTab('pestindex')} />
 
         <div className="gx-sidebar-logout">
           <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
@@ -730,12 +730,75 @@ export default function ExpertDashboard() {
         {activeTab === 'photos' && (<>
           <div className="gx-section-divider">📷 Field Photo Review</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📷 Photos from Field</div></div>
+            <div className="gx-card-header"><div className="gx-card-title">📷 Photos from Field</div><span className="gx-status gx-s-info">{pestAlerts.filter((a: any) => a.photos).length} with photos</span></div>
+            <div className="gx-card-body">
+              {pestAlerts.filter((a: any) => a.photos).length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
+                  <div>No field photos available yet.</div>
+                  <div style={{ marginTop: 10, fontSize: 13 }}>Photos attached to pest alerts by Field Managers will appear here for review.</div>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {pestAlerts.filter((a: any) => a.photos).map((a: any) => (
+                    <div key={a.id} className="gx-card" style={{ margin: 0 }}>
+                      <div style={{ position: 'relative', aspectRatio: '4/3', overflow: 'hidden', borderRadius: '8px 8px 0 0' }}>
+                        <img src={a.photos} alt={a.pestName || 'Field photo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      </div>
+                      <div style={{ padding: 12 }}>
+                        <div style={{ fontWeight: 600, marginBottom: 4 }}>🐛 {a.pestName || 'Pest Alert'}</div>
+                        <div style={{ fontSize: 13, color: 'var(--gx-text2)' }}>Severity: <span className={`gx-status ${a.severity === 'HIGH' ? 'gx-s-alert' : 'gx-s-pending'}`}>{a.severity}</span></div>
+                        {a.description && <div style={{ fontSize: 13, marginTop: 6, color: 'var(--gx-text2)' }}>{a.description}</div>}
+                        <div style={{ fontSize: 12, marginTop: 6, color: 'var(--gx-text3)' }}>Farm: {a.farmId} · {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ''}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ CROP DATABASE TAB ═══ */}
+        {activeTab === 'cropdb' && (<>
+          <div className="gx-section-divider">📚 Crop Database</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📚 Crop Reference Database</div></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
-                <div>Field photos uploaded by Field Manager will appear here for review.</div>
-                <div style={{ marginTop: 10, fontSize: 13 }}>Photos help assess pest damage, crop health, and field conditions remotely.</div>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📚</div>
+                <div>Crop database with regional varieties, growth stages, and nutrient requirements.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>This reference module is being populated with data for your region.</div>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ SOIL REFERENCE LIBRARY TAB ═══ */}
+        {activeTab === 'soillib' && (<>
+          <div className="gx-section-divider">🧬 Soil Reference Library</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🧬 Soil Type Reference</div></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🧬</div>
+                <div>Soil classification guide with ideal pH ranges, drainage characteristics, and amendment recommendations.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Reference data is being compiled for your assigned regions.</div>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ PEST & DISEASE INDEX TAB ═══ */}
+        {activeTab === 'pestindex' && (<>
+          <div className="gx-section-divider">⚠️ Pest & Disease Index</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">⚠️ Pest & Disease Reference</div></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+                <div>Comprehensive index of common pests and diseases with identification guides, treatment protocols, and preventive measures.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Index is being populated with region-specific pest data.</div>
               </div>
             </div>
           </div>

@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { landOwner } from '@/lib/api';
+import { landOwner, notifications } from '@/lib/api';
 import { LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
-type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings';
+type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport';
 
 export default function LandownerDashboard() {
   const { user, profile, logout } = useAuth();
@@ -53,6 +52,12 @@ export default function LandownerDashboard() {
     refetchInterval: 15000,
   });
 
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['lo-unread-count'],
+    queryFn: () => notifications.unreadCount('LAND_OWNER').catch(() => 0),
+    refetchInterval: 30000,
+  });
+
   const approveCropPlan = useMutation({
     mutationFn: ({ planId }: { planId: string }) => landOwner.selectCrop(planId),
     onSuccess: () => {
@@ -83,7 +88,7 @@ export default function LandownerDashboard() {
         <div className="gx-nav-group-label">My Farm</div>
         <SideNavItem icon="🌿" label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
         <SideNavItem icon="📍" label="My Land Details" active={activeTab === 'land'} onClick={() => setActiveTab('land')} />
-        <SideNavItem icon="🗺️" label="Farm Map & Location" />
+        <SideNavItem icon="🗺️" label="Farm Map & Location" active={activeTab === 'farmmap'} onClick={() => setActiveTab('farmmap')} />
 
         <div className="gx-nav-group-label">Reports & Data</div>
         <SideNavItem icon="🧪" label="Soil Test Reports" active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} badge="New" badgeColor="gold" />
@@ -94,12 +99,12 @@ export default function LandownerDashboard() {
         <div className="gx-nav-group-label">Finance</div>
         <SideNavItem icon="💰" label="Input Costs & Usage" active={activeTab === 'costs'} onClick={() => setActiveTab('costs')} />
         <SideNavItem icon="📊" label="Yield & Profit Tracker" active={activeTab === 'profit'} onClick={() => setActiveTab('profit')} />
-        <SideNavItem icon="🧾" label="Payment History" />
+        <SideNavItem icon="🧾" label="Payment History" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
 
         <div className="gx-nav-group-label">Communication</div>
-        <SideNavItem icon="🔔" label="Notifications" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} badge="4" badgeColor="red" />
-        <SideNavItem icon="💬" label="Messages" />
-        <SideNavItem icon="📋" label="Season Reports" />
+        <SideNavItem icon="🔔" label="Notifications" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} badge={unreadCount > 0 ? String(unreadCount) : undefined} badgeColor="red" />
+        <SideNavItem icon="💬" label="Messages" active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
+        <SideNavItem icon="📋" label="Season Reports" active={activeTab === 'seasonreport'} onClick={() => setActiveTab('seasonreport')} />
 
         <div className="gx-nav-group-label">Account</div>
         <SideNavItem icon="📄" label="My Contract" active={activeTab === 'contract'} onClick={() => setActiveTab('contract')} />
@@ -293,7 +298,7 @@ export default function LandownerDashboard() {
                 </div>
               )}
               <div className="gx-btn-row" style={{ marginTop: 16 }}>
-                <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('PDF report download will be available soon.')}>📄 Download PDF Report</button>
+                <button className="gx-btn gx-btn-ghost" onClick={() => toast({ title: 'PDF report download will be available soon.' })}>📄 Download PDF Report</button>
               </div>
             </div>
           </div>
@@ -498,6 +503,73 @@ export default function LandownerDashboard() {
               <div className="gx-metric-row"><span className="gx-metric-label">Role</span><span className="gx-metric-value">Land Owner</span></div>
               <div className="gx-metric-row"><span className="gx-metric-label">Phone</span><span className="gx-metric-value">{profile?.phone || '—'}</span></div>
               <div className="gx-metric-row"><span className="gx-metric-label">Member Since</span><span className="gx-metric-value">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-IN') : '—'}</span></div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ FARM MAP TAB ═══ */}
+        {activeTab === 'farmmap' && (<>
+          <div className="gx-section-divider">🗺️ Farm Map & Location</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🗺️ Farm Location</div></div>
+            <div className="gx-card-body">
+              {farm ? (
+                <div>
+                  <div className="gx-metric-row"><span className="gx-metric-label">Village</span><span className="gx-metric-value">{farm.village || '—'}</span></div>
+                  <div className="gx-metric-row"><span className="gx-metric-label">Mandal</span><span className="gx-metric-value">{farm.mandal || '—'}</span></div>
+                  <div className="gx-metric-row"><span className="gx-metric-label">District</span><span className="gx-metric-value">{farm.district || '—'}</span></div>
+                  <div className="gx-metric-row"><span className="gx-metric-label">Total Area</span><span className="gx-metric-value">{farm.totalAcres || farm.total_acres || '—'} acres</span></div>
+                  <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--gx-text2)', marginTop: 16 }}>
+                    <div style={{ fontSize: 40 }}>🗺️</div>
+                    <div style={{ marginTop: 8 }}>Interactive map view coming soon.</div>
+                  </div>
+                </div>
+              ) : <div style={{ textAlign: 'center', padding: '30px', color: 'var(--gx-text2)' }}>No farm registered yet.</div>}
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ PAYMENT HISTORY TAB ═══ */}
+        {activeTab === 'payments' && (<>
+          <div className="gx-section-divider">🧾 Payment History</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">🧾 Payment Records</div></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🧾</div>
+                <div>Payment history and transaction records will appear here.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Once payments are processed through the system, your full history will be available.</div>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ MESSAGES TAB ═══ */}
+        {activeTab === 'messages' && (<>
+          <div className="gx-section-divider">💬 Messages</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">💬 Message Center</div></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>💬</div>
+                <div>Direct messaging with your Field Manager and Expert.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Messaging feature is being developed. You will be notified when it's available.</div>
+              </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ SEASON REPORTS TAB ═══ */}
+        {activeTab === 'seasonreport' && (<>
+          <div className="gx-section-divider">📋 Season Reports</div>
+          <div className="gx-card">
+            <div className="gx-card-header"><div className="gx-card-title">📋 Season Summary Reports</div></div>
+            <div className="gx-card-body">
+              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+                <div>End-of-season reports with yield analysis, cost breakdown, and recommendations.</div>
+                <div style={{ marginTop: 10, fontSize: 13 }}>Reports will be generated at the end of each crop season.</div>
+              </div>
             </div>
           </div>
         </>)}

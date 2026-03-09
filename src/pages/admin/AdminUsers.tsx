@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { admin, auth as apiAuth } from '@/lib/api';
+import { javaApi } from '@/integrations/java-api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Phone, Plus, X, UserPlus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,8 +49,8 @@ export default function AdminUsers() {
 
   const updateProfile = useMutation({
     mutationFn: async ({ id, full_name, phone }: { id: string; full_name: string; phone: string }) => {
-      // Update via admin API — backend handles profile updates
-      console.log('Update profile', id, full_name, phone);
+      const r = await javaApi.update('USERS', id, { full_name, phone });
+      if (!r.success) throw new Error(r.error || 'Failed to update profile');
     },
     onSuccess: () => {
       toast.success('User updated');
@@ -60,8 +61,9 @@ export default function AdminUsers() {
   });
 
   const updateRole = useMutation({
-    mutationFn: async (_args: { userId: string; role: AppRole }) => {
-      toast.info('Role changes require a database admin operation.');
+    mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
+      const r = await javaApi.update('USERS', userId, { role });
+      if (!r.success) throw new Error(r.error || 'Failed to update role');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
