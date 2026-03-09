@@ -69,7 +69,7 @@ export default function AdminLabSamples() {
       toast.success('Soil sample received and assigned to expert');
       setForm(initialForm);
       queryClient.invalidateQueries({ queryKey: ['admin-lab-samples'] });
-      queryClient.invalidateQueries({ queryKey: ['expert-soil-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to receive sample'),
   });
