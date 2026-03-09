@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { admin } from '@/lib/api';
 import { toast } from 'sonner';
+import { useAI } from '@/hooks/useAI';
+import { AiInsightPanel } from '@/components/AiInsightPanel';
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
   const totalLand = farms.reduce((s: number, f: any) => s + (f.totalLand || 0), 0);
   const activeCrops = new Set(farms.map((f: any) => f.currentCrop).filter(Boolean)).size;
   const totalRevenue = farms.reduce((s: number, f: any) => s + (f.expectedRevenue || 0), 0);
+  const ai = useAI();
 
   const experts = users.filter((u: any) => u.role === 'expert');
   const fieldManagers = users.filter((u: any) => u.role === 'fieldmanager');
@@ -346,6 +349,25 @@ export default function AdminDashboard() {
           </div>
         </>
       )}
+
+      {/* AI Intelligence Panel */}
+      <div className="gx-section-divider">🤖 AI Cluster Intelligence</div>
+      <div className="gx-card" style={{ marginBottom: 20 }}>
+        <div className="gx-card-header"><div className="gx-card-title">🤖 AI Farm Advisor</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
+        <div className="gx-card-body">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+            <button className="gx-btn gx-btn-green" style={{ fontSize: 12 }} onClick={() => { ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success('Crop recommendations generated'); }}>🌾 Cluster Crop Recs</button>
+            <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear</button>
+          </div>
+          <AiInsightPanel
+            recommendations={ai.recommendations}
+            isAnalyzing={ai.isAnalyzing}
+            onAsk={(q) => ai.ask(q)}
+            compact
+            title="Cluster Intelligence"
+          />
+        </div>
+      </div>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,8 +7,11 @@ import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAI } from '@/hooks/useAI';
+import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { javaApi } from '@/integrations/java-api/client';
 
-type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex';
+type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex' | 'ai';
 
 export default function ExpertDashboard() {
   const { user, profile, logout } = useAuth();
@@ -37,6 +40,9 @@ export default function ExpertDashboard() {
   const [expertRemarks, setExpertRemarks] = useState('');
   const [selectedFarm, setSelectedFarm] = useState('');
   const [selectedAlertId, setSelectedAlertId] = useState('');
+
+  // AI Agent
+  const ai = useAI();
 
   // Crop suggestion form (3 crops)
   const emptyCrop = () => ({ cropName: '', cropVariety: '', season: 'Kharif', yieldMin: '', yieldMax: '', profit: '', inputCost: '', duration: '', score: '', notes: '' });
@@ -95,6 +101,40 @@ export default function ExpertDashboard() {
     enabled: !!user?.id,
   });
 
+  // Auto-analyze pest alerts when they arrive
+  useEffect(() => {
+    if (pestAlerts.length > 0 && ai.recommendations.filter(r => r.type === 'pest_alert').length === 0) {
+      pestAlerts.slice(0, 5).forEach((a: any) => {
+        ai.analyzePest({ pestName: a.pestName || '', severity: a.severity || 'Moderate', affectedAreaPct: a.affectedAreaPct, cropName: a.cropName, farmId: a.farmId, description: a.description, photos: a.photos });
+      });
+    }
+  }, [pestAlerts]);
+
+  // Auto-analyze soil reports
+  useEffect(() => {
+    if (myReports.length > 0 && ai.recommendations.filter(r => r.type === 'soil_report').length === 0) {
+      myReports.slice(0, 3).forEach((r: any) => {
+        ai.analyzeSoil({ ph: r.phLevel, nitrogen: r.nitrogenKgHa, phosphorus: r.phosphorusKgHa, potassium: r.potassiumKgHa, organicCarbon: r.organicCarbon, zinc: r.zincPpm, electricalConductivity: r.ecDsm });
+      });
+    }
+  }, [myReports]);
+
+  // Handle AI task assignment
+  const handleAiTaskAssign = (task: any, rec: any) => {
+    javaApi.insert('TASKS', {
+      id: crypto.randomUUID(),
+      farm_id: rec.relatedCrop || '',
+      title: task.title,
+      description: task.description,
+      status: 'pending',
+      due_date: new Date(Date.now() + task.dueInDays * 86400000).toISOString().split('T')[0],
+      created_by: user?.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).then(() => toast.success(`Task "${task.title}" created!`))
+      .catch(() => toast.error('Failed to create task'));
+  };
+
   const submitReport = useMutation({
     mutationFn: (farmId: string) => expert.submitSoilReport({
       farmId,
@@ -113,6 +153,19 @@ export default function ExpertDashboard() {
     }),
     onSuccess: () => {
       toast.success('Soil report uploaded & shared to all dashboards!');
+      // AI auto-analysis of submitted soil data
+      const aiResult = ai.analyzeSoil({
+        ph: parseFloat(soilPh) || undefined,
+        nitrogen: parseFloat(soilN) || undefined,
+        phosphorus: parseFloat(soilP) || undefined,
+        potassium: parseFloat(soilK) || undefined,
+        organicCarbon: parseFloat(soilOC) || undefined,
+        zinc: parseFloat(soilZn) || undefined,
+        electricalConductivity: parseFloat(soilEC) || undefined,
+      });
+      if (aiResult.suggestedTasks.length > 0) {
+        toast.info(`🤖 AI found ${aiResult.suggestedTasks.length} recommendations. Check AI tab.`);
+      }
       queryClient.invalidateQueries({ queryKey: ['expert-reports'] });
       queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
       setSoilPh(''); setSoilN(''); setSoilP(''); setSoilK('');
@@ -230,6 +283,7 @@ export default function ExpertDashboard() {
         <SideNavItem icon="📷" label="Field Photo Review" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
 
         <div className="gx-nav-group-label">Knowledge Base</div>
+        <SideNavItem icon="🤖" label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="green" />
         <SideNavItem icon="📚" label="Crop Database" active={activeTab === 'cropdb'} onClick={() => setActiveTab('cropdb')} />
         <SideNavItem icon="🧬" label="Soil Reference Library" active={activeTab === 'soillib'} onClick={() => setActiveTab('soillib')} />
         <SideNavItem icon="⚠️" label="Pest & Disease Index" active={activeTab === 'pestindex'} onClick={() => setActiveTab('pestindex')} />
@@ -298,6 +352,19 @@ export default function ExpertDashboard() {
               </div>
             </div>
           </div>
+
+          {/* AI Insights in Overview */}
+          <AiInsightPanel
+            recommendations={ai.recommendations.slice(0, 3)}
+            isAnalyzing={ai.isAnalyzing}
+            onAsk={ai.ask}
+            onAcceptTask={handleAiTaskAssign}
+            compact
+            title="AI Agent — Smart Analysis"
+          />
+          {ai.recommendations.length > 3 && (
+            <button className="gx-btn gx-btn-green" style={{ marginTop: 8 }} onClick={() => setActiveTab('ai')}>🤖 View All {ai.recommendations.length} AI Insights →</button>
+          )}
         </>)}
 
         {/* ═══ MY ASSIGNED FARMS TAB ═══ */}
@@ -675,7 +742,23 @@ export default function ExpertDashboard() {
                   <select className="gx-select" value={selectedAlertId} onChange={e => {
                     setSelectedAlertId(e.target.value);
                     const alert = pestAlerts.find((a: any) => a.id === e.target.value);
-                    if (alert) { setPestName((alert as any).pestName || ''); setSeverity((alert as any).severity || 'Moderate (10-25% infestation)'); }
+                    if (alert) {
+                      setPestName((alert as any).pestName || '');
+                      setSeverity((alert as any).severity || 'Moderate (10-25% infestation)');
+                      // AI auto-fill prescription fields
+                      const aiResult = ai.analyzePest({ pestName: (alert as any).pestName || '', severity: (alert as any).severity || 'Moderate', cropName: (alert as any).cropName, farmId: (alert as any).farmId });
+                      const task = aiResult.suggestedTasks[0];
+                      if (task) {
+                        const chemMatch = aiResult.details.find(d => d.includes('💊'));
+                        if (chemMatch) {
+                          const parts = chemMatch.replace('💊 ', '').split(' — ');
+                          if (parts[0]) setChemical(parts[0].trim());
+                          if (parts[1]) setDose(parts[1].split('(')[0].trim());
+                        }
+                        setFmInstructions(task.description);
+                        toast.info('🤖 AI auto-filled prescription from knowledge base');
+                      }
+                    }
                   }}>
                     <option value="">Select pest alert...</option>
                     {pestAlerts.map((a: any) => (<option key={a.id} value={a.id}>{a.pestName || 'Alert'} — {a.farmId || ''} ({a.severity || ''})</option>))}
@@ -724,6 +807,30 @@ export default function ExpertDashboard() {
               ))}
             </div>
           </div>
+        </>)}
+
+        {/* ═══ AI AGENT TAB ═══ */}
+        {activeTab === 'ai' && (<>
+          <div className="gx-section-divider">🤖 AI Agent — Full Analysis</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+            <button className="gx-btn gx-btn-green" onClick={() => {
+              myReports.forEach((r: any) => ai.analyzeSoil({ ph: r.phLevel, nitrogen: r.nitrogenKgHa, phosphorus: r.phosphorusKgHa, potassium: r.potassiumKgHa, organicCarbon: r.organicCarbon, zinc: r.zincPpm, electricalConductivity: r.ecDsm }));
+              toast.success('AI analyzed all soil reports');
+            }}>🧪 Re-Analyze All Soil Reports</button>
+            <button className="gx-btn gx-btn-orange" onClick={() => {
+              pestAlerts.forEach((a: any) => ai.analyzePest({ pestName: a.pestName || '', severity: a.severity || 'Moderate', affectedAreaPct: a.affectedAreaPct, cropName: a.cropName, farmId: a.farmId }));
+              toast.success('AI analyzed all pest alerts');
+            }}>🐛 Re-Analyze All Pest Alerts</button>
+            <button className="gx-btn gx-btn-blue" onClick={() => ai.getCropRecs({ season: undefined })}>🌾 Get Crop Recommendations</button>
+            <button className="gx-btn gx-btn-ghost" onClick={() => ai.clearRecommendations()}>🗑️ Clear Insights</button>
+          </div>
+          <AiInsightPanel
+            recommendations={ai.recommendations}
+            isAnalyzing={ai.isAnalyzing}
+            onAsk={ai.ask}
+            onAcceptTask={handleAiTaskAssign}
+            title="AI Agent — Complete Analysis"
+          />
         </>)}
 
         {/* ═══ FIELD PHOTOS TAB ═══ */}

@@ -8,8 +8,10 @@ import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAI } from '@/hooks/useAI';
+import { AiInsightPanel } from '@/components/AiInsightPanel';
 
-type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports';
+type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports' | 'ai';
 
 export default function FieldManagerDashboard() {
   const { user, profile, logout } = useAuth();
@@ -127,6 +129,9 @@ export default function FieldManagerDashboard() {
     onSuccess: () => {
       toast.success('Operation logged! Visible to Land Owner & Cluster Admin.');
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+      // AI auto-analyze the operation
+      const rec = ai.analyzeOp({ operationType: opType, cropName: '', observations: opNotes, productUsed: opChemical, quantityUsed: opDose, areaCoveredAcres: parseFloat(opArea) || 0 });
+      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI analyzed: ${rec.suggestedTasks.length} task(s) suggested`);
       setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost(''); setOpPhotos([]);
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to log operation'),
@@ -181,6 +186,9 @@ export default function FieldManagerDashboard() {
     onSuccess: () => {
       toast.success('Pest alert sent to Expert! They will prescribe treatment.');
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+      // AI auto-analyze the pest report
+      const rec = ai.analyzePest({ pestName, severity: pestSeverity, cropName: '', affectedAreaPct: parseFloat(pestArea) || 0, description: pestNotes });
+      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI analyzed pest: ${rec.suggestedTasks.length} task(s) recommended`);
       setPestName(''); setPestSeverity('Low'); setPestArea(''); setPestCropStage(''); setPestNotes(''); setPestPhotos([]);
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to report pest'),
@@ -207,6 +215,9 @@ export default function FieldManagerDashboard() {
     onSuccess: () => {
       toast.success('Soil sample logged! Expert has been notified for testing.');
       queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
+      // AI auto-analyze soil context
+      const rec = ai.analyzeSoil({ ph: 0, nitrogen: 0, phosphorus: 0, potassium: 0, organicCarbon: 0, currentCrop: '', region: '' });
+      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI: ${rec.suggestedTasks.length} soil insight(s) — enter lab results for detailed analysis`);
       setSamplePoints(''); setSampleGPS(''); setSampleNotes('');
       setSampleDate(new Date().toISOString().split('T')[0]);
     },
@@ -256,6 +267,27 @@ export default function FieldManagerDashboard() {
     onError: (err: any) => toast.error(err?.message || 'Failed to assign task'),
   });
 
+  const ai = useAI();
+
+  const handleAiTaskAssign = async (task: any) => {
+    try {
+      await javaApi.insert('TASKS', {
+        id: crypto.randomUUID(),
+        farm_id: opFarmId || (myFarms[0] as any)?.id || '',
+        title: task.title,
+        description: task.description,
+        assigned_to: task.assignTo || '',
+        status: 'pending',
+        due_date: new Date(Date.now() + (task.dueInDays || 3) * 86400000).toISOString().split('T')[0],
+        created_by: user?.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      toast.success(`AI Task assigned: ${task.title}`);
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+    } catch { toast.error('Failed to assign AI task'); }
+  };
+
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Field Manager';
   const pendingRx = prescriptions.filter((p: any) => p.status !== 'ACKNOWLEDGED');
 
@@ -292,6 +324,9 @@ export default function FieldManagerDashboard() {
         <SideNavItem icon="👥" label="Assign Tasks" active={activeTab === 'assign'} onClick={() => setActiveTab('assign')} />
         <SideNavItem icon="✅" label="Mark Complete" active={activeTab === 'complete'} onClick={() => setActiveTab('complete')} />
         <SideNavItem icon="📊" label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+
+        <div className="gx-nav-group-label">Intelligence</div>
+        <SideNavItem icon="🤖" label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
 
         <div className="gx-nav-group-label">Reports</div>
         <SideNavItem icon="📈" label="My Activity Log" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} />
@@ -380,6 +415,18 @@ export default function FieldManagerDashboard() {
               </table>
             </div>
           </div>
+
+          {/* AI Quick Insights in Overview */}
+          {ai.recommendations.length > 0 && (
+            <div className="gx-card" style={{ marginBottom: 20 }}>
+              <div className="gx-card-header"><div className="gx-card-title">🤖 AI Insights</div>
+                <button className="gx-btn gx-btn-orange" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setActiveTab('ai')}>View All →</button>
+              </div>
+              <div className="gx-card-body">
+                <AiInsightPanel recommendations={ai.recommendations} isAnalyzing={ai.isAnalyzing} onAcceptTask={handleAiTaskAssign} compact title="" />
+              </div>
+            </div>
+          )}
         </>)}
 
         {/* ═══ MY ASSIGNED FARMS TAB ═══ */}
@@ -843,6 +890,27 @@ export default function FieldManagerDashboard() {
                 <div>Worker attendance tracking. Workers check in/out from their dashboards.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Attendance records sync automatically for your assigned farms.</div>
               </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ AI AGENT TAB ═══ */}
+        {activeTab === 'ai' && (<>
+          <div className="gx-section-divider">🤖 AI Agent — Smart Farm Assistant</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header"><div className="gx-card-title">🤖 AI Analysis & Recommendations</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
+            <div className="gx-card-body">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                <button className="gx-btn gx-btn-orange" style={{ fontSize: 12 }} onClick={() => { const r = ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success(`Crop recommendations generated`); }}>🌾 Crop Recommendations</button>
+                <button className="gx-btn gx-btn-blue" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear All</button>
+              </div>
+              <AiInsightPanel
+                recommendations={ai.recommendations}
+                isAnalyzing={ai.isAnalyzing}
+                onAsk={(q) => ai.ask(q)}
+                onAcceptTask={handleAiTaskAssign}
+                title="Farm Intelligence"
+              />
             </div>
           </div>
         </>)}

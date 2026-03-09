@@ -9,8 +9,10 @@ import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAI } from '@/hooks/useAI';
+import { AiInsightPanel } from '@/components/AiInsightPanel';
 
-type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests';
+type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests' | 'ai';
 
 export default function WorkerDashboard() {
   const { user, profile, logout } = useAuth();
@@ -29,6 +31,7 @@ export default function WorkerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
   const today = new Date().toISOString().split('T')[0];
+  const ai = useAI();
 
   const { data: todayAttendance = null } = useQuery({
     queryKey: ['worker-attendance', user?.id, today],
@@ -163,6 +166,7 @@ export default function WorkerDashboard() {
 
         <div className="gx-nav-group-label">Support</div>
         <SideNavItem icon="📦" label="Material Request" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
+        <SideNavItem icon="🤖" label="AI Work Tips" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
 
         <div className="gx-sidebar-logout">
           <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
@@ -390,6 +394,29 @@ export default function WorkerDashboard() {
                   {submitMaterialRequest.isPending ? '⏳ Submitting...' : '📤 Submit Request'}
                 </button>
               </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ AI WORK TIPS TAB ═══ */}
+        {activeTab === 'ai' && (<>
+          <div className="gx-section-divider">🤖 AI Work Tips & Guidance</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header"><div className="gx-card-title">🤖 Smart Work Assistant</div><span className="gx-status gx-s-done">{ai.recommendations.length} Tips</span></div>
+            <div className="gx-card-body">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {pendingTasks.length > 0 && <button className="gx-btn gx-btn-green" style={{ fontSize: 12 }} onClick={() => {
+                  pendingTasks.slice(0, 3).forEach((t: any) => ai.analyzeOp({ operationType: t.title || 'Field Work', cropName: '', observations: t.description || '' }));
+                  toast.success('AI generated tips for your tasks');
+                }}>💡 Get Tips for My Tasks</button>}
+                <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear</button>
+              </div>
+              <AiInsightPanel
+                recommendations={ai.recommendations}
+                isAnalyzing={ai.isAnalyzing}
+                onAsk={(q) => ai.ask(q)}
+                title="Work Guidance"
+              />
             </div>
           </div>
         </>)}

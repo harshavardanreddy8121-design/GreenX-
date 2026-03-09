@@ -7,8 +7,10 @@ import { LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAI } from '@/hooks/useAI';
+import { AiInsightPanel } from '@/components/AiInsightPanel';
 
-type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport';
+type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
 
 export default function LandownerDashboard() {
   const { user, profile, logout } = useAuth();
@@ -69,6 +71,7 @@ export default function LandownerDashboard() {
   const costsArr = Array.isArray(costs) ? costs : [];
   const totalCosts = costsArr.reduce((sum: number, c: any) => sum + (parseFloat(c.amount) || 0), 0);
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Farmer';
+  const ai = useAI();
 
   return (
     <div className="gx-dashboard lo-accent">
@@ -105,6 +108,9 @@ export default function LandownerDashboard() {
         <SideNavItem icon="🔔" label="Notifications" active={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')} badge={unreadCount > 0 ? String(unreadCount) : undefined} badgeColor="red" />
         <SideNavItem icon="💬" label="Messages" active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
         <SideNavItem icon="📋" label="Season Reports" active={activeTab === 'seasonreport'} onClick={() => setActiveTab('seasonreport')} />
+
+        <div className="gx-nav-group-label">Intelligence</div>
+        <SideNavItem icon="🤖" label="AI Farm Advisor" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
 
         <div className="gx-nav-group-label">Account</div>
         <SideNavItem icon="📄" label="My Contract" active={activeTab === 'contract'} onClick={() => setActiveTab('contract')} />
@@ -555,6 +561,27 @@ export default function LandownerDashboard() {
                 <div>Direct messaging with your Field Manager and Expert.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Messaging feature is being developed. You will be notified when it's available.</div>
               </div>
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ AI FARM ADVISOR TAB ═══ */}
+        {activeTab === 'ai' && (<>
+          <div className="gx-section-divider">🤖 AI Farm Advisor</div>
+          <div className="gx-card" style={{ marginBottom: 20 }}>
+            <div className="gx-card-header"><div className="gx-card-title">🤖 Smart Crop & Soil Advisor</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
+            <div className="gx-card-body">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                <button className="gx-btn gx-btn-gold" style={{ fontSize: 12 }} onClick={() => { ai.getCropRecs({ region: farm?.state || 'Andhra Pradesh', season: 'Kharif', soilType: farm?.soilType, ph: farm?.soil_ph }); toast({ title: '🌾 Crop recommendations from AI generated' }); }}>🌾 Get Crop Recommendations</button>
+                {farm?.soil_ph && <button className="gx-btn gx-btn-blue" style={{ fontSize: 12 }} onClick={() => { ai.analyzeSoil({ ph: farm.soil_ph || 0, nitrogen: farm.soil_nitrogen || 0, phosphorus: farm.soil_phosphorus || 0, potassium: farm.soil_potassium || 0, organicCarbon: farm.soil_organic_carbon || 0, currentCrop: farm.currentCrop || '', region: farm.state || 'AP' }); toast({ title: '🤖 AI analyzing your soil data...' }); }}>🧪 Analyze My Soil</button>}
+                <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear</button>
+              </div>
+              <AiInsightPanel
+                recommendations={ai.recommendations}
+                isAnalyzing={ai.isAnalyzing}
+                onAsk={(q) => ai.ask(q)}
+                title="Farm Intelligence"
+              />
             </div>
           </div>
         </>)}
