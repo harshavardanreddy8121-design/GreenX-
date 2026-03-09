@@ -136,11 +136,11 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* UID Search */}
-      <div className="gx-section-divider">🔍 Search User by UID</div>
+      {/* UID + Farm Search */}
+      <div className="gx-section-divider">🔍 Quick Search</div>
       <div className="gx-card" style={{ marginBottom: 20 }}>
         <div className="gx-card-header">
-          <div className="gx-card-title">🔍 Quick UID Lookup</div>
+          <div className="gx-card-title">🔍 UID + Farm Lookup</div>
         </div>
         <div className="gx-card-body">
           <div className="gx-form-grid">
@@ -148,6 +148,16 @@ export default function AdminDashboard() {
               <label className="gx-label">Enter 4-digit UID</label>
               <input type="text" className="gx-input" placeholder="e.g. 1234"
                 value={uidSearch} onChange={e => setUidSearch(e.target.value.replace(/\D/g, '').slice(0, 4))} maxLength={4} />
+            </div>
+            <div className="gx-form-group">
+              <label className="gx-label">Search Farm</label>
+              <input
+                type="text"
+                className="gx-input"
+                placeholder="Farm code / name / ID"
+                value={farmSearch}
+                onChange={e => setFarmSearch(e.target.value)}
+              />
             </div>
           </div>
           {uidSearch.length === 4 && searchedUser && (

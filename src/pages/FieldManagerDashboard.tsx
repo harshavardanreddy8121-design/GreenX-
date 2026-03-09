@@ -32,6 +32,10 @@ export default function FieldManagerDashboard() {
   const [sampleCondition, setSampleCondition] = useState('Moist');
   const [sampleNotes, setSampleNotes] = useState('');
   const [sampleDate, setSampleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [photoFarmId, setPhotoFarmId] = useState('');
+  const [photoType, setPhotoType] = useState('Crop Progress');
+  const [photoNotes, setPhotoNotes] = useState('');
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -85,6 +89,35 @@ export default function FieldManagerDashboard() {
       setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost('');
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to log operation'),
+  });
+
+  const uploadPhotos = useMutation({
+    mutationFn: async () => {
+      if (!photoFarmId) throw new Error('Please select a farm');
+      if (!photoFiles.length) throw new Error('Please select at least one photo');
+
+      const oversized = photoFiles.find((f) => f.size > 10 * 1024 * 1024);
+      if (oversized) throw new Error(`File too large: ${oversized.name}. Max 10MB per photo.`);
+
+      const fd = new FormData();
+      fd.append('data', JSON.stringify({
+        farmId: photoFarmId,
+        operationType: 'PHOTO_UPDATE',
+        operationDate: new Date().toISOString().split('T')[0],
+        observations: `${photoType}${photoNotes ? `: ${photoNotes}` : ''}`,
+      }));
+      photoFiles.forEach((f) => fd.append('photos', f));
+      return fieldManager.logOperation(fd);
+    },
+    onSuccess: () => {
+      toast.success(`Uploaded ${photoFiles.length} photo(s) successfully`);
+      setPhotoFiles([]);
+      setPhotoNotes('');
+      setPhotoType('Crop Progress');
+      queryClient.invalidateQueries({ queryKey: ['fm-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
+    },
+    onError: (err: any) => toast.error(err?.message || 'Failed to upload photos'),
   });
 
   const logSample = useMutation({
@@ -446,26 +479,45 @@ export default function FieldManagerDashboard() {
               <div className="gx-form-grid">
                 <div className="gx-form-group">
                   <label className="gx-label">Farm</label>
-                  <select className="gx-select" value={opFarmId} onChange={e => setOpFarmId(e.target.value)}>
+                  <select className="gx-select" value={photoFarmId} onChange={e => setPhotoFarmId(e.target.value)}>
                     <option value="">Select Farm...</option>
                     {myFarms.map((f: any) => <option key={f.id} value={f.id}>{f.farmCode || f.id}</option>)}
                   </select>
                 </div>
                 <div className="gx-form-group">
                   <label className="gx-label">Photo Type</label>
-                  <select className="gx-select"><option>Crop Progress</option><option>Pest / Disease</option><option>Soil Condition</option><option>Irrigation</option><option>Post-Operation</option></select>
+                  <select className="gx-select" value={photoType} onChange={e => setPhotoType(e.target.value)}>
+                    <option>Crop Progress</option><option>Pest / Disease</option><option>Soil Condition</option><option>Irrigation</option><option>Post-Operation</option>
+                  </select>
                 </div>
               </div>
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
                 <div className="gx-upload-label">📷 Select or Capture Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.files || []).slice(0, 5);
+                    setPhotoFiles(selected);
+                  }}
+                  style={{ marginTop: 10 }}
+                />
+                {photoFiles.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gx-text2)' }}>
+                    Selected: {photoFiles.map(f => f.name).join(', ')}
+                  </div>
+                )}
               </div>
               <div className="gx-form-group full" style={{ marginTop: 12 }}>
                 <label className="gx-label">Caption / Notes</label>
-                <textarea className="gx-textarea" placeholder="Describe what the photo shows..." />
+                <textarea className="gx-textarea" value={photoNotes} onChange={e => setPhotoNotes(e.target.value)} placeholder="Describe what the photo shows..." />
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange">📤 Upload & Share</button>
+                <button className="gx-btn gx-btn-orange" disabled={uploadPhotos.isPending} onClick={() => uploadPhotos.mutate()}>
+                  {uploadPhotos.isPending ? '⏳ Uploading...' : '📤 Upload & Share'}
+                </button>
               </div>
             </div>
           </div>
