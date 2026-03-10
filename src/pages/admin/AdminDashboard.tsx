@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 
+import { BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [farmSearch, setFarmSearch] = useState('');
@@ -103,14 +104,14 @@ export default function AdminDashboard() {
   return (
     <>
       <div className="gx-page-header">
-        <div className="gx-page-title">Cluster Admin — Control Center 🏢</div>
+        <div className="gx-page-title">Cluster Admin — Control Center <Building2 className="inline-block w-4 h-4 mr-1 align-middle" /></div>
         <div className="gx-page-sub">{farms.length} farms · {users.length} users · {pendingSamples.length} samples pending</div>
       </div>
 
       {/* Alert */}
       {alerts.length > 0 && (
         <div className="gx-alert-box gx-alert-red">
-          <span>🚨</span>
+          <span><ShieldAlert className="inline-block w-4 h-4 mr-1 align-middle" /></span>
           <div><strong>Active Pest Alerts:</strong> {alerts.length} unresolved alerts across farms. Review and assign experts immediately.</div>
         </div>
       )}
@@ -140,10 +141,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* UID + Farm Search */}
-      <div className="gx-section-divider">🔍 Quick Search</div>
+      <div className="gx-section-divider"><Search className="inline-block w-4 h-4 mr-1 align-middle" /> Quick Search</div>
       <div className="gx-card" style={{ marginBottom: 20 }}>
         <div className="gx-card-header">
-          <div className="gx-card-title">🔍 UID + Farm Lookup</div>
+          <div className="gx-card-title"><Search className="inline-block w-4 h-4 mr-1 align-middle" /> UID + Farm Lookup</div>
         </div>
         <div className="gx-card-body">
           <div className="gx-form-grid">
@@ -178,20 +179,20 @@ export default function AdminDashboard() {
       </div>
 
       {/* Team Overview */}
-      <div className="gx-section-divider">👥 Team Overview</div>
+      <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> Team Overview</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 20 }}>
-        <RoleCard title="🌱 Land Owners" users={landowners} color="gold" />
-        <RoleCard title="🔬 Experts" users={experts} color="blue" />
-        <RoleCard title="🚜 Field Managers" users={fieldManagers} color="orange" />
-        <RoleCard title="👷 Workers" users={workers} color="green" />
+        <RoleCard title=<><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Land Owners</> users={landowners} color="gold" />
+        <RoleCard title=<><Microscope className="inline-block w-4 h-4 mr-1 align-middle" /> Experts</> users={experts} color="blue" />
+        <RoleCard title=<><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Field Managers</> users={fieldManagers} color="orange" />
+        <RoleCard title=<><HardHat className="inline-block w-4 h-4 mr-1 align-middle" /> Workers</> users={workers} color="green" />
       </div>
 
       {/* Operational Status */}
-      <div className="gx-section-divider">📊 Operational Status</div>
+      <div className="gx-section-divider"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Operational Status</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
         <div className="gx-card">
           <div className="gx-card-header">
-            <div className="gx-card-title">🧪 Samples Pipeline</div>
+            <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Samples Pipeline</div>
             <span className="gx-status gx-s-pending">{pendingSamples.length} Pending</span>
           </div>
           <div className="gx-card-body">
@@ -216,7 +217,7 @@ export default function AdminDashboard() {
         </div>
         <div className="gx-card">
           <div className="gx-card-header">
-            <div className="gx-card-title">🐛 Pest Alerts</div>
+            <div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Pest Alerts</div>
             <span className={`gx-status ${alerts.length > 0 ? 'gx-s-alert' : 'gx-s-done'}`}>{alerts.length} Active</span>
           </div>
           <div className="gx-card-body">
@@ -243,10 +244,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* All Farms Table */}
-      <div className="gx-section-divider">🌾 All Farms</div>
+      <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> All Farms</div>
       <div className="gx-card">
         <div className="gx-card-header">
-          <div className="gx-card-title">🌾 Farm Registry</div>
+          <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farm Registry</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input type="text" className="gx-input" style={{ width: 220, padding: '5px 10px', fontSize: 12 }}
               placeholder="Search farm code or name..."
@@ -326,10 +327,10 @@ export default function AdminDashboard() {
       {/* Finance Overview */}
       {totalRevenue > 0 && (
         <>
-          <div className="gx-section-divider" style={{ marginTop: 20 }}>💰 Revenue Projection</div>
+          <div className="gx-section-divider" style={{ marginTop: 20 }}><Wallet className="inline-block w-4 h-4 mr-1 align-middle" /> Revenue Projection</div>
           <div className="gx-card">
             <div className="gx-card-header">
-              <div className="gx-card-title">💰 Season Finance</div>
+              <div className="gx-card-title"><Wallet className="inline-block w-4 h-4 mr-1 align-middle" /> Season Finance</div>
               <span className="gx-status gx-s-done">₹{(totalRevenue / 100000).toFixed(1)}L projected</span>
             </div>
             <div className="gx-card-body">
@@ -351,13 +352,13 @@ export default function AdminDashboard() {
       )}
 
       {/* AI Intelligence Panel */}
-      <div className="gx-section-divider">🤖 AI Cluster Intelligence</div>
+      <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Cluster Intelligence</div>
       <div className="gx-card" style={{ marginBottom: 20 }}>
-        <div className="gx-card-header"><div className="gx-card-title">🤖 AI Farm Advisor</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
+        <div className="gx-card-header"><div className="gx-card-title"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Farm Advisor</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
         <div className="gx-card-body">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-            <button className="gx-btn gx-btn-green" style={{ fontSize: 12 }} onClick={() => { ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success('Crop recommendations generated'); }}>🌾 Cluster Crop Recs</button>
-            <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear</button>
+            <button className="gx-btn gx-btn-green" style={{ fontSize: 12 }} onClick={() => { ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success('Crop recommendations generated'); }}><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Cluster Crop Recs</button>
+            <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}><Trash2 className="inline-block w-4 h-4 mr-1 align-middle" /> Clear</button>
           </div>
           <AiInsightPanel
             recommendations={ai.recommendations}

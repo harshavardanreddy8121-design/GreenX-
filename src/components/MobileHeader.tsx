@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { Menu, X, Smartphone } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 
 interface MobileHeaderProps {
     title: string;
-    roleIcon?: string;
+    roleIcon?: ReactNode;
 }
 
-export function MobileHeader({ title, roleIcon = '📱' }: MobileHeaderProps) {
+export function MobileHeader({ title, roleIcon = <Smartphone size={18} /> }: MobileHeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const toggleMenu = () => {

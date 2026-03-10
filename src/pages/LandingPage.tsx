@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GreenXLogo } from '@/components/GreenXLogo';
 import { useAuth } from "@/contexts/AuthContext";
-import { Sprout } from 'lucide-react';
+import { Sprout, FlaskConical, Wheat, Smartphone, Ship, Microscope, DollarSign, Map, HardHat, BarChart3, Briefcase, Building2, ClipboardList, MapPin } from 'lucide-react';
 
 const roleRoutes: Record<string, string> = {
     admin: "/admin/users",
@@ -590,7 +590,7 @@ export default function LandingPage() {
 
                 <div className="hero-actions">
                     <button className="btn-hero-primary" onClick={() => navigate('/land-register')}>
-                        🌱 List Your Land
+                        <Sprout className="inline-block w-5 h-5 mr-1 align-middle" /> List Your Land
                     </button>
                     <a href="#solution" className="btn-hero-secondary">
                         ▶ See How It Works
@@ -613,7 +613,7 @@ export default function LandingPage() {
                     width: 'max-content'
                 }}>
                     {[...Array(16)].map((_, i) => {
-                        const items = ['🧪 Clinical Soil Testing', '🌾 Precision Agriculture', '📱 Real-Time Dashboard', '🚢 Direct International Export', '🔬 Expert Agronomists', '💰 70% Revenue to Landowner', '🗺️ GPS Field Tracking', '🌱 VRT Technology'];
+                        const items = ['Clinical Soil Testing', 'Precision Agriculture', 'Real-Time Dashboard', 'Direct International Export', 'Expert Agronomists', '70% Revenue to Landowner', 'GPS Field Tracking', 'VRT Technology'];
                         return (
                             <div key={i} style={{
                                 display: 'flex',
@@ -697,10 +697,10 @@ export default function LandingPage() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '56px' }}>
                         {[
-                            { icon: '🧪', title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
-                            { icon: '🌾', title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
-                            { icon: '👨‍🌾', title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
-                            { icon: '🚢', title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
+                            { icon: <FlaskConical size={36} strokeWidth={1.5} />, title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
+                            { icon: <Wheat size={36} strokeWidth={1.5} />, title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
+                            { icon: <HardHat size={36} strokeWidth={1.5} />, title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
+                            { icon: <Ship size={36} strokeWidth={1.5} />, title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
                         ].map((item, i) => (
                             <div key={i} style={{
                                 background: 'var(--surface)',
@@ -793,7 +793,7 @@ export default function LandingPage() {
                     }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '32px', alignItems: 'center' }}>
                             <div>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🏥</div>
+                                <div style={{ fontSize: '32px', marginBottom: '12px' }}><Building2 size={32} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--white)', marginBottom: '8px' }}>
                                     Hospital
                                 </div>
@@ -813,7 +813,7 @@ export default function LandingPage() {
                             }}></div>
 
                             <div>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🌾</div>
+                                <div style={{ fontSize: '32px', marginBottom: '12px' }}><Wheat size={32} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)', marginBottom: '8px' }}>
                                     GreenX Farm
                                 </div>
@@ -853,10 +853,10 @@ export default function LandingPage() {
                     <div style={{ marginTop: '48px', textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', gap: '8px', padding: '6px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                             {[
-                                { id: 't1', label: '👨‍🌾 Worker View' },
-                                { id: 't2', label: '🔬 Expert View' },
-                                { id: 't3', label: '📊 Owner View' },
-                                { id: 't4', label: '👔 Manager View' }
+                                { id: 't1', label: 'Worker View' },
+                                { id: 't2', label: 'Expert View' },
+                                { id: 't3', label: 'Owner View' },
+                                { id: 't4', label: 'Manager View' }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
@@ -892,7 +892,7 @@ export default function LandingPage() {
                         }}>
                             {activeTab === 't1' && (
                                 <div style={{ maxWidth: '600px', textAlign: 'left' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}>👨‍🌾</div>
+                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}><HardHat size={40} strokeWidth={1.5} /></div>
                                     <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--white)', marginBottom: '12px' }}>
                                         Worker Dashboard
                                     </h3>
@@ -909,7 +909,7 @@ export default function LandingPage() {
                             )}
                             {activeTab === 't2' && (
                                 <div style={{ maxWidth: '600px', textAlign: 'left' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}>🔬</div>
+                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}><Microscope size={40} strokeWidth={1.5} /></div>
                                     <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--white)', marginBottom: '12px' }}>
                                         Expert Agronomist Panel
                                     </h3>
@@ -926,7 +926,7 @@ export default function LandingPage() {
                             )}
                             {activeTab === 't3' && (
                                 <div style={{ maxWidth: '600px', textAlign: 'left' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}>📊</div>
+                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}><BarChart3 size={40} strokeWidth={1.5} /></div>
                                     <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--white)', marginBottom: '12px' }}>
                                         Landowner Portal
                                     </h3>
@@ -943,7 +943,7 @@ export default function LandingPage() {
                             )}
                             {activeTab === 't4' && (
                                 <div style={{ maxWidth: '600px', textAlign: 'left' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}>👔</div>
+                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}><Briefcase size={40} strokeWidth={1.5} /></div>
                                     <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--white)', marginBottom: '12px' }}>
                                         Field Manager Command Center
                                     </h3>
@@ -971,10 +971,10 @@ export default function LandingPage() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '28px', marginTop: '56px' }}>
                         {[
-                            { icon: '🏡', title: 'Landowners', desc: 'Professionals in cities with inherited/idle farmland. Want passive farm income without relocating.' },
-                            { icon: '👨‍🌾', title: 'Field Workers', desc: 'On-ground labor executing daily farm operations: planting, irrigation, harvest. GPS-tracked tasks.' },
-                            { icon: '🔬', title: 'Expert Agronomists', desc: 'Qualified agriculture scientists who design crop plans, diagnose issues, prescribe treatments.' },
-                            { icon: '👔', title: 'Field Managers', desc: 'Regional coordinators overseeing 20-30 farms, managing workers, logistics, and quality control.' }
+                            { icon: <Building2 size={40} strokeWidth={1.5} />, title: 'Landowners', desc: 'Professionals in cities with inherited/idle farmland. Want passive farm income without relocating.' },
+                            { icon: <HardHat size={40} strokeWidth={1.5} />, title: 'Field Workers', desc: 'On-ground labor executing daily farm operations: planting, irrigation, harvest. GPS-tracked tasks.' },
+                            { icon: <Microscope size={40} strokeWidth={1.5} />, title: 'Expert Agronomists', desc: 'Qualified agriculture scientists who design crop plans, diagnose issues, prescribe treatments.' },
+                            { icon: <Briefcase size={40} strokeWidth={1.5} />, title: 'Field Managers', desc: 'Regional coordinators overseeing 20-30 farms, managing workers, logistics, and quality control.' }
                         ].map((role, i) => (
                             <div key={i} style={{
                                 background: 'var(--surface)',
@@ -1043,7 +1043,7 @@ export default function LandingPage() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
                             <div>
-                                <div style={{ fontSize: '28px', marginBottom: '12px' }}>🌾</div>
+                                <div style={{ fontSize: '28px', marginBottom: '12px' }}><Wheat size={28} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--white)', marginBottom: '8px' }}>
                                     Landowner (70%)
                                 </div>
@@ -1056,7 +1056,7 @@ export default function LandingPage() {
                             </div>
 
                             <div>
-                                <div style={{ fontSize: '28px', marginBottom: '12px' }}>🏢</div>
+                                <div style={{ fontSize: '28px', marginBottom: '12px' }}><Building2 size={28} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--green)', marginBottom: '8px' }}>
                                     GreenX (30%)
                                 </div>
@@ -1086,7 +1086,7 @@ export default function LandingPage() {
 
                     <div style={{ marginTop: '48px', textAlign: 'center' }}>
                         <button className="btn-hero-primary" onClick={() => navigate('/land-register')}>
-                            📋 Register Your Land Now
+                            <ClipboardList className="inline-block w-5 h-5 mr-1 align-middle" /> Register Your Land Now
                         </button>
                     </div>
                 </div>
@@ -1234,7 +1234,7 @@ export default function LandingPage() {
                         color: 'var(--text3)',
                         marginTop: '20px'
                     }}>
-                        📍 Currently accepting farms in <strong style={{ color: 'var(--green)' }}>India</strong>
+                        <MapPin className="inline-block w-4 h-4 mr-1 align-middle" /> Currently accepting farms in <strong style={{ color: 'var(--green)' }}>India</strong>
                     </div>
 
                     <div style={{

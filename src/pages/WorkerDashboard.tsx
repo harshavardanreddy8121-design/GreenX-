@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
 import { files } from '@/lib/api';
-import { LogOut } from 'lucide-react';
+import { Bot, Camera, CheckCircle2, CircleDot, CircleX, ClipboardList, Clock, HardHat, Lightbulb, Loader2, LogOut, Package, Square, Trash2, Upload, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -143,11 +143,11 @@ export default function WorkerDashboard() {
 
   return (
     <div className="gx-dashboard" style={{ '--role-accent': '#22c55e', '--role-accent-dim': 'rgba(34,197,94,.12)' } as React.CSSProperties}>
-      <MobileHeader title="Worker" roleIcon="👷" />
+      <MobileHeader title="Worker" roleIcon={<HardHat size={18} />} />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">
-          <div className="gx-sidebar-avatar" style={{ background: 'rgba(34,197,94,.15)' }}>👷</div>
+          <div className="gx-sidebar-avatar" style={{ background: 'rgba(34,197,94,.15)' }}><HardHat size={22} /></div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">WORKER · FIELD</div>
           <div className="gx-theme-switch">
@@ -157,16 +157,16 @@ export default function WorkerDashboard() {
         </div>
 
         <div className="gx-nav-group-label">Daily</div>
-        <SideNavItem icon="⏰" label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
-        <SideNavItem icon="📋" label="My Tasks" active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} badge={pendingTasks.length > 0 ? String(pendingTasks.length) : undefined} badgeColor="red" />
+        <SideNavItem icon={<Clock size={18} />} label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+        <SideNavItem icon={<ClipboardList size={18} />} label="My Tasks" active={activeTab === 'tasks'} onClick={() => setActiveTab('tasks')} badge={pendingTasks.length > 0 ? String(pendingTasks.length) : undefined} badgeColor="red" />
 
         <div className="gx-nav-group-label">Farm</div>
-        <SideNavItem icon="🌾" label="Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
-        <SideNavItem icon="📷" label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
+        <SideNavItem icon={<Wheat size={18} />} label="Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
+        <SideNavItem icon={<Camera size={18} />} label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
 
         <div className="gx-nav-group-label">Support</div>
-        <SideNavItem icon="📦" label="Material Request" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
-        <SideNavItem icon="🤖" label="AI Work Tips" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
+        <SideNavItem icon={<Package size={18} />} label="Material Request" active={activeTab === 'requests'} onClick={() => setActiveTab('requests')} />
+        <SideNavItem icon={<Bot size={18} />} label="AI Work Tips" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
 
         <div className="gx-sidebar-logout">
           <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
@@ -176,7 +176,7 @@ export default function WorkerDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="gx-main">
         <div className="gx-page-header">
-          <div className="gx-page-title">Worker Dashboard — {userName} 👷</div>
+          <div className="gx-page-title">Worker Dashboard — {userName} <HardHat className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{pendingTasks.length} tasks pending · {myFarms.length} farms</div>
         </div>
 
@@ -184,7 +184,7 @@ export default function WorkerDashboard() {
         <div className="gx-stats-row">
           <div className="gx-stat-card green">
             <div className="gx-stat-label">Attendance</div>
-            <div className="gx-stat-value">{todayAttendance ? (todayAttendance.check_out ? '✅ Done' : '🟢 In') : '⬜ Not Yet'}</div>
+            <div className="gx-stat-value">{todayAttendance ? (todayAttendance.check_out ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Done</> : <><CircleDot className="inline-block w-4 h-4 mr-1 align-middle" /> In</>) : <><Square className="inline-block w-4 h-4 mr-1 align-middle" /> Not Yet</>}</div>
             <div className="gx-stat-change gx-neutral">Today</div>
           </div>
           <div className="gx-stat-card orange">
@@ -206,29 +206,29 @@ export default function WorkerDashboard() {
 
         {/* ═══ ATTENDANCE TAB ═══ */}
         {activeTab === 'attendance' && (<>
-          <div className="gx-section-divider">⏰ Daily Attendance</div>
+          <div className="gx-section-divider"><Clock className="inline-block w-4 h-4 mr-1 align-middle" /> Daily Attendance</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
             <div className="gx-card-header">
-              <div className="gx-card-title">⏰ Today's Attendance — {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+              <div className="gx-card-title"><Clock className="inline-block w-4 h-4 mr-1 align-middle" /> Today's Attendance — {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
               <span className={`gx-status ${todayAttendance ? 'gx-s-done' : 'gx-s-pending'}`}>{todayAttendance ? 'Checked In' : 'Not Checked In'}</span>
             </div>
             <div className="gx-card-body">
               {!todayAttendance ? (
                 <div style={{ textAlign: 'center', padding: 30 }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>⏰</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Clock size={48} strokeWidth={1.5} /></div>
                   <div style={{ marginBottom: 16, opacity: .7 }}>You haven't checked in today. Tap the button to mark attendance.</div>
-                  <button className="gx-btn gx-btn-green" onClick={() => markAttendance.mutate('checkin')}>✅ Check In Now</button>
+                  <button className="gx-btn gx-btn-green" onClick={() => markAttendance.mutate('checkin')}><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Check In Now</button>
                 </div>
               ) : !todayAttendance.check_out ? (
                 <div style={{ textAlign: 'center', padding: 30 }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🟢</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><CircleDot size={48} strokeWidth={1.5} /></div>
                   <div style={{ marginBottom: 8, color: 'var(--gx-green)' }}>Checked in at {new Date(todayAttendance.check_in).toLocaleTimeString('en-IN')}</div>
                   <div style={{ marginBottom: 16, opacity: .5 }}>Working... Tap below when shift is done.</div>
-                  <button className="gx-btn gx-btn-orange" onClick={() => markAttendance.mutate('checkout')}>🔴 Check Out</button>
+                  <button className="gx-btn gx-btn-orange" onClick={() => markAttendance.mutate('checkout')}><CircleX className="inline-block w-4 h-4 mr-1 align-middle" /> Check Out</button>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: 30 }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><CheckCircle2 size={48} strokeWidth={1.5} /></div>
                   <div style={{ color: 'var(--gx-green)', marginBottom: 4 }}>In: {new Date(todayAttendance.check_in).toLocaleTimeString('en-IN')}</div>
                   <div style={{ color: 'var(--gx-orange)', marginBottom: 8 }}>Out: {new Date(todayAttendance.check_out).toLocaleTimeString('en-IN')}</div>
                   <div style={{ opacity: .5 }}>Attendance complete for today.</div>
@@ -240,10 +240,10 @@ export default function WorkerDashboard() {
 
         {/* ═══ TASKS TAB ═══ */}
         {activeTab === 'tasks' && (<>
-          <div className="gx-section-divider">📋 My Tasks</div>
+          <div className="gx-section-divider"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> My Tasks</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
             <div className="gx-card-header">
-              <div className="gx-card-title">📋 Assigned Tasks</div>
+              <div className="gx-card-title"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Assigned Tasks</div>
               <span className="gx-status gx-s-pending">{myTasks.length} Total</span>
             </div>
             <div className="gx-card-body">
@@ -263,7 +263,7 @@ export default function WorkerDashboard() {
                         {t.status !== 'completed' && (
                           <button className="gx-btn gx-btn-green" style={{ padding: '4px 12px', fontSize: 11 }}
                             onClick={() => toggleTask.mutate(t)}>
-                            {t.status === 'pending' ? '▶ Start' : '✅ Done'}
+                            {t.status === 'pending' ? '▶ Start' : <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Done</>}
                           </button>
                         )}
                       </td>
@@ -277,10 +277,10 @@ export default function WorkerDashboard() {
 
         {/* ═══ FARMS TAB ═══ */}
         {activeTab === 'farms' && (<>
-          <div className="gx-section-divider">🌾 Assigned Farms</div>
+          <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Assigned Farms</div>
           <div className="gx-card">
             <div className="gx-card-header">
-              <div className="gx-card-title">🌾 My Farms</div>
+              <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> My Farms</div>
               <span className="gx-status gx-s-done">{myFarms.length} Active</span>
             </div>
             <div className="gx-card-body">
@@ -308,9 +308,9 @@ export default function WorkerDashboard() {
 
         {/* ═══ UPLOAD PHOTOS TAB ═══ */}
         {activeTab === 'photos' && (<>
-          <div className="gx-section-divider">📷 Upload Field Photos</div>
+          <div className="gx-section-divider"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Upload Field Photos</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📷 Photo Upload</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Photo Upload</div></div>
             <div className="gx-card-body">
               <div className="gx-form-grid">
                 <div className="gx-form-group">
@@ -332,7 +332,7 @@ export default function WorkerDashboard() {
                 </div>
               </div>
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
-                <div className="gx-upload-label">📷 Select or Capture Photos</div>
+                <div className="gx-upload-label"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Select or Capture Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
                 <input
                   type="file"
@@ -356,7 +356,7 @@ export default function WorkerDashboard() {
               </div>
               <div className="gx-btn-row">
                 <button className="gx-btn gx-btn-green" disabled={uploadWorkerPhotos.isPending} onClick={() => uploadWorkerPhotos.mutate()}>
-                  {uploadWorkerPhotos.isPending ? '⏳ Uploading...' : '📤 Upload Photos'}
+                  {uploadWorkerPhotos.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Uploading...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Upload Photos</>}
                 </button>
               </div>
             </div>
@@ -365,9 +365,9 @@ export default function WorkerDashboard() {
 
         {/* ═══ MATERIAL REQUEST TAB ═══ */}
         {activeTab === 'requests' && (<>
-          <div className="gx-section-divider">📦 Material Request</div>
+          <div className="gx-section-divider"><Package className="inline-block w-4 h-4 mr-1 align-middle" /> Material Request</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📦 Request Materials / Supplies</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Package className="inline-block w-4 h-4 mr-1 align-middle" /> Request Materials / Supplies</div></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -391,7 +391,7 @@ export default function WorkerDashboard() {
               </div>
               <div className="gx-btn-row">
                 <button className="gx-btn gx-btn-green" disabled={submitMaterialRequest.isPending} onClick={() => submitMaterialRequest.mutate()}>
-                  {submitMaterialRequest.isPending ? '⏳ Submitting...' : '📤 Submit Request'}
+                  {submitMaterialRequest.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Submitting...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Submit Request</>}
                 </button>
               </div>
             </div>
@@ -400,16 +400,16 @@ export default function WorkerDashboard() {
 
         {/* ═══ AI WORK TIPS TAB ═══ */}
         {activeTab === 'ai' && (<>
-          <div className="gx-section-divider">🤖 AI Work Tips & Guidance</div>
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Work Tips & Guidance</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
-            <div className="gx-card-header"><div className="gx-card-title">🤖 Smart Work Assistant</div><span className="gx-status gx-s-done">{ai.recommendations.length} Tips</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> Smart Work Assistant</div><span className="gx-status gx-s-done">{ai.recommendations.length} Tips</span></div>
             <div className="gx-card-body">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
                 {pendingTasks.length > 0 && <button className="gx-btn gx-btn-green" style={{ fontSize: 12 }} onClick={() => {
                   pendingTasks.slice(0, 3).forEach((t: any) => ai.analyzeOp({ operationType: t.title || 'Field Work', cropName: '', observations: t.description || '' }));
                   toast.success('AI generated tips for your tasks');
-                }}>💡 Get Tips for My Tasks</button>}
-                <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear</button>
+                }}><Lightbulb className="inline-block w-4 h-4 mr-1 align-middle" /> Get Tips for My Tasks</button>}
+                <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}><Trash2 className="inline-block w-4 h-4 mr-1 align-middle" /> Clear</button>
               </div>
               <AiInsightPanel
                 recommendations={ai.recommendations}
@@ -426,7 +426,7 @@ export default function WorkerDashboard() {
 }
 
 function SideNavItem({ icon, label, active, onClick, badge, badgeColor }: {
-  icon: string; label: string; active?: boolean; onClick?: () => void;
+  icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void;
   badge?: string; badgeColor?: 'red' | 'green' | 'gold' | 'blue';
 }) {
   return (

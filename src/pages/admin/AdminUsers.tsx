@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { admin, auth as apiAuth } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Phone, Plus, X, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { Phone, Plus, X, UserPlus, Pencil, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AppRole } from '@/types/database';
 
@@ -135,11 +135,11 @@ export default function AdminUsers() {
   return (
     <div>
       <div className="gx-page-header">
-        <div className="gx-page-title">Users & Roles 👥</div>
+        <div className="gx-page-title">Users & Roles <Users className="inline-block w-5 h-5 ml-1 align-middle" /></div>
         <div className="gx-page-sub">Manage platform users and their access roles</div>
       </div>
 
-      <div className="gx-section-divider">👥 User Management</div>
+      <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> User Management</div>
       <div style={{ marginBottom: 16 }}>
         <button onClick={() => setShowCreate(true)} className="gx-btn gx-btn-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <UserPlus className="w-4 h-4" /> Create User
@@ -158,7 +158,7 @@ export default function AdminUsers() {
       ) : (
         <div className="gx-card">
           <div className="gx-card-header">
-            <div className="gx-card-title">👥 All Users</div>
+            <div className="gx-card-title"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> All Users</div>
             <span className="gx-status gx-s-done">{users.length}</span>
           </div>
           <div className="gx-card-body" style={{ display: 'grid', gap: 10 }}>

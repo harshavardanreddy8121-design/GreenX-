@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { BarChart3, Building2, CloudSun, Factory, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Users, Wallet, Wheat } from 'lucide-react';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const adminNavItems = [
-  { icon: '📊', label: 'Dashboard', path: '/admin' },
-  { icon: '🗺️', label: 'Land Management', path: '/admin/land' },
-  { icon: '🌾', label: 'Farm Registration', path: '/admin/farm-registration' },
-  { icon: '🧪', label: 'Lab & Samples', path: '/admin/lab-samples' },
-  { icon: '🔬', label: 'Diagnostics', path: '/admin/diagnostics' },
-  { icon: '🌤️', label: 'Weather', path: '/admin/weather' },
-  { icon: '💰', label: 'Finance', path: '/admin/finance' },
-  { icon: '📦', label: 'Exports', path: '/admin/exports' },
-  { icon: '🏭', label: 'Inventory', path: '/admin/inventory' },
-  { icon: '🛩️', label: 'Drones', path: '/admin/drones' },
-  { icon: '👥', label: 'Users', path: '/admin/users' },
-  { icon: '⚙️', label: 'Settings', path: '/admin/settings' },
+  { icon: <BarChart3 size={18} />, label: 'Dashboard', path: '/admin' },
+  { icon: <Map size={18} />, label: 'Land Management', path: '/admin/land' },
+  { icon: <Wheat size={18} />, label: 'Farm Registration', path: '/admin/farm-registration' },
+  { icon: <TestTubes size={18} />, label: 'Lab & Samples', path: '/admin/lab-samples' },
+  { icon: <Microscope size={18} />, label: 'Diagnostics', path: '/admin/diagnostics' },
+  { icon: <CloudSun size={18} />, label: 'Weather', path: '/admin/weather' },
+  { icon: <Wallet size={18} />, label: 'Finance', path: '/admin/finance' },
+  { icon: <Package size={18} />, label: 'Exports', path: '/admin/exports' },
+  { icon: <Factory size={18} />, label: 'Inventory', path: '/admin/inventory' },
+  { icon: <Plane size={18} />, label: 'Drones', path: '/admin/drones' },
+  { icon: <Users size={18} />, label: 'Users', path: '/admin/users' },
+  { icon: <Settings size={18} />, label: 'Settings', path: '/admin/settings' },
 ];
 
 export default function AdminLayout() {
@@ -30,11 +30,11 @@ export default function AdminLayout() {
 
   return (
     <div className="gx-dashboard ca-accent">
-      <MobileHeader title="Cluster Admin" roleIcon="🏢" />
+      <MobileHeader title="Cluster Admin" roleIcon={<Building2 size={18} />} />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">
-          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-green-dim)' }}>🏢</div>
+          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-green-dim)' }}><Building2 size={22} /></div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">CLUSTER ADMIN</div>
           <div className="gx-theme-switch">

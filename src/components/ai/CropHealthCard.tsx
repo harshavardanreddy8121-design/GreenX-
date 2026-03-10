@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Activity, AlertCircle, TrendingUp, Heart } from 'lucide-react';
+import { Activity, AlertCircle, TrendingUp, Heart, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -80,7 +80,7 @@ export function CropHealthCard(props: CropHealthCardProps) {
                         onClick={props.onRefresh}
                         className="hover:bg-white"
                     >
-                        🔄 Refresh
+                        <RefreshCw className="inline-block w-4 h-4 mr-1" /> Refresh
                     </Button>
                 )}
             </div>

@@ -1,4 +1,4 @@
-import { Lightbulb, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { Lightbulb, CheckCircle, AlertCircle, Zap, AlertTriangle, Droplets, Wheat, CircleAlert, Bug, CircleDot } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface RecommendationsProps {
@@ -10,15 +10,15 @@ export function RecommendationsPanel(props: RecommendationsProps) {
     const displayedRecs = props.recommendations.slice(0, props.maxDisplay || 10);
 
     const getIcon = (rec: string) => {
-        if (rec.includes('🔴')) return '🔴';
-        if (rec.includes('⚠️')) return '⚠️';
-        if (rec.includes('💧')) return '💧';
-        if (rec.includes('🌾')) return '🌾';
-        if (rec.includes('✅')) return '✅';
-        if (rec.includes('🚨')) return '🚨';
-        if (rec.includes('🐛')) return '🐛';
-        if (rec.includes('🦠')) return '🦠';
-        return '💡';
+        if (rec.includes('🔴')) return <CircleAlert size={22} />;
+        if (rec.includes('⚠️')) return <AlertTriangle size={22} />;
+        if (rec.includes('💧')) return <Droplets size={22} />;
+        if (rec.includes('🌾')) return <Wheat size={22} />;
+        if (rec.includes('✅')) return <CheckCircle size={22} />;
+        if (rec.includes('🚨')) return <AlertCircle size={22} />;
+        if (rec.includes('🐛')) return <Bug size={22} />;
+        if (rec.includes('🦠')) return <CircleDot size={22} />;
+        return <Lightbulb size={22} />;
     };
 
     const getIconColor = (rec: string) => {

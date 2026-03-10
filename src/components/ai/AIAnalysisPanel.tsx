@@ -7,7 +7,7 @@ import { HealthCharts } from './HealthCharts';
 import { RecommendationsPanel } from './RecommendationsPanel';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, TrendingUp } from 'lucide-react';
+import { Loader2, TrendingUp, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AIAnalysisPanelProps {
@@ -76,7 +76,7 @@ export function AIAnalysisPanel(props: AIAnalysisPanelProps) {
                 <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                     <p className="text-sm text-gray-600 mb-1">Overall Health</p>
                     <p className="text-3xl font-bold text-blue-600">{summary.overallHealth || 0}/100</p>
-                    <p className="text-xs text-blue-700 mt-1">Status: {summary.overallHealth >= 80 ? '✅ Excellent' : summary.overallHealth >= 60 ? '✅ Good' : '⚠️ needs attention'}</p>
+                    <p className="text-xs text-blue-700 mt-1">Status: {summary.overallHealth >= 80 ? <><CheckCircle className="inline w-3 h-3" /> Excellent</> : summary.overallHealth >= 60 ? <><CheckCircle className="inline w-3 h-3" /> Good</> : <><AlertTriangle className="inline w-3 h-3" /> needs attention</>}</p>
                 </Card>
 
                 <Card className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">

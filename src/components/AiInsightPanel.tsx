@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { AiRecommendation, SuggestedTask } from '@/ai/aiAgent';
 
+import { AlertTriangle, Bot, CheckCircle2, ClipboardList, Info, Loader2, ShieldAlert } from 'lucide-react';
 interface AiInsightPanelProps {
     recommendations: AiRecommendation[];
     isAnalyzing?: boolean;
@@ -15,10 +16,10 @@ interface AiInsightPanelProps {
 }
 
 const severityColors: Record<string, { bg: string; border: string; icon: string }> = {
-    info: { bg: 'rgba(59,130,246,0.08)', border: 'var(--gx-blue, #3b82f6)', icon: 'ℹ️' },
-    warning: { bg: 'rgba(234,179,8,0.08)', border: 'var(--gx-gold, #eab308)', icon: '⚠️' },
-    critical: { bg: 'rgba(239,68,68,0.08)', border: 'var(--gx-red, #ef4444)', icon: '🚨' },
-    success: { bg: 'rgba(34,197,94,0.08)', border: 'var(--gx-green, #22c55e)', icon: '✅' },
+    info: { bg: 'rgba(59,130,246,0.08)', border: 'var(--gx-blue, #3b82f6)', icon: <Info size={18} /> },
+    warning: { bg: 'rgba(234,179,8,0.08)', border: 'var(--gx-gold, #eab308)', icon: <AlertTriangle size={18} /> },
+    critical: { bg: 'rgba(239,68,68,0.08)', border: 'var(--gx-red, #ef4444)', icon: <ShieldAlert size={18} /> },
+    success: { bg: 'rgba(34,197,94,0.08)', border: 'var(--gx-green, #22c55e)', icon: <CheckCircle2 size={18} /> },
 };
 
 export function AiInsightPanel({ recommendations, isAnalyzing, onAsk, onAcceptTask, compact, title }: AiInsightPanelProps) {
@@ -34,7 +35,7 @@ export function AiInsightPanel({ recommendations, isAnalyzing, onAsk, onAcceptTa
     return (
         <div className="gx-card" style={{ border: '1px solid var(--gx-green, #22c55e)', position: 'relative' }}>
             <div className="gx-card-header" style={{ background: 'rgba(34,197,94,0.06)' }}>
-                <div className="gx-card-title">🤖 {title || 'AI Agent — Smart Insights'}</div>
+                <div className="gx-card-title"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> {title || 'AI Agent — Smart Insights'}</div>
                 <span className="gx-status gx-s-done">{recommendations.length} insights</span>
             </div>
             <div className="gx-card-body">
@@ -51,21 +52,21 @@ export function AiInsightPanel({ recommendations, isAnalyzing, onAsk, onAcceptTa
                             style={{ flex: 1 }}
                         />
                         <button className="gx-btn gx-btn-green" onClick={handleAsk} disabled={isAnalyzing || !question.trim()}>
-                            {isAnalyzing ? '⏳' : '🤖'} Ask
+                            {isAnalyzing ? <Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> : <Bot className="inline-block w-4 h-4 mr-1 align-middle" />} Ask
                         </button>
                     </div>
                 )}
 
                 {isAnalyzing && (
                     <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--gx-green)' }}>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>🤖</div>
+                        <div style={{ fontSize: 28, marginBottom: 8 }}><Bot size={28} /></div>
                         <div>Analyzing...</div>
                     </div>
                 )}
 
                 {recommendations.length === 0 && !isAnalyzing && (
                     <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--gx-text2)' }}>
-                        <div style={{ fontSize: 36, marginBottom: 8 }}>🤖</div>
+                        <div style={{ fontSize: 36, marginBottom: 8 }}><Bot size={36} /></div>
                         <div>AI Agent ready. Upload data or ask a question for intelligent analysis.</div>
                         <div style={{ fontSize: 13, marginTop: 6 }}>Trained on comprehensive crop data: soil, pests, fertilizers, varieties, economics.</div>
                     </div>
@@ -108,7 +109,7 @@ export function AiInsightPanel({ recommendations, isAnalyzing, onAsk, onAcceptTa
                                         {/* Suggested tasks */}
                                         {rec.suggestedTasks.length > 0 && (
                                             <div style={{ marginTop: 12, borderTop: '1px solid var(--gx-border)', paddingTop: 10 }}>
-                                                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>📋 Suggested Tasks ({rec.suggestedTasks.length}):</div>
+                                                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Suggested Tasks ({rec.suggestedTasks.length}):</div>
                                                 {rec.suggestedTasks.map((task, i) => (
                                                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px dashed var(--gx-border)' }}>
                                                         <div style={{ flex: 1 }}>
@@ -156,7 +157,7 @@ export function AiBadge({ count, severity }: { count: number; severity?: string 
     const color = severity === 'critical' ? '#ef4444' : severity === 'warning' ? '#f59e0b' : '#22c55e';
     return (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 12, background: color, color: '#fff', fontSize: 11, fontWeight: 600 }}>
-            🤖 {count}
+            <Bot className="inline-block w-4 h-4 mr-1 align-middle" /> {count}
         </span>
     );
 }

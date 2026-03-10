@@ -2,11 +2,7 @@ import { useState, useRef, type ChangeEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { admin } from '@/lib/api';
-import {
-    User, MapPin, Ruler, Droplets, Building2, Landmark,
-    FileText, CheckCircle2, ChevronRight, ChevronLeft,
-    Upload, X, AlertCircle, Copy, Check, KeyRound,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, Building2, Check, CheckCircle2, ChevronLeft, ChevronRight, Copy, Droplets, FileText, Hammer, Home, KeyRound, Landmark, MapPin, Paperclip, Ruler, Upload, User, UserRound, Wheat, X } from 'lucide-react';
 
 // ─── Andhra Pradesh Districts ─────────────────────────────────────────────────
 const AP_DISTRICTS = [
@@ -19,14 +15,14 @@ const AP_DISTRICTS = [
 
 // ─── Steps Config ─────────────────────────────────────────────────────────────
 const steps = [
-    { id: 1, title: 'Personal Details', icon: User, emoji: '👤' },
-    { id: 2, title: 'Land Location', icon: MapPin, emoji: '🏡' },
-    { id: 3, title: 'Land Details', icon: Ruler, emoji: '📐' },
-    { id: 4, title: 'Water & Irrigation', icon: Droplets, emoji: '💧' },
-    { id: 5, title: 'Infrastructure', icon: Building2, emoji: '🏗️' },
-    { id: 6, title: 'Bank Details', icon: Landmark, emoji: '🏦' },
-    { id: 7, title: 'Documents', icon: FileText, emoji: '📎' },
-    { id: 8, title: 'Confirmation', icon: CheckCircle2, emoji: '✅' },
+    { id: 1, title: 'Personal Details', icon: User, icon: <UserRound size={16} /> },
+    { id: 2, title: 'Land Location', icon: MapPin, icon: <Home size={16} /> },
+    { id: 3, title: 'Land Details', icon: Ruler, icon: <Ruler size={16} /> },
+    { id: 4, title: 'Water & Irrigation', icon: Droplets, icon: <Droplets size={16} /> },
+    { id: 5, title: 'Infrastructure', icon: Building2, icon: <Hammer size={16} /> },
+    { id: 6, title: 'Bank Details', icon: Landmark, icon: <Landmark size={16} /> },
+    { id: 7, title: 'Documents', icon: FileText, icon: <Paperclip size={16} /> },
+    { id: 8, title: 'Confirmation', icon: CheckCircle2, icon: <CheckCircle2 size={16} /> },
 ];
 
 // ─── Default Form State ───────────────────────────────────────────────────────
@@ -308,7 +304,7 @@ export default function AdminFarmRegistration() {
                             borderRadius: 8, padding: '10px 14px', marginBottom: 20,
                             fontSize: 12, color: 'var(--gx-text2)', lineHeight: 1.5,
                         }}>
-                            ⚠️ Please save these credentials. The landowner should change the temporary password after first login.
+                            <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /> Please save these credentials. The landowner should change the temporary password after first login.
                         </div>
 
                         <button
@@ -324,7 +320,7 @@ export default function AdminFarmRegistration() {
             {/* Header */}
             <div>
                 <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gx-text)', margin: 0 }}>
-                    🌾 Farm Registration
+                    <Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farm Registration
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--gx-text2)', marginTop: 4 }}>
                     Register a new farm owner and their land details
@@ -383,7 +379,7 @@ export default function AdminFarmRegistration() {
             <div className="gx-card" ref={formRef} style={{ overflow: 'visible' }}>
                 <div className="gx-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 20 }}>{currentStepInfo.emoji}</span>
+                        <span style={{ fontSize: 20 }}>{currentStepInfo.icon}</span>
                         <div>
                             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--gx-text)' }}>
                                 Step {currentStep} of 8 — {currentStepInfo.title}
@@ -447,7 +443,7 @@ export default function AdminFarmRegistration() {
                             disabled={submitMutation.isPending}
                             style={{ minWidth: 160 }}
                         >
-                            {submitMutation.isPending ? 'Submitting...' : '✅ Register Farm'}
+                            {submitMutation.isPending ? 'Submitting...' : <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Register Farm</>}
                         </button>
                     )}
                 </div>
@@ -853,7 +849,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Personal */}
-            <SummarySection title="👤 Personal Details">
+            <SummarySection title=<><UserRound className="inline-block w-4 h-4 mr-1 align-middle" /> Personal Details</>>
                 <SummaryRow label="Full Name" value={form.full_name} />
                 <SummaryRow label="Mobile" value={form.mobile} />
                 <SummaryRow label="Email" value={form.email} />
@@ -865,7 +861,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Location */}
-            <SummarySection title="🏡 Land Location">
+            <SummarySection title=<><Home className="inline-block w-4 h-4 mr-1 align-middle" /> Land Location</>>
                 <SummaryRow label="Village" value={form.village} />
                 <SummaryRow label="Mandal" value={form.mandal} />
                 <SummaryRow label="District" value={form.district} />
@@ -875,7 +871,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Land */}
-            <SummarySection title="📐 Land Details">
+            <SummarySection title=<><Ruler className="inline-block w-4 h-4 mr-1 align-middle" /> Land Details</>>
                 <SummaryRow label="Survey No." value={form.survey_number} />
                 <SummaryRow label="Total Area" value={form.total_area ? `${form.total_area} Acres` : ''} />
                 <SummaryRow label="Cultivable Area" value={form.cultivable_area ? `${form.cultivable_area} Acres` : ''} />
@@ -887,7 +883,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Water */}
-            <SummarySection title="💧 Water & Irrigation">
+            <SummarySection title=<><Droplets className="inline-block w-4 h-4 mr-1 align-middle" /> Water & Irrigation</>>
                 <SummaryRow label="Water Source" value={form.water_source} />
                 <SummaryRow label="Irrigation" value={form.irrigation_method} />
                 <SummaryRow label="Borewell Depth" value={form.borewell_depth ? `${form.borewell_depth} ft` : ''} />
@@ -895,7 +891,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Infrastructure */}
-            <SummarySection title="🏗️ Infrastructure">
+            <SummarySection title=<><Hammer className="inline-block w-4 h-4 mr-1 align-middle" /> Infrastructure</>>
                 <SummaryRow label="Road Access" value={form.road_access} />
                 <SummaryRow label="Storage" value={form.storage_available ? 'Yes' : 'No'} />
                 <SummaryRow label="Fencing" value={form.fencing} />
@@ -903,7 +899,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Bank */}
-            <SummarySection title="🏦 Bank Details">
+            <SummarySection title=<><Landmark className="inline-block w-4 h-4 mr-1 align-middle" /> Bank Details</>>
                 <SummaryRow label="Account Holder" value={form.account_holder} />
                 <SummaryRow label="Bank" value={form.bank_name} />
                 <SummaryRow label="Branch" value={form.branch_name} />
@@ -914,7 +910,7 @@ function Step8({ form, files, set }: { form: FormState; files: { aadhaar_doc: Fi
             </SummarySection>
 
             {/* Documents */}
-            <SummarySection title="📎 Documents">
+            <SummarySection title=<><Paperclip className="inline-block w-4 h-4 mr-1 align-middle" /> Documents</>>
                 <SummaryRow label="Aadhaar Card" value={files.aadhaar_doc?.name || 'Not uploaded'} />
                 <SummaryRow label="Pattadar Passbook" value={files.passbook_doc?.name || 'Not uploaded'} />
                 <SummaryRow label="Profile Photo" value={files.profile_photo?.name || 'Not uploaded'} />

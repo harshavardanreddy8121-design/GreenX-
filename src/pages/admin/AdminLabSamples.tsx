@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { admin } from '@/lib/api';
-import { FlaskConical } from 'lucide-react';
+import { BookOpen, FlaskConical, TestTubes } from 'lucide-react';
 import { toast } from 'sonner';
 
 const initialForm = {
@@ -77,14 +77,14 @@ export default function AdminLabSamples() {
   return (
     <>
       <div className="gx-page-header">
-        <div className="gx-page-title">Lab & Samples 🧪</div>
+        <div className="gx-page-title">Lab & Samples <TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /></div>
         <div className="gx-page-sub">Collect, assign, and track soil samples</div>
       </div>
 
-      <div className="gx-section-divider">🧪 Receive & Assign Sample</div>
+      <div className="gx-section-divider"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Receive & Assign Sample</div>
       <div className="gx-card" style={{ marginBottom: 20 }}>
         <div className="gx-card-header">
-          <div className="gx-card-title">🧪 Sample Intake Form</div>
+          <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Sample Intake Form</div>
         </div>
         <div className="gx-card-body">
           <div className="gx-form-grid" style={{ marginBottom: 12 }}>
@@ -145,10 +145,10 @@ export default function AdminLabSamples() {
         </div>
       </div>
 
-      <div className="gx-section-divider">📚 Lab Reports Archive</div>
+      <div className="gx-section-divider"><BookOpen className="inline-block w-4 h-4 mr-1 align-middle" /> Lab Reports Archive</div>
       <div className="gx-card">
         <div className="gx-card-header">
-          <div className="gx-card-title">🧪 Recent Lab Samples</div>
+          <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Recent Lab Samples</div>
           <span className="gx-status gx-s-pending">{samples.length}</span>
         </div>
         <div className="gx-card-body">

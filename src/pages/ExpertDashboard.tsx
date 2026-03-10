@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { expert } from '@/lib/api';
-import { LogOut } from 'lucide-react';
+import { AlertTriangle, Archive, BarChart3, BookOpen, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, CloudSun, Dna, FileText, FlaskConical, Inbox, Loader2, LogOut, Microscope, Pill, Sprout, TestTubes, Thermometer, Trash2, Upload, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -164,7 +164,7 @@ export default function ExpertDashboard() {
         electricalConductivity: parseFloat(soilEC) || undefined,
       });
       if (aiResult.suggestedTasks.length > 0) {
-        toast.info(`🤖 AI found ${aiResult.suggestedTasks.length} recommendations. Check AI tab.`);
+        toast.info(`AI found ${aiResult.suggestedTasks.length} recommendations. Check AI tab.`);
       }
       queryClient.invalidateQueries({ queryKey: ['expert-reports'] });
       queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
@@ -251,11 +251,11 @@ export default function ExpertDashboard() {
 
   return (
     <div className="gx-dashboard ex-accent">
-      <MobileHeader title="Expert Lab" roleIcon="🔬" />
+      <MobileHeader title="Expert Lab" roleIcon={<Microscope size={18} />} />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">
-          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-blue-dim)' }}>🔬</div>
+          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-blue-dim)' }}><Microscope size={22} /></div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">EXPERT · SOIL & AGRONOMY</div>
           <div className="gx-theme-switch">
@@ -265,28 +265,28 @@ export default function ExpertDashboard() {
         </div>
 
         <div className="gx-nav-group-label">Lab Work</div>
-        <SideNavItem icon="📊" label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-        <SideNavItem icon="🌾" label="My Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={myFarms.length > 0 ? String(myFarms.length) : undefined} badgeColor="green" />
-        <SideNavItem icon="📥" label="Pending Samples" active={activeTab === 'samples'} onClick={() => setActiveTab('samples')} badge={pendingSamples.length > 0 ? String(pendingSamples.length) : undefined} badgeColor="red" />
-        <SideNavItem icon="⚗️" label="Enter Test Results" active={activeTab === 'results'} onClick={() => setActiveTab('results')} />
-        <SideNavItem icon="📤" label="Upload & Share Report" active={activeTab === 'report'} onClick={() => setActiveTab('report')} />
-        <SideNavItem icon="🗄️" label="All Past Reports" active={activeTab === 'past'} onClick={() => setActiveTab('past')} />
+        <SideNavItem icon={<BarChart3 size={18} />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+        <SideNavItem icon={<Wheat size={18} />} label="My Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={myFarms.length > 0 ? String(myFarms.length) : undefined} badgeColor="green" />
+        <SideNavItem icon={<Inbox size={18} />} label="Pending Samples" active={activeTab === 'samples'} onClick={() => setActiveTab('samples')} badge={pendingSamples.length > 0 ? String(pendingSamples.length) : undefined} badgeColor="red" />
+        <SideNavItem icon={<FlaskConical size={18} />} label="Enter Test Results" active={activeTab === 'results'} onClick={() => setActiveTab('results')} />
+        <SideNavItem icon={<Upload size={18} />} label="Upload & Share Report" active={activeTab === 'report'} onClick={() => setActiveTab('report')} />
+        <SideNavItem icon={<Archive size={18} />} label="All Past Reports" active={activeTab === 'past'} onClick={() => setActiveTab('past')} />
 
         <div className="gx-nav-group-label">Crop Planning</div>
-        <SideNavItem icon="🌾" label="Suggest Crops" active={activeTab === 'suggest'} onClick={() => setActiveTab('suggest')} badge={farmsAwaiting.length > 0 ? String(farmsAwaiting.length) : undefined} badgeColor="blue" />
-        <SideNavItem icon="📅" label="Build Crop Calendar" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
-        <SideNavItem icon="🌡️" label="Weather Integration" active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
+        <SideNavItem icon={<Wheat size={18} />} label="Suggest Crops" active={activeTab === 'suggest'} onClick={() => setActiveTab('suggest')} badge={farmsAwaiting.length > 0 ? String(farmsAwaiting.length) : undefined} badgeColor="blue" />
+        <SideNavItem icon={<Calendar size={18} />} label="Build Crop Calendar" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
+        <SideNavItem icon={<Thermometer size={18} />} label="Weather Integration" active={activeTab === 'weather'} onClick={() => setActiveTab('weather')} />
 
         <div className="gx-nav-group-label">Field Support</div>
-        <SideNavItem icon="🐛" label="Pest Alert Inbox" active={activeTab === 'pest'} onClick={() => setActiveTab('pest')} badge={pestAlerts.length > 0 ? String(pestAlerts.length) : undefined} badgeColor="red" />
-        <SideNavItem icon="💊" label="Issue Prescriptions" active={activeTab === 'prescription'} onClick={() => setActiveTab('prescription')} />
-        <SideNavItem icon="📷" label="Field Photo Review" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
+        <SideNavItem icon={<Bug size={18} />} label="Pest Alert Inbox" active={activeTab === 'pest'} onClick={() => setActiveTab('pest')} badge={pestAlerts.length > 0 ? String(pestAlerts.length) : undefined} badgeColor="red" />
+        <SideNavItem icon={<Pill size={18} />} label="Issue Prescriptions" active={activeTab === 'prescription'} onClick={() => setActiveTab('prescription')} />
+        <SideNavItem icon={<Camera size={18} />} label="Field Photo Review" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
 
         <div className="gx-nav-group-label">Knowledge Base</div>
-        <SideNavItem icon="🤖" label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="green" />
-        <SideNavItem icon="📚" label="Crop Database" active={activeTab === 'cropdb'} onClick={() => setActiveTab('cropdb')} />
-        <SideNavItem icon="🧬" label="Soil Reference Library" active={activeTab === 'soillib'} onClick={() => setActiveTab('soillib')} />
-        <SideNavItem icon="⚠️" label="Pest & Disease Index" active={activeTab === 'pestindex'} onClick={() => setActiveTab('pestindex')} />
+        <SideNavItem icon={<Bot size={18} />} label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="green" />
+        <SideNavItem icon={<BookOpen size={18} />} label="Crop Database" active={activeTab === 'cropdb'} onClick={() => setActiveTab('cropdb')} />
+        <SideNavItem icon={<Dna size={18} />} label="Soil Reference Library" active={activeTab === 'soillib'} onClick={() => setActiveTab('soillib')} />
+        <SideNavItem icon={<AlertTriangle size={18} />} label="Pest & Disease Index" active={activeTab === 'pestindex'} onClick={() => setActiveTab('pestindex')} />
 
         <div className="gx-sidebar-logout">
           <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
@@ -296,7 +296,7 @@ export default function ExpertDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="gx-main">
         <div className="gx-page-header">
-          <div className="gx-page-title">Expert Lab — {userName} 🔬</div>
+          <div className="gx-page-title">Expert Lab — {userName} <Microscope className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{pendingSamples.length} samples pending · {myFarms.length} assigned farms · {pestAlerts.length} pest alerts open</div>
         </div>
 
@@ -304,7 +304,7 @@ export default function ExpertDashboard() {
         {activeTab === 'overview' && (<>
           {pestAlerts.length > 0 && (
             <div className="gx-alert-box gx-alert-red">
-              <span>🐛</span>
+              <span><Bug className="inline-block w-4 h-4 mr-1 align-middle" /></span>
               <div><strong>Pest Alert from Field Manager:</strong> {pestAlerts[0]?.pestName || 'Infestation'} reported. Photos uploaded. Issue prescription now.</div>
             </div>
           )}
@@ -318,13 +318,13 @@ export default function ExpertDashboard() {
 
           <div className="gx-content-grid">
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title">📥 Pending Samples</div><span className="gx-status gx-s-pending">{pendingSamples.length}</span></div>
+              <div className="gx-card-header"><div className="gx-card-title"><Inbox className="inline-block w-4 h-4 mr-1 align-middle" /> Pending Samples</div><span className="gx-status gx-s-pending">{pendingSamples.length}</span></div>
               <div className="gx-card-body">
                 {pendingSamples.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No pending samples. All clear!</div>
                 ) : pendingSamples.slice(0, 3).map((s: any, i: number) => (
                   <div key={s.id || i} className="gx-activity-item">
-                    <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}>🧪</div>
+                    <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}><TestTubes size={18} /></div>
                     <div>
                       <div className="gx-act-text"><strong>{s.sampleCode || s.farmId || 'Sample'}</strong> — Farm {s.farmId || ''}</div>
                       <div className="gx-act-time">{s.collectionDate ? new Date(s.collectionDate).toLocaleDateString('en-IN') : ''} · {s.status || 'Pending'}</div>
@@ -335,13 +335,13 @@ export default function ExpertDashboard() {
               </div>
             </div>
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title">🐛 Active Pest Alerts</div><span className="gx-status gx-s-alert">{pestAlerts.length}</span></div>
+              <div className="gx-card-header"><div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Active Pest Alerts</div><span className="gx-status gx-s-alert">{pestAlerts.length}</span></div>
               <div className="gx-card-body">
                 {pestAlerts.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No active pest alerts.</div>
                 ) : pestAlerts.slice(0, 3).map((a: any, i: number) => (
                   <div key={a.id || i} className="gx-activity-item">
-                    <div className="gx-act-icon" style={{ background: 'rgba(239,68,68,0.1)' }}>🐛</div>
+                    <div className="gx-act-icon" style={{ background: 'rgba(239,68,68,0.1)' }}><Bug size={18} /></div>
                     <div>
                       <div className="gx-act-text"><strong>{a.pestName || 'Pest Alert'}</strong> — {a.severity || 'Moderate'}</div>
                       <div className="gx-act-time">{a.farmId || ''} · {a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-IN') : ''}</div>
@@ -363,15 +363,15 @@ export default function ExpertDashboard() {
             title="AI Agent — Smart Analysis"
           />
           {ai.recommendations.length > 3 && (
-            <button className="gx-btn gx-btn-green" style={{ marginTop: 8 }} onClick={() => setActiveTab('ai')}>🤖 View All {ai.recommendations.length} AI Insights →</button>
+            <button className="gx-btn gx-btn-green" style={{ marginTop: 8 }} onClick={() => setActiveTab('ai')}><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> View All {ai.recommendations.length} AI Insights →</button>
           )}
         </>)}
 
         {/* ═══ MY ASSIGNED FARMS TAB ═══ */}
         {activeTab === 'farms' && (<>
-          <div className="gx-section-divider">🌾 My Assigned Farms</div>
+          <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> My Assigned Farms</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🌾 Farms Under My Expertise</div><span className="gx-status gx-s-done">{myFarms.length} Farms</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farms Under My Expertise</div><span className="gx-status gx-s-done">{myFarms.length} Farms</span></div>
             <div className="gx-card-body">
               {myFarms.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No farms assigned yet.</div>
@@ -399,9 +399,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ PENDING SAMPLES TAB ═══ */}
         {activeTab === 'samples' && (<>
-          <div className="gx-section-divider">📥 Pending Soil Samples</div>
+          <div className="gx-section-divider"><Inbox className="inline-block w-4 h-4 mr-1 align-middle" /> Pending Soil Samples</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📥 Samples Awaiting Testing</div><span className="gx-status gx-s-pending">{pendingSamples.length} Pending</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Inbox className="inline-block w-4 h-4 mr-1 align-middle" /> Samples Awaiting Testing</div><span className="gx-status gx-s-pending">{pendingSamples.length} Pending</span></div>
             <div className="gx-card-body">
               <table className="gx-data-table">
                 <thead><tr><th>#</th><th>Sample Code</th><th>Farm</th><th>Collected By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
@@ -416,7 +416,7 @@ export default function ExpertDashboard() {
                       <td>{s.collectorName || '—'}</td>
                       <td>{s.collectionDate ? new Date(s.collectionDate).toLocaleDateString('en-IN') : '—'}</td>
                       <td><span className={`gx-status ${s.status === 'COMPLETED' ? 'gx-s-done' : 'gx-s-pending'}`}>{s.status || 'Pending'}</span></td>
-                      <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => { setSelectedFarm(s.farmId); setActiveTab('results'); }}>⚗️ Enter Results</button></td>
+                      <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => { setSelectedFarm(s.farmId); setActiveTab('results'); }}><FlaskConical className="inline-block w-4 h-4 mr-1 align-middle" /> Enter Results</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -427,9 +427,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ ENTER TEST RESULTS TAB ═══ */}
         {activeTab === 'results' && (<>
-          <div className="gx-section-divider">⚗️ Enter Soil Test Results</div>
+          <div className="gx-section-divider"><FlaskConical className="inline-block w-4 h-4 mr-1 align-middle" /> Enter Soil Test Results</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🧪 Upload Soil Test Report</div><span className="gx-status gx-s-pending">Test In Progress</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Upload Soil Test Report</div><span className="gx-status gx-s-pending">Test In Progress</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three" style={{ marginBottom: 14 }}>
                 <div className="gx-form-group">
@@ -466,7 +466,7 @@ export default function ExpertDashboard() {
                     if (!selectedFarm) { toast.error('Please select a farm first'); return; }
                     submitReport.mutate(selectedFarm);
                   }}
-                >{submitReport.isPending ? '⏳ Uploading...' : '📤 Upload & Share to All Dashboards'}</button>
+                >{submitReport.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Uploading...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Upload & Share to All Dashboards</>}</button>
                 <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('Draft saved locally. Continue editing anytime.')}>Save Draft</button>
               </div>
             </div>
@@ -475,19 +475,19 @@ export default function ExpertDashboard() {
 
         {/* ═══ UPLOAD & SHARE REPORT TAB ═══ */}
         {activeTab === 'report' && (<>
-          <div className="gx-section-divider">📤 Upload & Share Report</div>
+          <div className="gx-section-divider"><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Upload & Share Report</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📤 Share Completed Reports</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Share Completed Reports</div></div>
             <div className="gx-card-body">
               {myReports.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>📤</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Upload size={48} strokeWidth={1.5} /></div>
                   <div>No reports to share. Enter test results first.</div>
-                  <button className="gx-btn gx-btn-blue" style={{ marginTop: 16 }} onClick={() => setActiveTab('results')}>⚗️ Enter Test Results</button>
+                  <button className="gx-btn gx-btn-blue" style={{ marginTop: 16 }} onClick={() => setActiveTab('results')}><FlaskConical className="inline-block w-4 h-4 mr-1 align-middle" /> Enter Test Results</button>
                 </div>
               ) : myReports.slice(0, 10).map((r: any, i: number) => (
                 <div key={r.id || i} className="gx-activity-item">
-                  <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}>📄</div>
+                  <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}><FileText size={18} /></div>
                   <div style={{ flex: 1 }}>
                     <div className="gx-act-text"><strong>{r.farmId || 'Report'}</strong> — pH: {r.phLevel || '—'}, N: {r.nitrogenKgHa || '—'}</div>
                     <div className="gx-act-time">{r.reportDate ? new Date(r.reportDate).toLocaleDateString('en-IN') : r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : ''}</div>
@@ -501,9 +501,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ PAST REPORTS TAB ═══ */}
         {activeTab === 'past' && (<>
-          <div className="gx-section-divider">🗄️ All Past Reports</div>
+          <div className="gx-section-divider"><Archive className="inline-block w-4 h-4 mr-1 align-middle" /> All Past Reports</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🗄️ Report Archive</div><span className="gx-status gx-s-done">{myReports.length} Reports</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Archive className="inline-block w-4 h-4 mr-1 align-middle" /> Report Archive</div><span className="gx-status gx-s-done">{myReports.length} Reports</span></div>
             <div className="gx-card-body">
               <table className="gx-data-table">
                 <thead><tr><th>#</th><th>Farm</th><th>pH</th><th>N (kg/ha)</th><th>P (kg/ha)</th><th>K (kg/ha)</th><th>Rating</th><th>Date</th></tr></thead>
@@ -530,13 +530,13 @@ export default function ExpertDashboard() {
 
         {/* ═══ SUGGEST CROPS TAB ═══ */}
         {activeTab === 'suggest' && (<>
-          <div className="gx-section-divider">🌾 Suggest Crops</div>
+          <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Suggest Crops</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🌾 Farms Awaiting Crop Suggestions</div><span className="gx-status gx-s-pending">{farmsAwaiting.length} Awaiting</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farms Awaiting Crop Suggestions</div><span className="gx-status gx-s-pending">{farmsAwaiting.length} Awaiting</span></div>
             <div className="gx-card-body">
               {farmsAwaiting.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Wheat size={48} strokeWidth={1.5} /></div>
                   <div>All farms have been served. No pending suggestions needed.</div>
                 </div>
               ) : (
@@ -551,7 +551,7 @@ export default function ExpertDashboard() {
                         <td>{f.village || '—'}</td>
                         <td>{f.totalLand || '—'}</td>
                         <td><span className="gx-status gx-s-done">Ready</span></td>
-                        <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => { setSelectedSuggestFarm(f); setSugCrops([emptyCrop(), emptyCrop(), emptyCrop()]); }}>🌾 Suggest Crops</button></td>
+                        <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => { setSelectedSuggestFarm(f); setSugCrops([emptyCrop(), emptyCrop(), emptyCrop()]); }}><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Suggest Crops</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -564,14 +564,14 @@ export default function ExpertDashboard() {
           {selectedSuggestFarm && (
             <div className="gx-card" style={{ marginTop: 16 }}>
               <div className="gx-card-header">
-                <div className="gx-card-title">🌾 Suggest Crops for {selectedSuggestFarm.farmCode || selectedSuggestFarm.name}</div>
+                <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Suggest Crops for {selectedSuggestFarm.farmCode || selectedSuggestFarm.name}</div>
                 <button className="gx-btn gx-btn-ghost" style={{ fontSize: 11 }} onClick={() => setSelectedSuggestFarm(null)}>✕ Cancel</button>
               </div>
               <div className="gx-card-body">
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                   {sugCrops.map((crop, idx) => (
                     <div key={idx} style={{ border: '1px solid var(--gx-border)', borderRadius: 8, padding: 14, background: 'var(--gx-surface)' }}>
-                      <div style={{ fontWeight: 600, marginBottom: 10, color: 'var(--gx-accent)', fontSize: 13 }}>🌱 Crop {idx + 1}{idx === 0 ? ' *' : ' (optional)'}</div>
+                      <div style={{ fontWeight: 600, marginBottom: 10, color: 'var(--gx-accent)', fontSize: 13 }}><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Crop {idx + 1}{idx === 0 ? ' *' : ' (optional)'}</div>
                       <div className="gx-form-group">
                         <label className="gx-label">Crop Name{idx === 0 ? ' *' : ''}</label>
                         <input className="gx-input" value={crop.cropName} onChange={e => updateSugCrop(idx, 'cropName', e.target.value)} placeholder="e.g. Rice, Wheat" />
@@ -631,7 +631,7 @@ export default function ExpertDashboard() {
                       saveCropSuggestionMut.mutate();
                     }}
                   >
-                    {saveCropSuggestionMut.isPending ? '⏳ Saving...' : '✅ Save All Suggestions'}
+                    {saveCropSuggestionMut.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Saving...</> : <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Save All Suggestions</>}
                   </button>
                   <button className="gx-btn gx-btn-ghost" onClick={() => setSelectedSuggestFarm(null)}>Cancel</button>
                 </div>
@@ -642,9 +642,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ BUILD CROP CALENDAR TAB ═══ */}
         {activeTab === 'calendar' && (<>
-          <div className="gx-section-divider">📅 Build Crop Calendar</div>
+          <div className="gx-section-divider"><Calendar className="inline-block w-4 h-4 mr-1 align-middle" /> Build Crop Calendar</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📅 Crop Calendar Builder</div><span className="gx-status gx-s-done">Ready to Build</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Calendar className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Calendar Builder</div><span className="gx-status gx-s-done">Ready to Build</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid" style={{ marginBottom: 16 }}>
                 <div className="gx-form-group">
@@ -662,7 +662,7 @@ export default function ExpertDashboard() {
                   <div className="gx-cal-cell header" /><div className="gx-cal-cell header">W1</div><div className="gx-cal-cell header">W2</div><div className="gx-cal-cell header">W3</div><div className="gx-cal-cell header">W4</div><div className="gx-cal-cell header">W5</div><div className="gx-cal-cell header">W6</div><div className="gx-cal-cell header">Harvest</div>
                 </div>
                 <div className="gx-cal-week">
-                  <div className="gx-cal-cell header">Sowing</div><div className="gx-cal-cell task">🌱 Sow seeds</div><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" />
+                  <div className="gx-cal-cell header">Sowing</div><div className="gx-cal-cell task"><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Sow seeds</div><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" />
                 </div>
                 <div className="gx-cal-week">
                   <div className="gx-cal-cell header">Fertilizer</div><div className="gx-cal-cell fertilize">Basal dose</div><div className="gx-cal-cell" /><div className="gx-cal-cell fertilize">Top dress</div><div className="gx-cal-cell" /><div className="gx-cal-cell fertilize">K₂O</div><div className="gx-cal-cell" /><div className="gx-cal-cell" />
@@ -674,12 +674,12 @@ export default function ExpertDashboard() {
                   <div className="gx-cal-cell header">Pest Scout</div><div className="gx-cal-cell" /><div className="gx-cal-cell pest">Scout FAW</div><div className="gx-cal-cell pest">Scout Aphids</div><div className="gx-cal-cell pest">Stem borer</div><div className="gx-cal-cell pest">Scout FAW</div><div className="gx-cal-cell" /><div className="gx-cal-cell" />
                 </div>
                 <div className="gx-cal-week">
-                  <div className="gx-cal-cell header">Harvest</div><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell task">🌾 Harvest</div>
+                  <div className="gx-cal-cell header">Harvest</div><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell" /><div className="gx-cal-cell task"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Harvest</div>
                 </div>
               </div>
               <div className="gx-btn-row" style={{ marginTop: 16 }}>
                 <button className="gx-btn gx-btn-blue" disabled={publishCalendar.isPending} onClick={() => publishCalendar.mutate()}>
-                  {publishCalendar.isPending ? '⏳ Publishing...' : '📤 Publish Calendar to Field Manager'}
+                  {publishCalendar.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Publishing...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Publish Calendar to Field Manager</>}
                 </button>
                 <button className="gx-btn gx-btn-ghost" onClick={() => toast.info('Calendar preview shows the planned schedule above.')}>Preview Full Calendar</button>
               </div>
@@ -689,12 +689,12 @@ export default function ExpertDashboard() {
 
         {/* ═══ WEATHER TAB ═══ */}
         {activeTab === 'weather' && (<>
-          <div className="gx-section-divider">🌡️ Weather Integration</div>
+          <div className="gx-section-divider"><Thermometer className="inline-block w-4 h-4 mr-1 align-middle" /> Weather Integration</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🌡️ Weather Data</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Thermometer className="inline-block w-4 h-4 mr-1 align-middle" /> Weather Data</div></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🌤️</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><CloudSun size={48} strokeWidth={1.5} /></div>
                 <div>Weather integration shows local conditions for farm locations.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Temperature, humidity, rainfall data will help plan field operations.</div>
               </div>
@@ -704,9 +704,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ PEST ALERT INBOX TAB ═══ */}
         {activeTab === 'pest' && (<>
-          <div className="gx-section-divider">🐛 Pest Alert Inbox</div>
+          <div className="gx-section-divider"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Pest Alert Inbox</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🐛 Active Pest Alerts</div><span className="gx-status gx-s-alert">{pestAlerts.length} Open</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Active Pest Alerts</div><span className="gx-status gx-s-alert">{pestAlerts.length} Open</span></div>
             <div className="gx-card-body">
               <table className="gx-data-table">
                 <thead><tr><th>#</th><th>Pest/Disease</th><th>Farm</th><th>Severity</th><th>Reported</th><th>Status</th><th>Action</th></tr></thead>
@@ -721,7 +721,7 @@ export default function ExpertDashboard() {
                       <td><span className={`gx-status ${a.severity === 'HIGH' || a.severity === 'CRITICAL' ? 'gx-s-alert' : 'gx-s-pending'}`}>{a.severity || '—'}</span></td>
                       <td>{a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-IN') : '—'}</td>
                       <td><span className={`gx-status ${a.status === 'RESOLVED' ? 'gx-s-done' : 'gx-s-alert'}`}>{a.status || 'OPEN'}</span></td>
-                      <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => setActiveTab('prescription')}>💊 Prescribe</button></td>
+                      <td><button className="gx-btn gx-btn-blue" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => setActiveTab('prescription')}><Pill className="inline-block w-4 h-4 mr-1 align-middle" /> Prescribe</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -732,9 +732,9 @@ export default function ExpertDashboard() {
 
         {/* ═══ ISSUE PRESCRIPTIONS TAB ═══ */}
         {activeTab === 'prescription' && (<>
-          <div className="gx-section-divider">💊 Issue Pest Prescription</div>
+          <div className="gx-section-divider"><Pill className="inline-block w-4 h-4 mr-1 align-middle" /> Issue Pest Prescription</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
-            <div className="gx-card-header"><div className="gx-card-title">🐛 Pest Prescription</div><span className="gx-status gx-s-alert">Urgent</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Pest Prescription</div><span className="gx-status gx-s-alert">Urgent</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid">
                 <div className="gx-form-group">
@@ -756,7 +756,7 @@ export default function ExpertDashboard() {
                           if (parts[1]) setDose(parts[1].split('(')[0].trim());
                         }
                         setFmInstructions(task.description);
-                        toast.info('🤖 AI auto-filled prescription from knowledge base');
+                        toast.info('AI auto-filled prescription from knowledge base');
                       }
                     }
                   }}>
@@ -784,23 +784,23 @@ export default function ExpertDashboard() {
                     if (!chemical) { toast.error('Please enter the recommended chemical'); return; }
                     issuePrescriptionMut.mutate(selectedAlertId);
                   }}
-                >{issuePrescriptionMut.isPending ? '⏳ Sending...' : '💊 Send Prescription to Field Manager'}</button>
+                >{issuePrescriptionMut.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Sending...</> : <><Pill className="inline-block w-4 h-4 mr-1 align-middle" /> Send Prescription to Field Manager</>}</button>
               </div>
             </div>
           </div>
 
           {/* Existing prescriptions list */}
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📋 Issued Prescriptions</div><span className="gx-status gx-s-done">{myPrescriptions.length} Total</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Issued Prescriptions</div><span className="gx-status gx-s-done">{myPrescriptions.length} Total</span></div>
             <div className="gx-card-body">
               {myPrescriptions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No prescriptions issued yet.</div>
               ) : myPrescriptions.map((p: any, i: number) => (
                 <div key={p.id || i} className="gx-activity-item">
-                  <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}>💊</div>
+                  <div className="gx-act-icon" style={{ background: 'var(--gx-blue-dim)' }}><Pill size={18} /></div>
                   <div style={{ flex: 1 }}>
                     <div className="gx-act-text"><strong>{p.chemicalName || 'Prescription'}</strong> — {p.dose || ''}</div>
-                    <div className="gx-act-time">{p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : ''} · {p.isacknowledged ? '✅ Acknowledged' : '⏳ Pending'}</div>
+                    <div className="gx-act-time">{p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : ''} · {p.isacknowledged ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Acknowledged</> : <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Pending</>}</div>
                   </div>
                   <span className={`gx-status ${p.isacknowledged ? 'gx-s-done' : 'gx-s-pending'}`}>{p.isacknowledged ? 'ACK' : 'Pending'}</span>
                 </div>
@@ -811,18 +811,18 @@ export default function ExpertDashboard() {
 
         {/* ═══ AI AGENT TAB ═══ */}
         {activeTab === 'ai' && (<>
-          <div className="gx-section-divider">🤖 AI Agent — Full Analysis</div>
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Agent — Full Analysis</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <button className="gx-btn gx-btn-green" onClick={() => {
               myReports.forEach((r: any) => ai.analyzeSoil({ ph: r.phLevel, nitrogen: r.nitrogenKgHa, phosphorus: r.phosphorusKgHa, potassium: r.potassiumKgHa, organicCarbon: r.organicCarbon, zinc: r.zincPpm, electricalConductivity: r.ecDsm }));
               toast.success('AI analyzed all soil reports');
-            }}>🧪 Re-Analyze All Soil Reports</button>
+            }}><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Re-Analyze All Soil Reports</button>
             <button className="gx-btn gx-btn-orange" onClick={() => {
               pestAlerts.forEach((a: any) => ai.analyzePest({ pestName: a.pestName || '', severity: a.severity || 'Moderate', affectedAreaPct: a.affectedAreaPct, cropName: a.cropName, farmId: a.farmId }));
               toast.success('AI analyzed all pest alerts');
-            }}>🐛 Re-Analyze All Pest Alerts</button>
-            <button className="gx-btn gx-btn-blue" onClick={() => ai.getCropRecs({ season: undefined })}>🌾 Get Crop Recommendations</button>
-            <button className="gx-btn gx-btn-ghost" onClick={() => ai.clearRecommendations()}>🗑️ Clear Insights</button>
+            }}><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Re-Analyze All Pest Alerts</button>
+            <button className="gx-btn gx-btn-blue" onClick={() => ai.getCropRecs({ season: undefined })}><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Get Crop Recommendations</button>
+            <button className="gx-btn gx-btn-ghost" onClick={() => ai.clearRecommendations()}><Trash2 className="inline-block w-4 h-4 mr-1 align-middle" /> Clear Insights</button>
           </div>
           <AiInsightPanel
             recommendations={ai.recommendations}
@@ -835,13 +835,13 @@ export default function ExpertDashboard() {
 
         {/* ═══ FIELD PHOTOS TAB ═══ */}
         {activeTab === 'photos' && (<>
-          <div className="gx-section-divider">📷 Field Photo Review</div>
+          <div className="gx-section-divider"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Field Photo Review</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📷 Photos from Field</div><span className="gx-status gx-s-info">{pestAlerts.filter((a: any) => a.photos).length} with photos</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Photos from Field</div><span className="gx-status gx-s-info">{pestAlerts.filter((a: any) => a.photos).length} with photos</span></div>
             <div className="gx-card-body">
               {pestAlerts.filter((a: any) => a.photos).length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>📷</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Camera size={48} strokeWidth={1.5} /></div>
                   <div>No field photos available yet.</div>
                   <div style={{ marginTop: 10, fontSize: 13 }}>Photos attached to pest alerts by Field Managers will appear here for review.</div>
                 </div>
@@ -853,7 +853,7 @@ export default function ExpertDashboard() {
                         <img src={a.photos} alt={a.pestName || 'Field photo'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       </div>
                       <div style={{ padding: 12 }}>
-                        <div style={{ fontWeight: 600, marginBottom: 4 }}>🐛 {a.pestName || 'Pest Alert'}</div>
+                        <div style={{ fontWeight: 600, marginBottom: 4 }}><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> {a.pestName || 'Pest Alert'}</div>
                         <div style={{ fontSize: 13, color: 'var(--gx-text2)' }}>Severity: <span className={`gx-status ${a.severity === 'HIGH' ? 'gx-s-alert' : 'gx-s-pending'}`}>{a.severity}</span></div>
                         {a.description && <div style={{ fontSize: 13, marginTop: 6, color: 'var(--gx-text2)' }}>{a.description}</div>}
                         <div style={{ fontSize: 12, marginTop: 6, color: 'var(--gx-text3)' }}>Farm: {a.farmId} · {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ''}</div>
@@ -868,12 +868,12 @@ export default function ExpertDashboard() {
 
         {/* ═══ CROP DATABASE TAB ═══ */}
         {activeTab === 'cropdb' && (<>
-          <div className="gx-section-divider">📚 Crop Database</div>
+          <div className="gx-section-divider"><BookOpen className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Database</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📚 Crop Reference Database</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><BookOpen className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Reference Database</div></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📚</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><BookOpen size={48} strokeWidth={1.5} /></div>
                 <div>Crop database with regional varieties, growth stages, and nutrient requirements.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>This reference module is being populated with data for your region.</div>
               </div>
@@ -883,12 +883,12 @@ export default function ExpertDashboard() {
 
         {/* ═══ SOIL REFERENCE LIBRARY TAB ═══ */}
         {activeTab === 'soillib' && (<>
-          <div className="gx-section-divider">🧬 Soil Reference Library</div>
+          <div className="gx-section-divider"><Dna className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Reference Library</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🧬 Soil Type Reference</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Dna className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Type Reference</div></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🧬</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Dna size={48} strokeWidth={1.5} /></div>
                 <div>Soil classification guide with ideal pH ranges, drainage characteristics, and amendment recommendations.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Reference data is being compiled for your assigned regions.</div>
               </div>
@@ -898,12 +898,12 @@ export default function ExpertDashboard() {
 
         {/* ═══ PEST & DISEASE INDEX TAB ═══ */}
         {activeTab === 'pestindex' && (<>
-          <div className="gx-section-divider">⚠️ Pest & Disease Index</div>
+          <div className="gx-section-divider"><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /> Pest & Disease Index</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">⚠️ Pest & Disease Reference</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /> Pest & Disease Reference</div></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><AlertTriangle size={48} strokeWidth={1.5} /></div>
                 <div>Comprehensive index of common pests and diseases with identification guides, treatment protocols, and preventive measures.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Index is being populated with region-specific pest data.</div>
               </div>
@@ -916,7 +916,7 @@ export default function ExpertDashboard() {
 }
 
 function SideNavItem({ icon, label, active, onClick, badge, badgeColor }: {
-  icon: string; label: string; active?: boolean; onClick?: () => void;
+  icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void;
   badge?: string; badgeColor?: 'red' | 'green' | 'gold' | 'blue';
 }) {
   return (

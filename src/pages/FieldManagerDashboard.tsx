@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
-import { LogOut } from 'lucide-react';
+import { BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -131,7 +131,7 @@ export default function FieldManagerDashboard() {
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
       // AI auto-analyze the operation
       const rec = ai.analyzeOp({ operationType: opType, cropName: '', observations: opNotes, productUsed: opChemical, quantityUsed: opDose, areaCoveredAcres: parseFloat(opArea) || 0 });
-      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI analyzed: ${rec.suggestedTasks.length} task(s) suggested`);
+      if (rec.suggestedTasks.length > 0) toast.info(`AI analyzed: ${rec.suggestedTasks.length} task(s) suggested`);
       setOpNotes(''); setOpArea(''); setOpLabour(''); setOpChemical(''); setOpDose(''); setOpMachine(''); setOpCost(''); setOpPhotos([]);
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to log operation'),
@@ -188,7 +188,7 @@ export default function FieldManagerDashboard() {
       queryClient.invalidateQueries({ queryKey: ['fm-tasks'] });
       // AI auto-analyze the pest report
       const rec = ai.analyzePest({ pestName, severity: pestSeverity, cropName: '', affectedAreaPct: parseFloat(pestArea) || 0, description: pestNotes });
-      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI analyzed pest: ${rec.suggestedTasks.length} task(s) recommended`);
+      if (rec.suggestedTasks.length > 0) toast.info(`AI analyzed pest: ${rec.suggestedTasks.length} task(s) recommended`);
       setPestName(''); setPestSeverity('Low'); setPestArea(''); setPestCropStage(''); setPestNotes(''); setPestPhotos([]);
     },
     onError: (err: any) => toast.error(err?.message || 'Failed to report pest'),
@@ -217,7 +217,7 @@ export default function FieldManagerDashboard() {
       queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
       // AI auto-analyze soil context
       const rec = ai.analyzeSoil({ ph: 0, nitrogen: 0, phosphorus: 0, potassium: 0, organicCarbon: 0, currentCrop: '', region: '' });
-      if (rec.suggestedTasks.length > 0) toast.info(`🤖 AI: ${rec.suggestedTasks.length} soil insight(s) — enter lab results for detailed analysis`);
+      if (rec.suggestedTasks.length > 0) toast.info(`AI: ${rec.suggestedTasks.length} soil insight(s) — enter lab results for detailed analysis`);
       setSamplePoints(''); setSampleGPS(''); setSampleNotes('');
       setSampleDate(new Date().toISOString().split('T')[0]);
     },
@@ -293,11 +293,11 @@ export default function FieldManagerDashboard() {
 
   return (
     <div className="gx-dashboard fm-accent">
-      <MobileHeader title="Field Manager" roleIcon="🚜" />
+      <MobileHeader title="Field Manager" roleIcon={<Tractor size={18} />} />
       {/* ── SIDEBAR ── */}
       <div className="gx-sidebar">
         <div className="gx-sidebar-user">
-          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-orange-dim)' }}>🚜</div>
+          <div className="gx-sidebar-avatar" style={{ background: 'var(--gx-orange-dim)' }}><Tractor size={22} /></div>
           <div className="gx-sidebar-name">{userName}</div>
           <div className="gx-sidebar-role">FIELD MANAGER · OPS</div>
           <div className="gx-theme-switch">
@@ -307,29 +307,29 @@ export default function FieldManagerDashboard() {
         </div>
 
         <div className="gx-nav-group-label">My Work</div>
-        <SideNavItem icon="📋" label="Today's Tasks" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} badge={tasks.length > 0 ? String(tasks.length) : undefined} badgeColor="red" />
-        <SideNavItem icon="🌾" label="My Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
-        <SideNavItem icon="📅" label="Crop Calendar View" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
-        <SideNavItem icon="💊" label="Prescription Inbox" active={activeTab === 'rx'} onClick={() => setActiveTab('rx')} badge={pendingRx.length > 0 ? String(pendingRx.length) : undefined} badgeColor="red" />
+        <SideNavItem icon={<ClipboardList size={18} />} label="Today's Tasks" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} badge={tasks.length > 0 ? String(tasks.length) : undefined} badgeColor="red" />
+        <SideNavItem icon={<Wheat size={18} />} label="My Assigned Farms" active={activeTab === 'farms'} onClick={() => setActiveTab('farms')} badge={String(myFarms.length)} badgeColor="green" />
+        <SideNavItem icon={<Calendar size={18} />} label="Crop Calendar View" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
+        <SideNavItem icon={<Pill size={18} />} label="Prescription Inbox" active={activeTab === 'rx'} onClick={() => setActiveTab('rx')} badge={pendingRx.length > 0 ? String(pendingRx.length) : undefined} badgeColor="red" />
 
         <div className="gx-nav-group-label">Data Collection</div>
-        <SideNavItem icon="🧪" label="Log Soil Sample" active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
-        <SideNavItem icon="🚜" label="Record Field Operation" active={activeTab === 'operation'} onClick={() => setActiveTab('operation')} />
-        <SideNavItem icon="📷" label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
-        <SideNavItem icon="🐛" label="Report Pest / Disease" active={activeTab === 'pest'} onClick={() => setActiveTab('pest')} />
-        <SideNavItem icon="💧" label="Log Irrigation" active={activeTab === 'irrigation'} onClick={() => setActiveTab('irrigation')} />
-        <SideNavItem icon="🌱" label="Log Sowing" active={activeTab === 'sowing'} onClick={() => setActiveTab('sowing')} />
+        <SideNavItem icon={<TestTubes size={18} />} label="Log Soil Sample" active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} />
+        <SideNavItem icon={<Tractor size={18} />} label="Record Field Operation" active={activeTab === 'operation'} onClick={() => setActiveTab('operation')} />
+        <SideNavItem icon={<Camera size={18} />} label="Upload Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
+        <SideNavItem icon={<Bug size={18} />} label="Report Pest / Disease" active={activeTab === 'pest'} onClick={() => setActiveTab('pest')} />
+        <SideNavItem icon={<Droplets size={18} />} label="Log Irrigation" active={activeTab === 'irrigation'} onClick={() => setActiveTab('irrigation')} />
+        <SideNavItem icon={<Sprout size={18} />} label="Log Sowing" active={activeTab === 'sowing'} onClick={() => setActiveTab('sowing')} />
 
         <div className="gx-nav-group-label">Workers</div>
-        <SideNavItem icon="👥" label="Assign Tasks" active={activeTab === 'assign'} onClick={() => setActiveTab('assign')} />
-        <SideNavItem icon="✅" label="Mark Complete" active={activeTab === 'complete'} onClick={() => setActiveTab('complete')} />
-        <SideNavItem icon="📊" label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+        <SideNavItem icon={<Users size={18} />} label="Assign Tasks" active={activeTab === 'assign'} onClick={() => setActiveTab('assign')} />
+        <SideNavItem icon={<CheckCircle2 size={18} />} label="Mark Complete" active={activeTab === 'complete'} onClick={() => setActiveTab('complete')} />
+        <SideNavItem icon={<BarChart3 size={18} />} label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
 
         <div className="gx-nav-group-label">Intelligence</div>
-        <SideNavItem icon="🤖" label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
+        <SideNavItem icon={<Bot size={18} />} label="AI Agent" active={activeTab === 'ai'} onClick={() => setActiveTab('ai')} badge={ai.recommendations.length > 0 ? String(ai.recommendations.length) : undefined} badgeColor="gold" />
 
         <div className="gx-nav-group-label">Reports</div>
-        <SideNavItem icon="📈" label="My Activity Log" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} />
+        <SideNavItem icon={<TrendingUp size={18} />} label="My Activity Log" active={activeTab === 'reports'} onClick={() => setActiveTab('reports')} />
 
         <div className="gx-sidebar-logout">
           <button onClick={handleLogout}><LogOut size={14} /> Logout</button>
@@ -339,7 +339,7 @@ export default function FieldManagerDashboard() {
       {/* ── MAIN CONTENT ── */}
       <div className="gx-main">
         <div className="gx-page-header">
-          <div className="gx-page-title">Field Operations — {userName} 🚜</div>
+          <div className="gx-page-title">Field Operations — {userName} <Tractor className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms · {sampleTrack.length} samples tracked</div>
         </div>
 
@@ -347,7 +347,7 @@ export default function FieldManagerDashboard() {
         {(activeTab === 'overview' || activeTab === 'tasks') && (<>
           {pendingRx.length > 0 && (
             <div className="gx-alert-box gx-alert-red">
-              <span>💊</span>
+              <span><Pill className="inline-block w-4 h-4 mr-1 align-middle" /></span>
               <div><strong>New Prescription from Expert:</strong> {pendingRx[0]?.fmInstructions || pendingRx[0]?.chemicalName || 'Treatment'} — Read instructions & start immediately.</div>
             </div>
           )}
@@ -360,7 +360,7 @@ export default function FieldManagerDashboard() {
           </div>
 
           <div className="gx-card" style={{ marginBottom: 20 }}>
-            <div className="gx-card-header"><div className="gx-card-title">🧪 Soil Sample Live Track</div><span className="gx-status gx-s-pending">{sampleTrack.length}</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Sample Live Track</div><span className="gx-status gx-s-pending">{sampleTrack.length}</span></div>
             <div className="gx-card-body">
               {sampleTrack.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '18px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No samples tracked yet for your farms.</div>
@@ -385,9 +385,9 @@ export default function FieldManagerDashboard() {
             </div>
           </div>
 
-          <div className="gx-section-divider">📋 Today's Task List</div>
+          <div className="gx-section-divider"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Today's Task List</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
-            <div className="gx-card-header"><div className="gx-card-title">📋 Tasks Assigned</div><span className="gx-status gx-s-pending">{tasks.length} Tasks</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Tasks Assigned</div><span className="gx-status gx-s-pending">{tasks.length} Tasks</span></div>
             <div className="gx-card-body">
               <table className="gx-data-table">
                 <thead><tr><th>#</th><th>Task</th><th>Farm</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
@@ -405,7 +405,7 @@ export default function FieldManagerDashboard() {
                         {t.status !== 'COMPLETED' && (
                           <button className="gx-btn gx-btn-orange" style={{ padding: '4px 12px', fontSize: 11 }}
                             onClick={() => updateTask.mutate({ id: t.id, status: t.status === 'PENDING' ? 'IN_PROGRESS' : 'COMPLETED' })}>
-                            {t.status === 'IN_PROGRESS' ? '✅ Done' : '▶ Start'}
+                            {t.status === 'IN_PROGRESS' ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Done</> : '▶ Start'}
                           </button>
                         )}
                       </td>
@@ -419,7 +419,7 @@ export default function FieldManagerDashboard() {
           {/* AI Quick Insights in Overview */}
           {ai.recommendations.length > 0 && (
             <div className="gx-card" style={{ marginBottom: 20 }}>
-              <div className="gx-card-header"><div className="gx-card-title">🤖 AI Insights</div>
+              <div className="gx-card-header"><div className="gx-card-title"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Insights</div>
                 <button className="gx-btn gx-btn-orange" style={{ padding: '3px 10px', fontSize: 11 }} onClick={() => setActiveTab('ai')}>View All →</button>
               </div>
               <div className="gx-card-body">
@@ -431,13 +431,13 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ MY ASSIGNED FARMS TAB ═══ */}
         {activeTab === 'farms' && (<>
-          <div className="gx-section-divider">🌾 My Assigned Farms</div>
+          <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> My Assigned Farms</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🌾 Farms Under My Management</div><span className="gx-status gx-s-done">{myFarms.length} Active</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farms Under My Management</div><span className="gx-status gx-s-done">{myFarms.length} Active</span></div>
             <div className="gx-card-body">
               {myFarms.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌾</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Wheat size={48} strokeWidth={1.5} /></div>
                   <div>No farms assigned yet. Cluster Admin will assign farms to you.</div>
                 </div>
               ) : (
@@ -464,19 +464,19 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ CROP CALENDAR VIEW TAB ═══ */}
         {activeTab === 'calendar' && (<>
-          <div className="gx-section-divider">📅 Crop Calendar View</div>
+          <div className="gx-section-divider"><Calendar className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Calendar View</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📅 Season Calendar & Scheduled Tasks</div><span className="gx-status gx-s-done">Published</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Calendar className="inline-block w-4 h-4 mr-1 align-middle" /> Season Calendar & Scheduled Tasks</div><span className="gx-status gx-s-done">Published</span></div>
             <div className="gx-card-body">
               {tasks.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>📅</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Calendar size={48} strokeWidth={1.5} /></div>
                   <div>No calendar tasks available. Expert will publish after crop selection.</div>
                 </div>
               ) : tasks.map((t: any, idx: number) => (
                 <div key={t.id || idx} className="gx-activity-item">
                   <div className="gx-act-icon" style={{ background: t.status === 'COMPLETED' ? 'var(--gx-green-dim)' : 'var(--gx-orange-dim)' }}>
-                    {t.taskType === 'SOWING' ? '🌱' : t.taskType === 'FERTILIZER' ? '🧪' : t.taskType === 'IRRIGATION' ? '💧' : t.taskType === 'PEST_SCOUT' ? '🐛' : '📋'}
+                    {t.taskType === 'SOWING' ? <Sprout size={18} /> : t.taskType === 'FERTILIZER' ? <TestTubes size={18} /> : t.taskType === 'IRRIGATION' ? <Droplets size={18} /> : t.taskType === 'PEST_SCOUT' ? <Bug size={18} /> : <ClipboardList size={18} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div className="gx-act-text"><strong>{t.taskTitle || t.taskType || 'Task'}</strong></div>
@@ -491,13 +491,13 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ PRESCRIPTION INBOX TAB ═══ */}
         {activeTab === 'rx' && (<>
-          <div className="gx-section-divider">💊 Prescription Inbox</div>
+          <div className="gx-section-divider"><Pill className="inline-block w-4 h-4 mr-1 align-middle" /> Prescription Inbox</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">💊 Expert Prescriptions</div><span className="gx-status gx-s-alert">{pendingRx.length} Pending</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Pill className="inline-block w-4 h-4 mr-1 align-middle" /> Expert Prescriptions</div><span className="gx-status gx-s-alert">{pendingRx.length} Pending</span></div>
             <div className="gx-card-body">
               {prescriptions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>💊</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Pill size={48} strokeWidth={1.5} /></div>
                   <div>No prescriptions received. Expert will send when pest is detected.</div>
                 </div>
               ) : (
@@ -514,7 +514,7 @@ export default function FieldManagerDashboard() {
                         <td><span className={`gx-status ${p.isacknowledged || p.status === 'ACKNOWLEDGED' ? 'gx-s-done' : 'gx-s-alert'}`}>{p.isacknowledged || p.status === 'ACKNOWLEDGED' ? 'ACK' : 'Pending'}</span></td>
                         <td>
                           {!(p.isacknowledged || p.status === 'ACKNOWLEDGED') && (
-                            <button className="gx-btn gx-btn-orange" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => ackPrescription.mutate(p.id)}>✅ Acknowledge</button>
+                            <button className="gx-btn gx-btn-orange" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => ackPrescription.mutate(p.id)}><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Acknowledge</button>
                           )}
                         </td>
                       </tr>
@@ -528,9 +528,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ LOG SOIL SAMPLE TAB ═══ */}
         {activeTab === 'soil' && (<>
-          <div className="gx-section-divider">🧪 Log Soil Sample Collection</div>
+          <div className="gx-section-divider"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Log Soil Sample Collection</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🧪 Collect & Send to Expert Lab</div><span className="gx-status gx-s-pending">Collection</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Collect & Send to Expert Lab</div><span className="gx-status gx-s-pending">Collection</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -563,7 +563,7 @@ export default function FieldManagerDashboard() {
                     if (!sampleFarmId) { toast.error('Please select a farm first'); return; }
                     logSample.mutate();
                   }}
-                >{logSample.isPending ? '⏳ Saving...' : '🧪 Log Sample & Send to Expert'}</button>
+                >{logSample.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Saving...</> : <><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Log Sample & Send to Expert</>}</button>
               </div>
             </div>
           </div>
@@ -571,9 +571,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ RECORD FIELD OPERATION TAB ═══ */}
         {activeTab === 'operation' && (<>
-          <div className="gx-section-divider">🚜 Log Field Operation</div>
+          <div className="gx-section-divider"><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Log Field Operation</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📝 Record Operation</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><PenLine className="inline-block w-4 h-4 mr-1 align-middle" /> Record Operation</div><span className="gx-status gx-s-done">Ready</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -604,7 +604,7 @@ export default function FieldManagerDashboard() {
                   placeholder="Soil was dry, needed extra depth. Applied fertilizer post-irrigation..." />
               </div>
               <div className="gx-upload-box">
-                <div className="gx-upload-label">📷 Attach Field Photos (optional)</div>
+                <div className="gx-upload-label"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Attach Field Photos (optional)</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>Drag & drop or click · JPEG/PNG · Max 10MB</div>
                 <input
                   type="file"
@@ -623,7 +623,7 @@ export default function FieldManagerDashboard() {
                 )}
               </div>
               <div className="gx-btn-row">
-                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate(undefined); }}>{logOperation.isPending ? '⏳ Saving...' : '📤 Log Operation & Notify'}</button>
+                <button className="gx-btn gx-btn-orange" disabled={logOperation.isPending} onClick={() => { if (!opFarmId) { toast.error('Please select a farm'); return; } logOperation.mutate(undefined); }}>{logOperation.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Saving...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Log Operation & Notify</>}</button>
                 <button className="gx-btn gx-btn-ghost" onClick={() => toast.success('Draft saved locally.')}>Save Draft</button>
               </div>
             </div>
@@ -632,9 +632,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ UPLOAD PHOTOS TAB ═══ */}
         {activeTab === 'photos' && (<>
-          <div className="gx-section-divider">📷 Upload Field Photos</div>
+          <div className="gx-section-divider"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Upload Field Photos</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📷 Field Photo Upload</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Field Photo Upload</div></div>
             <div className="gx-card-body">
               <div className="gx-form-grid">
                 <div className="gx-form-group">
@@ -652,7 +652,7 @@ export default function FieldManagerDashboard() {
                 </div>
               </div>
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
-                <div className="gx-upload-label">📷 Select or Capture Photos</div>
+                <div className="gx-upload-label"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Select or Capture Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>JPEG/PNG · Max 10MB each · Up to 5 photos</div>
                 <input
                   type="file"
@@ -676,7 +676,7 @@ export default function FieldManagerDashboard() {
               </div>
               <div className="gx-btn-row">
                 <button className="gx-btn gx-btn-orange" disabled={uploadPhotos.isPending} onClick={() => uploadPhotos.mutate()}>
-                  {uploadPhotos.isPending ? '⏳ Uploading...' : '📤 Upload & Share'}
+                  {uploadPhotos.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Uploading...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Upload & Share</>}
                 </button>
               </div>
             </div>
@@ -685,9 +685,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ REPORT PEST / DISEASE TAB ═══ */}
         {activeTab === 'pest' && (<>
-          <div className="gx-section-divider">🐛 Report Pest / Disease</div>
+          <div className="gx-section-divider"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Report Pest / Disease</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🐛 Pest / Disease Alert</div><span className="gx-status gx-s-alert">Send to Expert</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Pest / Disease Alert</div><span className="gx-status gx-s-alert">Send to Expert</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -707,7 +707,7 @@ export default function FieldManagerDashboard() {
                 <div className="gx-form-group"><label className="gx-label">Date Detected</label><input type="date" className="gx-input" defaultValue={new Date().toISOString().split('T')[0]} /></div>
               </div>
               <div className="gx-upload-box" style={{ marginTop: 14 }}>
-                <div className="gx-upload-label">📷 Attach Pest / Damage Photos</div>
+                <div className="gx-upload-label"><Camera className="inline-block w-4 h-4 mr-1 align-middle" /> Attach Pest / Damage Photos</div>
                 <div style={{ fontSize: 11, opacity: .5 }}>Photos help expert identify and prescribe accurately</div>
                 <input
                   type="file"
@@ -731,7 +731,7 @@ export default function FieldManagerDashboard() {
               </div>
               <div className="gx-btn-row">
                 <button className="gx-btn gx-btn-orange" disabled={reportPest.isPending} onClick={() => reportPest.mutate()}>
-                  {reportPest.isPending ? '⏳ Sending...' : '🐛 Send Pest Alert to Expert'}
+                  {reportPest.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Sending...</> : <><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Send Pest Alert to Expert</>}
                 </button>
               </div>
             </div>
@@ -740,9 +740,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ LOG IRRIGATION TAB ═══ */}
         {activeTab === 'irrigation' && (<>
-          <div className="gx-section-divider">💧 Log Irrigation</div>
+          <div className="gx-section-divider"><Droplets className="inline-block w-4 h-4 mr-1 align-middle" /> Log Irrigation</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">💧 Record Irrigation Event</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Droplets className="inline-block w-4 h-4 mr-1 align-middle" /> Record Irrigation Event</div><span className="gx-status gx-s-done">Ready</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -770,7 +770,7 @@ export default function FieldManagerDashboard() {
                   setOpArea(irrArea); setOpNotes(`Irrigation: ${irrMethod}, Duration: ${irrDuration}h, Source: ${irrSource}. ${irrNotes}`);
                   logOperation.mutate('Irrigation');
                   setIrrMethod('Flood'); setIrrDuration(''); setIrrArea(''); setIrrSource(''); setIrrNotes('');
-                }}>{logOperation.isPending ? '⏳ Saving...' : '💧 Log Irrigation'}</button>
+                }}>{logOperation.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Saving...</> : <><Droplets className="inline-block w-4 h-4 mr-1 align-middle" /> Log Irrigation</>}</button>
               </div>
             </div>
           </div>
@@ -778,9 +778,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ LOG SOWING TAB ═══ */}
         {activeTab === 'sowing' && (<>
-          <div className="gx-section-divider">🌱 Log Sowing</div>
+          <div className="gx-section-divider"><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Log Sowing</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">🌱 Record Sowing Event</div><span className="gx-status gx-s-done">Ready</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Record Sowing Event</div><span className="gx-status gx-s-done">Ready</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -810,7 +810,7 @@ export default function FieldManagerDashboard() {
                   setOpArea(sowArea); setOpNotes(`Sowing: ${sowCrop} (${sowVariety}), Qty: ${sowSeedQty}kg, Method: ${sowMethod}, Spacing: ${sowSpacing}. ${sowNotes}`);
                   logOperation.mutate('Sowing');
                   setSowCrop(''); setSowVariety(''); setSowSeedQty(''); setSowArea(''); setSowMethod('Direct Seeding'); setSowSpacing(''); setSowNotes('');
-                }}>{logOperation.isPending ? '⏳ Saving...' : '🌱 Log Sowing & Notify'}</button>
+                }}>{logOperation.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Saving...</> : <><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Log Sowing & Notify</>}</button>
               </div>
             </div>
           </div>
@@ -818,9 +818,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ ASSIGN TASKS TAB ═══ */}
         {activeTab === 'assign' && (<>
-          <div className="gx-section-divider">👥 Assign Tasks to Workers</div>
+          <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> Assign Tasks to Workers</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">👥 Task Assignment</div></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> Task Assignment</div></div>
             <div className="gx-card-body">
               <div className="gx-form-grid three">
                 <div className="gx-form-group">
@@ -847,7 +847,7 @@ export default function FieldManagerDashboard() {
                   if (!opFarmId) { toast.error('Please select a farm'); return; }
                   if (!taskTitle) { toast.error('Please enter a task title'); return; }
                   assignTask.mutate();
-                }}>{assignTask.isPending ? '⏳ Assigning...' : '📤 Assign Task'}</button>
+                }}>{assignTask.isPending ? <><Loader2 className="inline-block w-4 h-4 mr-1 align-middle" /> Assigning...</> : <><Upload className="inline-block w-4 h-4 mr-1 align-middle" /> Assign Task</>}</button>
               </div>
             </div>
           </div>
@@ -855,22 +855,22 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ MARK COMPLETE TAB ═══ */}
         {activeTab === 'complete' && (<>
-          <div className="gx-section-divider">✅ Mark Tasks Complete</div>
+          <div className="gx-section-divider"><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Mark Tasks Complete</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">✅ Pending Completion</div><span className="gx-status gx-s-pending">{tasks.filter((t: any) => t.status === 'IN_PROGRESS').length} In Progress</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Pending Completion</div><span className="gx-status gx-s-pending">{tasks.filter((t: any) => t.status === 'IN_PROGRESS').length} In Progress</span></div>
             <div className="gx-card-body">
               <table className="gx-data-table">
                 <thead><tr><th>#</th><th>Task</th><th>Farm</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>
                   {tasks.filter((t: any) => t.status !== 'COMPLETED').length === 0 ? (
-                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 30, opacity: .5 }}>All tasks completed! 🎉</td></tr>
+                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 30, opacity: .5 }}>All tasks completed! <Sparkles className="inline-block w-4 h-4 mr-1 align-middle" /></td></tr>
                   ) : tasks.filter((t: any) => t.status !== 'COMPLETED').map((t: any, i: number) => (
                     <tr key={t.id || i}>
                       <td>{i + 1}</td>
                       <td>{t.title || t.observations || 'Task'}</td>
                       <td>{t.farm_code || t.farmId || '—'}</td>
                       <td><span className={`gx-status gx-s-pending`}>{t.status || 'Pending'}</span></td>
-                      <td><button className="gx-btn gx-btn-green" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => updateTask.mutate({ id: t.id, status: 'COMPLETED' })}>✅ Complete</button></td>
+                      <td><button className="gx-btn gx-btn-green" style={{ padding: '4px 12px', fontSize: 11 }} onClick={() => updateTask.mutate({ id: t.id, status: 'COMPLETED' })}><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Complete</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -881,12 +881,12 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ ATTENDANCE TAB ═══ */}
         {activeTab === 'attendance' && (<>
-          <div className="gx-section-divider">📊 Worker Attendance</div>
+          <div className="gx-section-divider"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Worker Attendance</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📊 Today's Attendance</div><span className="gx-status gx-s-done">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Today's Attendance</div><span className="gx-status gx-s-done">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
             <div className="gx-card-body">
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
+                <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><BarChart3 size={48} strokeWidth={1.5} /></div>
                 <div>Worker attendance tracking. Workers check in/out from their dashboards.</div>
                 <div style={{ marginTop: 10, fontSize: 13 }}>Attendance records sync automatically for your assigned farms.</div>
               </div>
@@ -896,13 +896,13 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ AI AGENT TAB ═══ */}
         {activeTab === 'ai' && (<>
-          <div className="gx-section-divider">🤖 AI Agent — Smart Farm Assistant</div>
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Agent — Smart Farm Assistant</div>
           <div className="gx-card" style={{ marginBottom: 20 }}>
-            <div className="gx-card-header"><div className="gx-card-title">🤖 AI Analysis & Recommendations</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Analysis & Recommendations</div><span className="gx-status gx-s-done">{ai.recommendations.length} Insights</span></div>
             <div className="gx-card-body">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                <button className="gx-btn gx-btn-orange" style={{ fontSize: 12 }} onClick={() => { const r = ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success(`Crop recommendations generated`); }}>🌾 Crop Recommendations</button>
-                <button className="gx-btn gx-btn-blue" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}>🗑 Clear All</button>
+                <button className="gx-btn gx-btn-orange" style={{ fontSize: 12 }} onClick={() => { const r = ai.getCropRecs({ region: 'Telangana', season: 'Kharif' }); toast.success(`Crop recommendations generated`); }}><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Recommendations</button>
+                <button className="gx-btn gx-btn-blue" style={{ fontSize: 12 }} onClick={() => ai.clearRecommendations()}><Trash2 className="inline-block w-4 h-4 mr-1 align-middle" /> Clear All</button>
               </div>
               <AiInsightPanel
                 recommendations={ai.recommendations}
@@ -917,9 +917,9 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ ACTIVITY LOG / REPORTS TAB ═══ */}
         {activeTab === 'reports' && (<>
-          <div className="gx-section-divider">📈 My Activity Log</div>
+          <div className="gx-section-divider"><TrendingUp className="inline-block w-4 h-4 mr-1 align-middle" /> My Activity Log</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title">📈 Operations & Activity History</div><span className="gx-status gx-s-done">{stats?.operationsLogged || 0} Logged</span></div>
+            <div className="gx-card-header"><div className="gx-card-title"><TrendingUp className="inline-block w-4 h-4 mr-1 align-middle" /> Operations & Activity History</div><span className="gx-status gx-s-done">{stats?.operationsLogged || 0} Logged</span></div>
             <div className="gx-card-body">
               <div className="gx-stats-row" style={{ marginBottom: 16 }}>
                 <div className="gx-stat-card orange"><div className="gx-stat-label">Operations</div><div className="gx-stat-value">{stats?.operationsLogged || 0}</div></div>
@@ -932,7 +932,7 @@ export default function FieldManagerDashboard() {
               ) : tasks.slice(0, 10).map((t: any, idx: number) => (
                 <div key={t.id || idx} className="gx-activity-item">
                   <div className="gx-act-icon" style={{ background: t.status === 'COMPLETED' ? 'var(--gx-green-dim)' : 'var(--gx-orange-dim)' }}>
-                    {t.status === 'COMPLETED' ? '✅' : '📋'}
+                    {t.status === 'COMPLETED' ? <CheckCircle2 size={18} /> : <ClipboardList size={18} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div className="gx-act-text"><strong>{t.title || t.operation_type || 'Activity'}</strong></div>
@@ -950,7 +950,7 @@ export default function FieldManagerDashboard() {
 }
 
 function SideNavItem({ icon, label, active, onClick, badge, badgeColor }: {
-  icon: string; label: string; active?: boolean; onClick?: () => void;
+  icon: React.ReactNode; label: string; active?: boolean; onClick?: () => void;
   badge?: string; badgeColor?: 'red' | 'green' | 'gold' | 'blue';
 }) {
   return (
