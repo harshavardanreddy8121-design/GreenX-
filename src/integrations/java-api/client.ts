@@ -1,7 +1,9 @@
 // Java API Client for Oracle Database Backend
 // Replaces Supabase with direct Java backend API calls
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || '') + '/api';
+const BACKEND_URL = import.meta.env.VITE_API_URL
+  || 'https://spring-boot-backend-production-13e6.up.railway.app';
+const API_BASE_URL = BACKEND_URL + '/api';
 
 export interface ApiResponse<T> {
   success: boolean;

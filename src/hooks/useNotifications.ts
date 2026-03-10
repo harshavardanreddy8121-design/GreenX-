@@ -39,7 +39,9 @@ export function useNotifications({ userId, role, onNew }: UseNotificationsOption
         if (!userId) return;
 
         const token = getToken();
-        const socket = new SockJS('/api/ws');
+        const wsBase = (import.meta.env.VITE_API_URL
+            || 'https://spring-boot-backend-production-13e6.up.railway.app') + '/api/ws';
+        const socket = new SockJS(wsBase);
         const client = new Client({
             webSocketFactory: () => socket as WebSocket,
             connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
