@@ -10,19 +10,39 @@ const BACKEND_URL = import.meta.env.VITE_API_URL
     || 'https://spring-boot-backend-production-13e6.up.railway.app';
 const BASE = BACKEND_URL + '/api';
 const TOKEN_KEY = 'greenx_token';
+const COOKIE_NAME = 'greenx_token';
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+
+function setCookieValue(value: string) {
+    if (typeof document === 'undefined') return;
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(value)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=None; Secure`; 
+}
+
+function clearCookieValue() {
+    if (typeof document === 'undefined') return;
+    document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=None; Secure`;
+}
 
 export function getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    const fromStorage = localStorage.getItem(TOKEN_KEY);
+    if (fromStorage) return fromStorage;
+
+    if (typeof document === 'undefined') return null;
+    const cookieMatch = document.cookie.split('; ').find((cookie) => cookie.startsWith(`${COOKIE_NAME}=`));
+    if (!cookieMatch) return null;
+    return decodeURIComponent(cookieMatch.split('=')[1] || '');
 }
 
 export function setToken(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
+    setCookieValue(token);
     // Sync with javaApi client token so both clients are authenticated
     localStorage.setItem('javaApiToken', token);
 }
 
 export function clearToken() {
     localStorage.removeItem(TOKEN_KEY);
+    clearCookieValue();
     localStorage.removeItem('javaApiToken');
 }
 
