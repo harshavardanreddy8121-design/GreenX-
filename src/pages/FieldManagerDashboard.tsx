@@ -8,6 +8,7 @@ import { BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Dro
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
@@ -217,6 +218,11 @@ export default function FieldManagerDashboard() {
       toast.success('Soil sample logged! Expert has been notified for testing.');
       queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
       queryClient.invalidateQueries({ queryKey: ['fm-samples'] });
+      // Invalidate other dashboards so they pick up the new sample immediately
+      queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-lab-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['landowner-samples'] });
       // Trigger workflow so other dashboards (admin, landowner, expert) see the sample
       emitWorkflowTrigger({
         farmId: sampleFarmId,
@@ -350,6 +356,7 @@ export default function FieldManagerDashboard() {
         <div className="gx-page-header">
           <div className="gx-page-title">Field Operations — {userName} <Tractor className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms · {sampleTrack.length} samples tracked</div>
+          <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="FIELD_MANAGER" /></div>
         </div>
 
         {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}

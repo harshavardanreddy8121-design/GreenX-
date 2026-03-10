@@ -4,6 +4,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { BarChart3, Building2, CloudSun, Factory, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Users, Wallet, Wheat } from 'lucide-react';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const adminNavItems = [
   { icon: <BarChart3 size={18} />, label: 'Dashboard', path: '/admin' },
@@ -67,6 +68,9 @@ export default function AdminLayout() {
 
       {/* ── MAIN CONTENT ── */}
       <div className="gx-main">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 16px 0' }}>
+          <NotificationBell role="CLUSTER_ADMIN" />
+        </div>
         <Outlet />
       </div>
     </div>

@@ -37,6 +37,7 @@ export default function AdminLabSamples() {
   const { data: samples = [] } = useQuery({
     queryKey: ['admin-lab-samples'],
     queryFn: () => admin.getPendingSamples().catch(() => []),
+    refetchInterval: 15000,
   });
 
   const farmById = useMemo(() => {
@@ -70,6 +71,9 @@ export default function AdminLabSamples() {
       setForm(initialForm);
       queryClient.invalidateQueries({ queryKey: ['admin-lab-samples'] });
       queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['landowner-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['fm-samples'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to receive sample'),
   });

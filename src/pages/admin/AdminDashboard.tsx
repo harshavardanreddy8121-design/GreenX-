@@ -36,6 +36,7 @@ export default function AdminDashboard() {
     queryKey: ['admin-pending-samples'],
     queryFn: () => admin.getPendingSamples().catch(() => []),
     retry: false,
+    refetchInterval: 15000,
   });
 
   const { data: alerts = [] } = useQuery({

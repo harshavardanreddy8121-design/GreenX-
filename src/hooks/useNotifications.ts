@@ -80,7 +80,7 @@ export function useNotifications({ userId, role, onNew }: UseNotificationsOption
         // Sync with backend
         if (role) {
             const backendRole = role.toUpperCase().replace(/\s+/g, '_');
-            notificationsApi.markRead(backendRole, id).catch(() => {});
+            notificationsApi.markRead(backendRole, id).catch(() => { });
         }
     }, [role]);
 

@@ -7,6 +7,7 @@ import { AlertTriangle, Banknote, BarChart3, Bell, Bot, Bug, Calendar, Camera, C
 import { useToast } from '@/hooks/use-toast';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -135,6 +136,7 @@ export default function LandownerDashboard() {
           <div className="gx-page-sub">
             {farm ? `Your farm in ${farm.village || 'AP'} — ${farm.crop || 'Kharif'} Season is active` : 'Welcome to your GreenX dashboard'}
           </div>
+          <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="LAND_OWNER" /></div>
         </div>
 
         {/* ═══ OVERVIEW TAB ═══ */}

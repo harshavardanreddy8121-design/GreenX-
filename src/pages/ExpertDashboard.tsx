@@ -7,6 +7,7 @@ import { AlertTriangle, Archive, BarChart3, BookOpen, Bot, Bug, Calendar, Camera
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { javaApi } from '@/integrations/java-api/client';
@@ -168,6 +169,11 @@ export default function ExpertDashboard() {
       }
       queryClient.invalidateQueries({ queryKey: ['expert-reports'] });
       queryClient.invalidateQueries({ queryKey: ['expert-pending-samples'] });
+      // Notify other dashboards of the new soil report
+      queryClient.invalidateQueries({ queryKey: ['landowner-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-lab-samples'] });
+      queryClient.invalidateQueries({ queryKey: ['fm-samples'] });
       setSoilPh(''); setSoilN(''); setSoilP(''); setSoilK('');
       setSoilOC(''); setSoilMoisture(''); setSoilEC('');
       setSoilZn(''); setSoilB(''); setExpertRemarks('');
@@ -298,6 +304,7 @@ export default function ExpertDashboard() {
         <div className="gx-page-header">
           <div className="gx-page-title">Expert Lab — {userName} <Microscope className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{pendingSamples.length} samples pending · {myFarms.length} assigned farms · {pestAlerts.length} pest alerts open</div>
+          <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="EXPERT" /></div>
         </div>
 
         {/* ═══ OVERVIEW TAB ═══ */}
