@@ -43,10 +43,10 @@ async function request<T>(
         body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     });
 
-    if (res.status === 401) {
+    if (res.status === 401 || res.status === 403) {
         clearToken();
         window.location.href = '/login';
-        throw new Error('Session expired');
+        throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
     }
 
     const text = await res.text();

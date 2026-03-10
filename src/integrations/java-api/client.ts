@@ -45,7 +45,6 @@ class JavaApiClient {
 
   constructor() {
     this.baseUrl = API_BASE_URL;
-    this.token = localStorage.getItem('javaApiToken');
   }
 
   private async request<T>(
@@ -53,6 +52,8 @@ class JavaApiClient {
     method: string = 'GET',
     body?: any
   ): Promise<ApiResponse<T>> {
+    // Always read fresh token from localStorage
+    this.token = localStorage.getItem('javaApiToken');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -69,6 +70,14 @@ class JavaApiClient {
 
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+
+      // 401/403: clear stale token and redirect to login
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('javaApiToken');
+        localStorage.removeItem('greenx_token');
+        window.location.href = '/login';
+        return { success: false, error: 'Session expired — please log in again' };
+      }
 
       // Check if response has content
       const contentType = response.headers.get('content-type');
