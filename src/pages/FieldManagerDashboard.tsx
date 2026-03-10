@@ -75,7 +75,7 @@ export default function FieldManagerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [], isError: farmsError } = useQuery({
+  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['fm-farms', user?.id],
     queryFn: () => fieldManager.getAssignedFarms(),
     enabled: !!user?.id,
@@ -103,7 +103,7 @@ export default function FieldManagerDashboard() {
     retry: 2,
   });
 
-  const { data: sampleTrack = [], isError: samplesError } = useQuery({
+  const { data: sampleTrack = [], isError: samplesError, error: samplesErr } = useQuery({
     queryKey: ['fm-samples', user?.id],
     queryFn: () => fieldManager.getSamples(),
     enabled: !!user?.id,
@@ -367,7 +367,7 @@ export default function FieldManagerDashboard() {
         {(farmsError || samplesError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
           </div>
         )}
 

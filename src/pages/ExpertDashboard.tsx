@@ -59,7 +59,7 @@ export default function ExpertDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: pendingSamples = [], isError: samplesError } = useQuery({
+  const { data: pendingSamples = [], isError: samplesError, error: samplesErr } = useQuery({
     queryKey: ['expert-pending-samples', user?.id],
     queryFn: () => expert.getPendingSamples(),
     enabled: !!user?.id,
@@ -67,7 +67,7 @@ export default function ExpertDashboard() {
     retry: 2,
   });
 
-  const { data: myFarms = [], isError: farmsError } = useQuery({
+  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['expert-farms'],
     queryFn: () => expert.getAssignedFarms(),
     enabled: !!user?.id,
@@ -317,7 +317,7 @@ export default function ExpertDashboard() {
         {(samplesError || farmsError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
           </div>
         )}
 

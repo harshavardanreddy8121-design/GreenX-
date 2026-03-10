@@ -11,7 +11,7 @@ export default function AdminDashboard() {
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
-  const { data: farms = [], isError: farmsError } = useQuery({
+  const { data: farms = [], isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['admin-farms'],
     queryFn: () => admin.getFarms(),
     retry: 2,
@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     retry: 2,
   });
 
-  const { data: pendingSamples = [], isError: samplesError } = useQuery({
+  const { data: pendingSamples = [], isError: samplesError, error: samplesErr } = useQuery({
     queryKey: ['admin-pending-samples'],
     queryFn: () => admin.getPendingSamples(),
     retry: 2,
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
       {(farmsError || samplesError) && (
         <div className="gx-alert-box gx-alert-red">
           <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-          <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running.</div>
+          <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
         </div>
       )}
 

@@ -23,7 +23,7 @@ export default function LandownerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [], isError: farmsError } = useQuery({
+  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['landowner-farms', user?.id],
     queryFn: () => landOwner.getFarms(),
     enabled: !!user?.id,
@@ -53,7 +53,7 @@ export default function LandownerDashboard() {
     retry: 2,
   });
 
-  const { data: sampleTrack = [], isError: samplesError } = useQuery({
+  const { data: sampleTrack = [], isError: samplesError, error: samplesErr } = useQuery({
     queryKey: ['landowner-samples', user?.id],
     queryFn: () => landOwner.getSamples(),
     enabled: !!user?.id,
@@ -147,7 +147,7 @@ export default function LandownerDashboard() {
         {(farmsError || samplesError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
           </div>
         )}
 
