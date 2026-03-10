@@ -42,8 +42,12 @@ public class JwtFilter extends OncePerRequestFilter {
                         authToken.setDetails(
                                 new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
-                    } catch (Exception ignored) {
-                        // user not found – leave unauthenticated
+                    } catch (Exception ex) {
+                        // user not found – log and return 401
+                        System.err.println("[JwtFilter] User not found for email: " + email + ". Exception: " + ex);
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.getWriter().write("{\"error\":\"User not found for token\"}");
+                        return;
                     }
                 }
             } else {
