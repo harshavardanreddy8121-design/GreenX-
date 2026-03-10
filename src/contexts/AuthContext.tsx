@@ -44,8 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) { setLoading(false); return; }
     apiAuth.me()
       .then(u => {
+        console.log('[AuthContext] Backend user.role:', u.role);
+        const normRole = normalizeRole(u.role);
+        console.log('[AuthContext] Normalized role:', normRole);
         setUser(u);
-        setRole(normalizeRole(u.role));
+        setRole(normRole);
       })
       .catch(() => clearToken())
       .finally(() => setLoading(false));
@@ -53,9 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await apiAuth.login(email, password);
+    console.log('[AuthContext] Backend user.role (login):', res.user.role);
+    const normRole = normalizeRole(res.user.role);
+    console.log('[AuthContext] Normalized role (login):', normRole);
     setToken(res.token);
     setUser(res.user);
-    setRole(normalizeRole(res.user.role));
+    setRole(normRole);
   };
 
   const register = async (email: string, password: string, name: string, rawRole: string) => {
