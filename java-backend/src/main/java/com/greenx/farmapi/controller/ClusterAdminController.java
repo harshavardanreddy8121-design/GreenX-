@@ -118,7 +118,8 @@ public class ClusterAdminController {
 
     @GetMapping("/samples/pending")
     public ApiResponse<List<SoilSample>> getPendingSamples() {
-        List<SoilSample> samples = soilSampleRepository.findByStatus("AT_LAB");
+        List<SoilSample> samples = new ArrayList<>(soilSampleRepository.findByStatus("COLLECTED"));
+        samples.addAll(soilSampleRepository.findByStatus("AT_LAB"));
         samples.addAll(soilSampleRepository.findByStatus("TESTING"));
         return ApiResponse.success(samples);
     }

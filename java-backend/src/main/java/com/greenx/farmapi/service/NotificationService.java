@@ -38,10 +38,15 @@ public class NotificationService {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("id", n.getId());
+            payload.put("toUserId", n.getToUserId());
+            payload.put("fromRole", n.getFromRole());
             payload.put("title", n.getTitle());
             payload.put("message", n.getMessage());
             payload.put("type", n.getType());
-            payload.put("farmId", n.getRelatedFarmId());
+            payload.put("relatedFarmId", n.getRelatedFarmId());
+            payload.put("relatedEntityType", n.getRelatedEntityType());
+            payload.put("relatedEntityId", n.getRelatedEntityId());
+            payload.put("isread", false);
             payload.put("createdAt", n.getCreatedAt().toString());
             messagingTemplate.convertAndSendToUser(toUserId, "/queue/notifications", payload);
         } catch (Exception ignored) {

@@ -9,6 +9,7 @@ import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { useNotifications } from '@/hooks/useNotifications';
 
 type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
 
@@ -58,6 +59,12 @@ export default function LandownerDashboard() {
     queryKey: ['lo-unread-count'],
     queryFn: () => notifications.unreadCount('LAND_OWNER').catch(() => 0),
     refetchInterval: 30000,
+  });
+
+  const { notifications: realNotifications, markRead: markNotifRead } = useNotifications({
+    userId: user?.id ?? null,
+    role: 'LAND_OWNER',
+    onNew: (n) => toast({ title: n.title, description: n.message }),
   });
 
   const approveCropPlan = useMutation({
@@ -464,17 +471,18 @@ export default function LandownerDashboard() {
           <div className="gx-card">
             <div className="gx-card-header"><div className="gx-card-title"><Bell className="inline-block w-4 h-4 mr-1 align-middle" /> All Notifications</div></div>
             <div className="gx-card-body">
-              {timeline.length === 0 ? (
+              {realNotifications.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
                   <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Bell size={48} strokeWidth={1.5} /></div>
                   <div>No notifications yet. You'll be notified when something happens on your farm.</div>
                 </div>
-              ) : timeline.map((event: any, idx: number) => (
-                <div key={event.id || idx} className="gx-activity-item">
-                  <div className="gx-act-icon" style={{ background: 'var(--gx-gold-dim)' }}><Bell size={18} /></div>
+              ) : realNotifications.map((notif: any) => (
+                <div key={notif.id} className={`gx-activity-item ${!notif.isread ? 'cursor-pointer' : ''}`} onClick={() => !notif.isread && markNotifRead(notif.id)}>
+                  <div className="gx-act-icon" style={{ background: notif.type === 'URGENT' || notif.type === 'ALERT' ? 'rgba(239,68,68,0.15)' : 'var(--gx-gold-dim)' }}><Bell size={18} /></div>
                   <div>
-                    <div className="gx-act-text"><strong>{event.event_title || event.title || 'Notification'}</strong> — {event.event_description || event.message || ''}</div>
-                    <div className="gx-act-time">{event.created_at ? new Date(event.created_at).toLocaleString() : ''}</div>
+                    <div className="gx-act-text"><strong>{notif.title || 'Notification'}</strong> — {notif.message || ''}</div>
+                    <div className="gx-act-time">{notif.createdAt ? new Date(notif.createdAt).toLocaleString() : ''}</div>
+                    {!notif.isread && <span className="gx-status gx-s-pending" style={{ marginTop: 4, display: 'inline-flex' }}>Unread</span>}
                   </div>
                 </div>
               ))}

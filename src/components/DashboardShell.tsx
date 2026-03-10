@@ -21,6 +21,15 @@ interface DashboardShellProps {
     role: string;
 }
 
+function roleToBackend(displayRole: string): string {
+    const r = displayRole.toLowerCase().replace(/\s+/g, '');
+    if (r === 'fieldmanager') return 'FIELD_MANAGER';
+    if (r === 'landowner') return 'LAND_OWNER';
+    if (r === 'expert') return 'EXPERT';
+    if (r === 'admin' || r === 'clusteradmin') return 'CLUSTER_ADMIN';
+    return displayRole.toUpperCase().replace(/\s+/g, '_');
+}
+
 export default function DashboardShell({ children, menuItems, role }: DashboardShellProps) {
     const { user, profile, logout } = useAuth();
     const navigate = useNavigate();
@@ -30,6 +39,7 @@ export default function DashboardShell({ children, menuItems, role }: DashboardS
 
     const { notifications, unreadCount, markRead } = useNotifications({
         userId: user?.id ?? null,
+        role: roleToBackend(role),
         onNew: (n) => toast({
             title: n.title,
             description: n.message,

@@ -13,10 +13,13 @@ export function getToken(): string | null {
 
 export function setToken(token: string) {
     localStorage.setItem(TOKEN_KEY, token);
+    // Sync with javaApi client token so both clients are authenticated
+    localStorage.setItem('javaApiToken', token);
 }
 
 export function clearToken() {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem('javaApiToken');
 }
 
 async function request<T>(

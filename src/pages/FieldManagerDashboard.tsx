@@ -8,6 +8,7 @@ import { BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Dro
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 
@@ -215,6 +216,14 @@ export default function FieldManagerDashboard() {
     onSuccess: () => {
       toast.success('Soil sample logged! Expert has been notified for testing.');
       queryClient.invalidateQueries({ queryKey: ['fm-farms'] });
+      queryClient.invalidateQueries({ queryKey: ['fm-samples'] });
+      // Trigger workflow so other dashboards (admin, landowner, expert) see the sample
+      emitWorkflowTrigger({
+        farmId: sampleFarmId,
+        eventKey: 'soil_samples_collected',
+        triggeredBy: 'fieldmanager',
+        note: 'Field manager collected soil samples and submitted to lab.',
+      });
       // AI auto-analyze soil context
       const rec = ai.analyzeSoil({ ph: 0, nitrogen: 0, phosphorus: 0, potassium: 0, organicCarbon: 0, currentCrop: '', region: '' });
       if (rec.suggestedTasks.length > 0) toast.info(`AI: ${rec.suggestedTasks.length} soil insight(s) — enter lab results for detailed analysis`);
