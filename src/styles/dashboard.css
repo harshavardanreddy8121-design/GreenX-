@@ -19,9 +19,9 @@
     --gx-orange: #f97316;
     --gx-orange-dim: rgba(249, 115, 22, 0.15);
     --gx-red: #ef4444;
-    --gx-text: #e8f0eb;
-    --gx-text2: #a8bfb0;
-    --gx-text3: #6b8a76;
+    --gx-text: #f0f7f2;
+    --gx-text2: #c2d6c8;
+    --gx-text3: #8aab96;
     --gx-radius: 12px;
     --gx-radius-sm: 8px;
 }
@@ -33,9 +33,9 @@
     --gx-surface2: #f1f5f3;
     --gx-border: rgba(16, 185, 129, 0.12);
     --gx-border2: rgba(16, 185, 129, 0.18);
-    --gx-text: #0f2419;
-    --gx-text2: #3d5a4a;
-    --gx-text3: #7a9988;
+    --gx-text: #0a1c13;
+    --gx-text2: #2d4838;
+    --gx-text3: #5e826e;
     --gx-green-dim: rgba(34, 197, 94, 0.08);
     --gx-blue-dim: rgba(59, 130, 246, 0.08);
     --gx-gold-dim: rgba(240, 180, 41, 0.08);
@@ -85,14 +85,14 @@
 }
 
 .gx-sidebar-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--gx-text);
 }
 
 .gx-sidebar-role {
-    font-size: 11px;
-    color: #8fb8a0;
+    font-size: 12px;
+    color: #a0ccb2;
     margin-top: 2px;
     font-family: 'JetBrains Mono', monospace;
 }
@@ -118,11 +118,11 @@
 }
 
 .gx-nav-group-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #7aaa8a;
+    color: #96c4a6;
     padding: 8px 20px 6px;
     margin-top: 8px;
 }
@@ -132,8 +132,8 @@
     align-items: center;
     gap: 10px;
     padding: 9px 20px;
-    font-size: 13.5px;
-    color: #9abfaa;
+    font-size: 14.5px;
+    color: #b0d4be;
     cursor: pointer;
     border-radius: 0;
     transition: all 0.15s;
@@ -158,14 +158,14 @@
 }
 
 .gx-nav-icon {
-    font-size: 15px;
+    font-size: 16px;
     width: 20px;
     text-align: center;
 }
 
 .gx-nav-badge {
     margin-left: auto;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     padding: 2px 6px;
     border-radius: 20px;
@@ -205,15 +205,15 @@
 }
 
 .gx-page-title {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--gx-text);
     letter-spacing: -0.5px;
 }
 
 .gx-page-sub {
-    font-size: 14px;
-    color: #a8bfb0;
+    font-size: 15px;
+    color: #c2d6c8;
     margin-top: 4px;
 }
 
@@ -266,14 +266,14 @@
 }
 
 .gx-stat-label {
-    font-size: 12px;
-    color: #a8bfb0;
+    font-size: 13px;
+    color: #c2d6c8;
     margin-bottom: 8px;
     font-weight: 500;
 }
 
 .gx-stat-value {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
     color: var(--gx-text);
     font-family: 'JetBrains Mono', monospace;
@@ -281,12 +281,12 @@
 }
 
 .gx-stat-unit {
-    font-size: 16px;
-    color: #a8bfb0;
+    font-size: 17px;
+    color: #c2d6c8;
 }
 
 .gx-stat-change {
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
 }
 
@@ -335,7 +335,7 @@
 }
 
 .gx-card-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--gx-text);
     display: flex;
@@ -355,19 +355,19 @@
 
 .gx-data-table th {
     text-align: left;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: #7aaa8a;
+    color: #96c4a6;
     padding: 8px 12px;
     border-bottom: 1px solid var(--gx-border);
 }
 
 .gx-data-table td {
     padding: 11px 12px;
-    font-size: 13px;
-    color: #b8ccbf;
+    font-size: 14px;
+    color: #d0e0d6;
     border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     vertical-align: middle;
 }
@@ -388,7 +388,7 @@
     gap: 5px;
     padding: 3px 9px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 
@@ -466,9 +466,9 @@
 }
 
 .gx-label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: #a8bfb0;
+    color: #c2d6c8;
     letter-spacing: 0.3px;
     text-transform: uppercase;
 }
@@ -480,7 +480,7 @@
     border: 1px solid var(--gx-border2);
     border-radius: var(--gx-radius-sm);
     padding: 10px 13px;
-    font-size: 13.5px;
+    font-size: 14.5px;
     color: var(--gx-text);
     font-family: 'Outfit', sans-serif;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -511,7 +511,7 @@
     gap: 7px;
     padding: 10px 18px;
     border-radius: var(--gx-radius-sm);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     border: none;
@@ -559,7 +559,7 @@
 .gx-btn-ghost {
     background: transparent;
     border: 1px solid var(--gx-border2);
-    color: #b8ccbf;
+    color: #d0e0d6;
 }
 
 .gx-btn-ghost:hover {
@@ -569,7 +569,7 @@
 
 .gx-btn-sm {
     padding: 6px 12px;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .gx-btn-row {
@@ -592,19 +592,19 @@
 }
 
 .gx-act-icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 15px;
     flex-shrink: 0;
 }
 
 .gx-act-text {
-    font-size: 13px;
-    color: #b8ccbf;
+    font-size: 14px;
+    color: #d0e0d6;
     line-height: 1.5;
 }
 
@@ -613,8 +613,8 @@
 }
 
 .gx-act-time {
-    font-size: 11px;
-    color: #7aaa8a;
+    font-size: 12px;
+    color: #96c4a6;
     margin-top: 3px;
     font-family: 'JetBrains Mono', monospace;
 }
@@ -623,8 +623,8 @@
 .gx-progress-label {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
-    color: #a8bfb0;
+    font-size: 13px;
+    color: #c2d6c8;
     margin-bottom: 6px;
 }
 
@@ -645,7 +645,7 @@
 .gx-alert-box {
     border-radius: var(--gx-radius-sm);
     padding: 12px 16px;
-    font-size: 13px;
+    font-size: 14px;
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -678,11 +678,11 @@
 
 /* ── SECTION DIVIDER ── */
 .gx-section-divider {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: #7aaa8a;
+    color: #96c4a6;
     margin: 24px 0 14px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--gx-border);
@@ -695,7 +695,7 @@
     align-items: center;
     padding: 10px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .gx-metric-row:last-child {
@@ -703,7 +703,7 @@
 }
 
 .gx-metric-label {
-    color: #a8bfb0;
+    color: #c2d6c8;
 }
 
 .gx-metric-value {
@@ -740,8 +740,8 @@
     border: 1px solid var(--gx-border);
     border-radius: 4px;
     padding: 6px 8px;
-    font-size: 11px;
-    color: #a8bfb0;
+    font-size: 12px;
+    color: #c2d6c8;
     min-height: 44px;
 }
 
@@ -749,8 +749,8 @@
     background: transparent;
     border: none;
     font-weight: 600;
-    color: #7aaa8a;
-    font-size: 10px;
+    color: #96c4a6;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1px;
     display: flex;
@@ -879,7 +879,7 @@
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.2);
     color: #f87171;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
@@ -992,11 +992,11 @@
     }
 
     .gx-page-title {
-        font-size: 18px;
+        font-size: 20px;
     }
 
     .gx-page-sub {
-        font-size: 12px;
+        font-size: 13px;
     }
 
     /* Make tables horizontally scrollable */
@@ -1037,7 +1037,7 @@
     }
 
     .gx-stat-value {
-        font-size: 24px;
+        font-size: 26px;
     }
 
     /* Make sidebar wider on very small screens */
