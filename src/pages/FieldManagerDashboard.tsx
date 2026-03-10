@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
-import { BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -75,35 +75,40 @@ export default function FieldManagerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [] } = useQuery({
+  const { data: myFarms = [], isError: farmsError } = useQuery({
     queryKey: ['fm-farms', user?.id],
-    queryFn: () => fieldManager.getAssignedFarms().catch(() => []),
+    queryFn: () => fieldManager.getAssignedFarms(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['fm-tasks', user?.id],
-    queryFn: () => fieldManager.getTodayTasks().catch(() => []),
+    queryFn: () => fieldManager.getTodayTasks(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: prescriptions = [] } = useQuery({
     queryKey: ['fm-prescriptions', user?.id],
-    queryFn: () => fieldManager.getPrescriptions().catch(() => []),
+    queryFn: () => fieldManager.getPrescriptions(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: stats = {} as any } = useQuery({
     queryKey: ['fm-stats', user?.id],
-    queryFn: () => fieldManager.getStats().catch(() => ({})),
+    queryFn: () => fieldManager.getStats(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
-  const { data: sampleTrack = [] } = useQuery({
+  const { data: sampleTrack = [], isError: samplesError } = useQuery({
     queryKey: ['fm-samples', user?.id],
-    queryFn: () => fieldManager.getSamples().catch(() => []),
+    queryFn: () => fieldManager.getSamples(),
     enabled: !!user?.id,
     refetchInterval: 15000,
+    retry: 2,
   });
 
   const logOperation = useMutation({
@@ -358,6 +363,13 @@ export default function FieldManagerDashboard() {
           <div className="gx-page-sub">{tasks.length} tasks today · {myFarms.length} assigned farms · {sampleTrack.length} samples tracked</div>
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="FIELD_MANAGER" /></div>
         </div>
+
+        {(farmsError || samplesError) && (
+          <div className="gx-alert-box gx-alert-red">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+          </div>
+        )}
 
         {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}
         {(activeTab === 'overview' || activeTab === 'tasks') && (<>

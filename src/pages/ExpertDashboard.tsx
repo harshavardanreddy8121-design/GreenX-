@@ -59,47 +59,54 @@ export default function ExpertDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: pendingSamples = [] } = useQuery({
+  const { data: pendingSamples = [], isError: samplesError } = useQuery({
     queryKey: ['expert-pending-samples', user?.id],
-    queryFn: () => expert.getPendingSamples().catch(() => []),
+    queryFn: () => expert.getPendingSamples(),
     enabled: !!user?.id,
     refetchInterval: 15000,
+    retry: 2,
   });
 
-  const { data: myFarms = [] } = useQuery({
+  const { data: myFarms = [], isError: farmsError } = useQuery({
     queryKey: ['expert-farms'],
-    queryFn: () => expert.getAssignedFarms().catch(() => []),
+    queryFn: () => expert.getAssignedFarms(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: myReports = [] } = useQuery({
     queryKey: ['expert-reports'],
-    queryFn: () => expert.getMyReports().catch(() => []),
+    queryFn: () => expert.getMyReports(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: farmsAwaiting = [] } = useQuery({
     queryKey: ['expert-farms-awaiting'],
-    queryFn: () => expert.getFarmsAwaitingSuggestions().catch(() => []),
+    queryFn: () => expert.getFarmsAwaitingSuggestions(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: pestAlerts = [] } = useQuery({
     queryKey: ['expert-pest-alerts'],
-    queryFn: () => expert.getPestAlerts().catch(() => []),
+    queryFn: () => expert.getPestAlerts(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: myPrescriptions = [] } = useQuery({
     queryKey: ['expert-prescriptions'],
-    queryFn: () => expert.getMyPrescriptions().catch(() => []),
+    queryFn: () => expert.getMyPrescriptions(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const { data: stats = {} as any } = useQuery({
     queryKey: ['expert-stats'],
-    queryFn: () => expert.getStats().catch(() => ({})),
+    queryFn: () => expert.getStats(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   // Auto-analyze pest alerts when they arrive
@@ -306,6 +313,13 @@ export default function ExpertDashboard() {
           <div className="gx-page-sub">{pendingSamples.length} samples pending · {myFarms.length} assigned farms · {pestAlerts.length} pest alerts open</div>
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="EXPERT" /></div>
         </div>
+
+        {(samplesError || farmsError) && (
+          <div className="gx-alert-box gx-alert-red">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+          </div>
+        )}
 
         {/* ═══ OVERVIEW TAB ═══ */}
         {activeTab === 'overview' && (<>

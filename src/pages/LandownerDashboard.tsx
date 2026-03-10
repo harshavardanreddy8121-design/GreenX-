@@ -23,37 +23,42 @@ export default function LandownerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [] } = useQuery({
+  const { data: myFarms = [], isError: farmsError } = useQuery({
     queryKey: ['landowner-farms', user?.id],
-    queryFn: () => landOwner.getFarms().catch(() => []),
+    queryFn: () => landOwner.getFarms(),
     enabled: !!user?.id,
+    retry: 2,
   });
 
   const farm: any = myFarms[0];
 
   const { data: costs = [] } = useQuery({
     queryKey: ['farm-costs', farm?.id],
-    queryFn: () => landOwner.getFinanceSummary().catch(() => ({})),
+    queryFn: () => landOwner.getFinanceSummary(),
     enabled: !!farm?.id,
+    retry: 2,
   });
 
   const { data: cropPlans = [] } = useQuery({
     queryKey: ['crop-plans', farm?.id],
-    queryFn: () => landOwner.getCropSuggestions().catch(() => []),
+    queryFn: () => landOwner.getCropSuggestions(),
     enabled: !!farm?.id,
+    retry: 2,
   });
 
   const { data: timeline = [] } = useQuery({
     queryKey: ['farm-timeline', farm?.id],
-    queryFn: () => landOwner.getOperationsFeed().catch(() => []),
+    queryFn: () => landOwner.getOperationsFeed(),
     enabled: !!farm?.id,
+    retry: 2,
   });
 
-  const { data: sampleTrack = [] } = useQuery({
+  const { data: sampleTrack = [], isError: samplesError } = useQuery({
     queryKey: ['landowner-samples', user?.id],
-    queryFn: () => landOwner.getSamples().catch(() => []),
+    queryFn: () => landOwner.getSamples(),
     enabled: !!user?.id,
     refetchInterval: 15000,
+    retry: 2,
   });
 
   const { data: unreadCount = 0 } = useQuery({
@@ -138,6 +143,13 @@ export default function LandownerDashboard() {
           </div>
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="LAND_OWNER" /></div>
         </div>
+
+        {(farmsError || samplesError) && (
+          <div className="gx-alert-box gx-alert-red">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+            <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running and accessible.</div>
+          </div>
+        )}
 
         {/* ═══ OVERVIEW TAB ═══ */}
         {activeTab === 'overview' && (<>

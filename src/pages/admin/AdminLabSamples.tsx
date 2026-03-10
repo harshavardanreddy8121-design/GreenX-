@@ -21,23 +21,27 @@ export default function AdminLabSamples() {
 
   const { data: farms = [] } = useQuery({
     queryKey: ['admin-lab-farms'],
-    queryFn: () => admin.getFarms().catch(() => []),
+    queryFn: () => admin.getFarms(),
+    retry: 2,
   });
 
   const { data: experts = [] } = useQuery({
     queryKey: ['admin-lab-experts'],
-    queryFn: () => admin.getExperts().catch(() => []),
+    queryFn: () => admin.getExperts(),
+    retry: 2,
   });
 
   const { data: fieldManagers = [] } = useQuery({
     queryKey: ['admin-lab-field-managers'],
-    queryFn: () => admin.getAvailableManagers().catch(() => []),
+    queryFn: () => admin.getAvailableManagers(),
+    retry: 2,
   });
 
   const { data: samples = [] } = useQuery({
     queryKey: ['admin-lab-samples'],
-    queryFn: () => admin.getPendingSamples().catch(() => []),
+    queryFn: () => admin.getPendingSamples(),
     refetchInterval: 15000,
+    retry: 2,
   });
 
   const farmById = useMemo(() => {

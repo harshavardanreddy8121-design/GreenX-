@@ -1,6 +1,7 @@
 package com.greenx.farmapi.service;
 
 import com.greenx.farmapi.entity.*;
+import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class FieldManagerService {
     private final PrescriptionRepository prescriptionRepository;
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
+    private final UserRepository userRepository;
 
     @Transactional
     public FieldOperation logOperation(FieldOperation operation, List<MultipartFile> photos) throws IOException {
@@ -65,14 +67,36 @@ public class FieldManagerService {
                         (sample.getCollectionNotes() != null ? sample.getCollectionNotes() + " " : "") +
                                 "Photos: " + String.join(",", paths));
         }
+        // Auto-assign expertId from the farm if the sample doesn't have one
+        farmRepository.findById(sample.getFarmId()).ifPresent(farm -> {
+            if ((sample.getAssignedExpertId() == null || sample.getAssignedExpertId().isBlank())
+                    && farm.getExpertId() != null && !farm.getExpertId().isBlank()) {
+                sample.setAssignedExpertId(farm.getExpertId());
+            }
+        });
+
         final SoilSample savedSample = soilSampleRepository.save(sample);
 
         farmRepository.findById(savedSample.getFarmId()).ifPresent(farm -> {
-            // Notify cluster admin
+            // Notify cluster admins
             if (farm.getClusterId() != null) {
-                // find admins in cluster
-                // (notification is sent individually when admin list is available)
+                List<User> admins = userRepository.findByRoleAndClusterId("CLUSTER_ADMIN", farm.getClusterId());
+                for (User admin : admins) {
+                    notificationService.notify(admin.getId(), savedSample.getCollectedBy(), "FIELD_MANAGER",
+                            "New Soil Sample Collected",
+                            "Soil sample collected on farm " + farm.getFarmCode() + ". Review and assign to expert.",
+                            "INFO", farm.getId(), "SOIL_SAMPLE", savedSample.getId());
+                }
             }
+            // Also notify the assigned expert if set
+            if (savedSample.getAssignedExpertId() != null && !savedSample.getAssignedExpertId().isBlank()) {
+                notificationService.notify(savedSample.getAssignedExpertId(), savedSample.getCollectedBy(),
+                        "FIELD_MANAGER",
+                        "New Soil Sample Assigned to You",
+                        "A soil sample from farm " + farm.getFarmCode() + " has been submitted for testing.",
+                        "INFO", farm.getId(), "SOIL_SAMPLE", savedSample.getId());
+            }
+            // Notify land owner
             notificationService.notify(farm.getOwnerId(), savedSample.getCollectedBy(), "FIELD_MANAGER",
                     "Soil Sampling Started",
                     "Soil sampling is in progress on your farm " + farm.getFarmCode(),

@@ -5,22 +5,22 @@ import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 
-import { BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
-  const { data: farms = [] } = useQuery({
+  const { data: farms = [], isError: farmsError } = useQuery({
     queryKey: ['admin-farms'],
-    queryFn: () => admin.getFarms().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getFarms(),
+    retry: 2,
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ['admin-users'],
-    queryFn: () => admin.getUsers().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getUsers(),
+    retry: 2,
   });
 
   const { data: taskStats = { pending: 0, completed: 0 } } = useQuery({
@@ -28,33 +28,33 @@ export default function AdminDashboard() {
     queryFn: () => admin.getStats().then(s => ({
       pending: (s['pendingTasks'] as number) ?? 0,
       completed: (s['completedTasks'] as number) ?? 0,
-    })).catch(() => ({ pending: 0, completed: 0 })),
-    retry: false,
+    })),
+    retry: 2,
   });
 
-  const { data: pendingSamples = [] } = useQuery({
+  const { data: pendingSamples = [], isError: samplesError } = useQuery({
     queryKey: ['admin-pending-samples'],
-    queryFn: () => admin.getPendingSamples().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getPendingSamples(),
+    retry: 2,
     refetchInterval: 15000,
   });
 
   const { data: alerts = [] } = useQuery({
     queryKey: ['admin-alerts'],
-    queryFn: () => admin.getAllAlerts().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getAllAlerts(),
+    retry: 2,
   });
 
   const { data: managers = [] } = useQuery({
     queryKey: ['admin-managers'],
-    queryFn: () => admin.getAvailableManagers().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getAvailableManagers(),
+    retry: 2,
   });
 
   const { data: expertList = [] } = useQuery({
     queryKey: ['admin-expert-list'],
-    queryFn: () => admin.getExperts().catch(() => []),
-    retry: false,
+    queryFn: () => admin.getExperts(),
+    retry: 2,
   });
 
   const assignManagerMutation = useMutation({
@@ -108,6 +108,13 @@ export default function AdminDashboard() {
         <div className="gx-page-title">Cluster Admin — Control Center <Building2 className="inline-block w-4 h-4 mr-1 align-middle" /></div>
         <div className="gx-page-sub">{farms.length} farms · {users.length} users · {pendingSamples.length} samples pending</div>
       </div>
+
+      {(farmsError || samplesError) && (
+        <div className="gx-alert-box gx-alert-red">
+          <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+          <div><strong>Backend Connection Error:</strong> Could not load data from the server. Please check that the Java backend is running.</div>
+        </div>
+      )}
 
       {/* Alert */}
       {alerts.length > 0 && (
