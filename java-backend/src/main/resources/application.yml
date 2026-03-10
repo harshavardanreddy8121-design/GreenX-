@@ -53,9 +53,9 @@ spring:
 logging:
   level:
     root: INFO
-    com.greenx: DEBUG
+    com.greenx: INFO
     org.springframework.security: WARN
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
