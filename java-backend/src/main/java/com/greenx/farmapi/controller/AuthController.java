@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
