@@ -6,6 +6,11 @@ import com.greenx.farmapi.repository.UserRepository;
 import com.greenx.farmapi.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +25,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
     public ApiResponse<AuthResponse> register(@RequestBody RegisterRequest request) {
@@ -49,22 +55,34 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@RequestBody LoginRequest request) {
         try {
+            if (request == null || request.getEmail() == null || request.getPassword() == null) {
+                return ApiResponse.error("Email and password are required");
+            }
+
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+
             Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
             if (userOpt.isEmpty()) {
                 return ApiResponse.error("Invalid email or password");
             }
+
             User user = userOpt.get();
-            if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                return ApiResponse.error("Invalid email or password");
-            }
             if (!user.isEnabled()) {
                 return ApiResponse.error("Account is deactivated. Please contact admin.");
             }
+
             String token = jwtUtil.generateToken(user.getId(), user.getEmail(), user.getRole());
             return ApiResponse.success(AuthResponse.builder()
                     .token(token)
                     .user(UserDto.fromEntity(user))
                     .build());
+        } catch (BadCredentialsException e) {
+            return ApiResponse.error("Invalid email or password");
+        } catch (DisabledException e) {
+            return ApiResponse.error("Account is deactivated. Please contact admin.");
+        } catch (AuthenticationException e) {
+            return ApiResponse.error("Authentication failed");
         } catch (Exception e) {
             return ApiResponse.error("Login failed: " + e.getMessage());
         }

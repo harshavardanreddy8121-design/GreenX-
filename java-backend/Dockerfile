@@ -4,12 +4,12 @@ FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /build
 
 # Copy pom first for dependency layer caching
-COPY java-backend/pom.xml .
+COPY pom.xml .
 
 # Download dependencies (cached unless pom.xml changes)
 RUN mvn dependency:go-offline -q
 
-COPY java-backend/src/ src/
+COPY src/ src/
 RUN mvn clean package -DskipTests -q
 
 # ── Stage 2: Runtime ─────────────────────────────────────────────────────────

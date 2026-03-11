@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -47,8 +48,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public endpoints (authentication and health)
-                        .requestMatchers("/auth/**", "/api/auth/**", "/health", "/ws/**").permitAll()
+                        .requestMatchers("/auth/**", "/api/auth/**", "/health", "/api/health", "/ws/**", "/api/ws/**")
+                        .permitAll()
                         .requestMatchers("/files/**").permitAll()
                         // Role-protected endpoints
                         .requestMatchers("/admin/**").hasRole("CLUSTER_ADMIN")

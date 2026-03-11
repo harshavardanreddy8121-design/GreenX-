@@ -5,15 +5,21 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -22,7 +28,21 @@ public class JwtUtil {
     private long jwtExpirationMs;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+
+        // HS512 requires >= 64 bytes. Derive a stable strong key if env secret is too
+        // short.
+        if (secretBytes.length < 64) {
+            log.warn(
+                    "JWT secret is shorter than 64 bytes; deriving HS512 key via SHA-512. Configure JWT_SECRET to at least 64 bytes in production.");
+            try {
+                secretBytes = MessageDigest.getInstance("SHA-512").digest(secretBytes);
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException("Unable to initialize JWT signing key", e);
+            }
+        }
+
+        return Keys.hmacShaKeyFor(secretBytes);
     }
 
     public String generateToken(String userId, String email, String role) {
