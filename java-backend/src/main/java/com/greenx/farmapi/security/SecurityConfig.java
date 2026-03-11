@@ -34,7 +34,7 @@ public class SecurityConfig {
     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
     // production
     // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
-    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app}")
+    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app}")
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
