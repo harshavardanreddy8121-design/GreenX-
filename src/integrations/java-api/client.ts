@@ -70,11 +70,16 @@ class JavaApiClient {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, config);
 
-      // 401/403: clear stale token and redirect to login
+      // 401/403: clear stale token and redirect to login.
+      // Skip the redirect for auth endpoints to avoid a reload loop while the
+      // user is already on the login page.
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('javaApiToken');
-        localStorage.removeItem('greenx_token');
-        window.location.href = '/login';
+        const isAuthEndpoint = endpoint.startsWith('/auth/');
+        if (!isAuthEndpoint) {
+          localStorage.removeItem('javaApiToken');
+          localStorage.removeItem('greenx_token');
+          window.location.href = '/login';
+        }
         return { success: false, error: 'Session expired — please log in again' };
       }
 

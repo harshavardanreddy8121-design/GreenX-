@@ -34,7 +34,9 @@ public class SecurityConfig {
     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
     // production
     // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
-    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app}")
+    // localhost origins are included so local dev (npm run dev → port 5173)
+    // can reach a locally-running Spring Boot backend without CORS errors.
+    @Value("${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app,https://web-hug-studio-46-043df96f-70335c46-main.vercel.app}")
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
@@ -48,7 +50,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // "/auth/**" matches the servlet path (after context-path /api is stripped).
+                        // "/api/auth/**" is kept as a fallback for deployments without a context-path.
+                        .requestMatchers("/auth/**", "/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -61,8 +61,13 @@ async function request<T>(
     });
 
     if (res.status === 401 || res.status === 403) {
-        clearToken();
-        window.location.href = '/login';
+        // Don't redirect when calling auth endpoints (login/register) — that
+        // would cause a reload loop while the user is already on the login page.
+        const isAuthEndpoint = path.startsWith('/auth/');
+        if (!isAuthEndpoint) {
+            clearToken();
+            window.location.href = '/login';
+        }
         throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
     }
 

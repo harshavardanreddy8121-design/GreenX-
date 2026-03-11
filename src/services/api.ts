@@ -2,8 +2,8 @@
  * Frontend API service layer — GreenX
  *
  * Backend base URL is controlled by VITE_API_URL env var.
- * In production (Vercel) set:  VITE_API_URL=https://spring-boot-backend-production-13e6.up.railway.app
- * In local dev leave it empty — Vite proxy forwards /api → http://localhost:8082
+ * In production (Vercel) set:  VITE_API_URL=https://greenx-backend-yyti.onrender.com
+ * In local dev leave it empty — Vite proxy forwards /api → http://localhost:8080
  */
 
 export { health, auth, getToken, setToken, clearToken } from '@/lib/api';

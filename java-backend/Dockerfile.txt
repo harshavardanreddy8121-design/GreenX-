@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 COPY --from=builder /build/target/farm-management-api-*.jar app.jar
 
-# Railway injects PORT; expose 8080 as default
+# Render injects PORT; expose 8080 as default
 EXPOSE 8080
 
 # Generous start-period: Spring Boot + DB connection takes ~60-90s

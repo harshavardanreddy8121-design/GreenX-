@@ -1,0 +1,57 @@
+# Render Blueprint — GreenX Backend
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy: connect this repo in the Render dashboard and Render will pick up this file.
+# The backend Docker image is built from java-backend/Dockerfile.
+#
+# Environment variables marked sync: false must be set manually in the
+# Render dashboard (Service → Environment) before the first deploy.
+
+services:
+  - type: web
+    name: greenx-backend
+    runtime: docker
+    dockerfilePath: ./java-backend/Dockerfile
+    dockerContext: ./java-backend
+    healthCheckPath: /api/health
+    # Render's free tier spins down after inactivity; upgrade to starter or above
+    # for always-on deployments.
+    envVars:
+      # ── Database (Render PostgreSQL — linked automatically) ────────────────
+      - key: DB_HOST
+        fromDatabase:
+          name: greenx-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: greenx-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: greenx-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: greenx-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: greenx-db
+          property: password
+
+      # ── JWT ───────────────────────────────────────────────────────────────
+      # Use a long random string (≥ 32 chars) — keep secret!
+      - key: JWT_SECRET
+        sync: false
+
+      # ── CORS ──────────────────────────────────────────────────────────────
+      # Comma-separated list of allowed frontend origins (your Vercel URLs).
+      # Example: https://greenx.vercel.app,https://your-custom-domain.com
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+databases:
+  - name: greenx-db
+    plan: free
+    databaseName: greenx
+    user: greenx_user
