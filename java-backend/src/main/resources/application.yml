@@ -13,8 +13,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:postgres}}
     driver-class-name: org.postgresql.Driver
     hikari:
-      # Railway Postgres free tier allows max 20 connections total across all apps.
-      # Keep pool small to stay within limits.
+      # AWS RDS free tier is limited; keep pool small to avoid exhausting connections.
       maximum-pool-size: 5
       minimum-idle: 1
       connection-timeout: 30000
@@ -60,12 +59,12 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Server Configuration
-# Railway injects PORT automatically; default 8080 matches Railway's expected port
+# Render injects PORT automatically; default 8080 is used locally.
 server.port: ${PORT:8080}
 server.servlet.context-path: /api
 
 # JWT Configuration
-# Set JWT_SECRET env var in Railway/Render to a strong random string
+# Set JWT_SECRET env var in the Render dashboard to a strong random string
 jwt:
   secret: ${JWT_SECRET:your-secret-key-change-this-in-production-at-least-32-characters-long!}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours default
