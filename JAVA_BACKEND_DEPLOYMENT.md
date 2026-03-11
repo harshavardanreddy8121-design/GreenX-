@@ -135,9 +135,9 @@ mvn clean package
 This will create `target/farm-management-api-1.0.0.jar`
 
 ### Run Application
-
 ```bash
 java -jar target/farm-management-api-1.0.0.jar
+```
 ```
 
 Or start with Maven:
@@ -315,6 +315,37 @@ curl -X POST http://localhost:8080/api/data/users \
     "name": "John Doe"
   }'
 ```
+
+## Render Deployment
+
+Render clones the repository into its workspace root, so the Maven module is nested under `java-backend`. Configure the service with the following commands:
+
+```bash
+# Build (from repo root)
+mvn -f java-backend/pom.xml clean package
+
+# Start (Render injects PORT)
+java -jar java-backend/target/farm-management-api-1.0.0.jar --server.port=$PORT
+```
+
+Render environment variables (use the values supplied by the deployment team):
+
+```
+PORT=8080
+DB_HOST=database-1.c4vgmck64ako.us-east-1.rds.amazonaws.com
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=greenx300cr
+JWT_SECRET=f97f096e34fe54010efec9b5e6869b95
+ALLOWED_ORIGINS=https://web-hug-studio-46-043df96f-70335c46-main.vercel.app
+SPRING_DATASOURCE_URL=jdbc:postgresql://database-1.c4vgmck64ako.us-east-1.rds.amazonaws.com:5432/postgres
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=greenx300cr
+UPLOAD_DIR=./uploads
+```
+
+After the Render build succeeds, run the same login/`/auth/me` smoke tests described earlier and document results to verify the deployed service works end-to-end.
 
 ## Production Deployment
 

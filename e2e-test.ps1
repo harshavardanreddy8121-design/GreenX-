@@ -1,4 +1,4 @@
-$base = "https://spring-boot-backend-production-13e6.up.railway.app/api"
+$base = "https://greenx-backend-yyti.onrender.com/api"
 $ErrorActionPreference = "Continue"
 
 Write-Host "`n========================================" -ForegroundColor Yellow

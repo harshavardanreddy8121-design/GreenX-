@@ -4,11 +4,8 @@
  * Token is read from localStorage (`greenx_token`) and sent automatically.
  */
 
-// In production (Lovable/Vercel), VITE_API_URL may not be set;
-// fall back to the Railway backend URL.
-const BACKEND_URL = import.meta.env.VITE_API_URL
-    || 'https://spring-boot-backend-production-13e6.up.railway.app';
-const BASE = BACKEND_URL + '/api';
+const BACKEND_URL = import.meta.env.VITE_API_URL ?? '';
+const BASE = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
 const TOKEN_KEY = 'greenx_token';
 const COOKIE_NAME = 'greenx_token';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
