@@ -8,13 +8,13 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
     hmr: {
       overlay: true,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8082',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
       },
