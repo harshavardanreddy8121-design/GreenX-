@@ -1,8 +1,8 @@
 // Java API Client for Oracle Database Backend
 // Replaces Supabase with direct Java backend API calls
 
-const BACKEND_URL = import.meta.env.VITE_API_URL ?? '';
-const API_BASE_URL = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+import { API_BASE_URL } from '@/lib/backend';
+const API_BASE_URL_TRIMMED = API_BASE_URL.replace(/\/+$/, '');
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -42,8 +42,8 @@ class JavaApiClient {
     return value;
   }
 
-  constructor() {
-    this.baseUrl = API_BASE_URL;
+    constructor() {
+    this.baseUrl = API_BASE_URL_TRIMMED;
   }
 
   private async request<T>(

@@ -4,8 +4,8 @@
  * Token is read from localStorage (`greenx_token`) and sent automatically.
  */
 
-const BACKEND_URL = import.meta.env.VITE_API_URL ?? '';
-const BASE = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+import { API_BASE_URL } from './backend';
+const BASE = API_BASE_URL.replace(/\/+$/, '');
 const TOKEN_KEY = 'greenx_token';
 const COOKIE_NAME = 'greenx_token';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days

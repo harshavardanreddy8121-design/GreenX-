@@ -1,4 +1,4 @@
-FROM maven:3.10.1-eclipse-temurin-17 AS builder
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 WORKDIR /workspace
 
 # Copy only Maven metadata first so dependency layer can cache

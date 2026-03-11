@@ -61,10 +61,8 @@ logging:
 
 # Server Configuration
 # Railway injects PORT automatically; default 8080 matches Railway's expected port
-server:
-  port: ${PORT:8080}
-  servlet:
-    context-path: /api
+server.port: ${PORT:8080}
+server.servlet.context-path: /api
 
 # JWT Configuration
 # Set JWT_SECRET env var in Railway/Render to a strong random string

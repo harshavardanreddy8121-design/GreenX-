@@ -22,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +33,7 @@ public class SecurityConfig {
     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
     // production
     // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
-    @Value("${ALLOWED_ORIGINS:*}")
+    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app}")
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
@@ -46,8 +47,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/auth/**", "/health", "/ws/**").permitAll()
+                        // Public endpoints (authentication and health)
+                        .requestMatchers("/auth/**", "/api/auth/**", "/health", "/ws/**").permitAll()
                         .requestMatchers("/files/**").permitAll()
                         // Role-protected endpoints
                         .requestMatchers("/admin/**").hasRole("CLUSTER_ADMIN")
@@ -79,12 +80,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // If ALLOWED_ORIGINS=* use pattern wildcard (supports credentials); otherwise
-        // use explicit list
-        if ("*".equals(allowedOrigins)) {
+        List<String> originList = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
+
+        if (originList.size() == 1 && "*".equals(originList.get(0))) {
             config.setAllowedOriginPatterns(List.of("*"));
         } else {
-            config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+            config.setAllowedOrigins(originList);
         }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));

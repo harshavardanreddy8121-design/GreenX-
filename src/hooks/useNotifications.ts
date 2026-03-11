@@ -3,6 +3,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { getToken, notifications as notificationsApi } from '@/lib/api';
 import type { GxNotification } from '@/lib/api';
+import { WS_BASE_URL } from '@/lib/backend';
 
 export interface UseNotificationsOptions {
     userId: string | null | undefined;
@@ -39,10 +40,7 @@ export function useNotifications({ userId, role, onNew }: UseNotificationsOption
         if (!userId) return;
 
         const token = getToken();
-        const wsBase = (import.meta.env.VITE_API_URL ?? '')
-            ? `${import.meta.env.VITE_API_URL}/api/ws`
-            : '/api/ws';
-        const socket = new SockJS(wsBase);
+        const socket = new SockJS(WS_BASE_URL);
         const client = new Client({
             webSocketFactory: () => socket as WebSocket,
             connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},

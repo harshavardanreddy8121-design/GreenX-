@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/backend';
 
 interface ConnectionTestResult {
     success: boolean;
@@ -16,7 +17,7 @@ export function useApiConnectionTest() {
         setResult(null);
 
         try {
-            const apiUrl = (import.meta.env.VITE_API_URL || '') + '/api';
+            const apiUrl = API_BASE_URL;
 
             // Test 1: Health check
             const healthResponse = await fetch(`${apiUrl}/health`, {
