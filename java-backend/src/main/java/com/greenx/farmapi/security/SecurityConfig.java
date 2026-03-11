@@ -48,19 +48,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Public endpoints (authentication and health)
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
-                        .requestMatchers("/auth/**", "/api/auth/**", "/health", "/api/health", "/ws/**", "/api/ws/**")
-                        .permitAll()
-                        .requestMatchers("/files/**").permitAll()
-                        // Role-protected endpoints
-                        .requestMatchers("/admin/**").hasRole("CLUSTER_ADMIN")
-                        .requestMatchers("/expert/**").hasRole("EXPERT")
-                        .requestMatchers("/fieldmanager/**").hasRole("FIELD_MANAGER")
-                        .requestMatchers("/landowner/**").hasRole("LAND_OWNER")
-                        // Generic data endpoints — require authentication (any role)
-                        .requestMatchers("/data/**", "/ai/**", "/admin/migration/**").authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
