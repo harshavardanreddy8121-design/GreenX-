@@ -17,14 +17,27 @@ services:
     # Render's free tier spins down after inactivity; upgrade to starter or above
     # for always-on deployments.
     envVars:
-      # ── Database (AWS RDS PostgreSQL) ──────────────────────────────────────
-      # Full JDBC URL:  jdbc:postgresql://<rds-host>:5432/<db-name>
-      - key: SPRING_DATASOURCE_URL
-        sync: false
-      - key: SPRING_DATASOURCE_USERNAME
-        sync: false
-      - key: SPRING_DATASOURCE_PASSWORD
-        sync: false
+      # ── Database (Render PostgreSQL — linked automatically) ────────────────
+      - key: DB_HOST
+        fromDatabase:
+          name: greenx-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: greenx-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: greenx-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: greenx-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: greenx-db
+          property: password
 
       # ── JWT ───────────────────────────────────────────────────────────────
       # Use a long random string (≥ 32 chars) — keep secret!
@@ -36,3 +49,9 @@ services:
       # Example: https://greenx.vercel.app,https://your-custom-domain.com
       - key: ALLOWED_ORIGINS
         sync: false
+
+databases:
+  - name: greenx-db
+    plan: free
+    databaseName: greenx
+    user: greenx_user

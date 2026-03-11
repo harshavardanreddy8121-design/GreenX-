@@ -1,24 +1,23 @@
 version: '3.8'
 
 services:
-  # Oracle Database
-  oracle:
-    image: gvenzl/oracle-xe:latest
-    container_name: farm-app-oracle
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: farm-app-postgres
     environment:
-      ORACLE_PASSWORD: oracle_password
-      APP_USER: oracle_user
-      APP_USER_PASSWORD: oracle_password
+      POSTGRES_DB: greenx
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "1521:1521"
+      - "5432:5432"
     volumes:
-      - oracle_data:/opt/oracle/oradata
-      - ./java-backend/src/main/resources/db/migration/V1__init_schema.sql:/opt/oracle/scripts/startup/01_init_schema.sql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "healthcheck.sh" ]
-      interval: 20s
-      timeout: 10s
-      retries: 10
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - farm-network
 
@@ -29,12 +28,12 @@ services:
       dockerfile: Dockerfile
     container_name: farm-app-backend
     depends_on:
-      oracle:
+      postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
-      SPRING_DATASOURCE_USERNAME: oracle_user
-      SPRING_DATASOURCE_PASSWORD: oracle_password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/greenx
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
       JWT_SECRET: your-secret-key-change-this-in-production-at-least-32-characters-long!
       JWT_EXPIRATION: 86400000
     ports:
@@ -67,7 +66,7 @@ services:
       - farm-network
 
 volumes:
-  oracle_data:
+  postgres_data:
 
 networks:
   farm-network:
