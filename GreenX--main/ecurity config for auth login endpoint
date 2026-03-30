@@ -1,0 +1,53 @@
+warning: in the working copy of 'java-backend/src/main/java/com/greenx/farmapi/security/SecurityConfig.java', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/java-backend/src/main/java/com/greenx/farmapi/security/SecurityConfig.java b/java-backend/src/main/java/com/greenx/farmapi/security/SecurityConfig.java[m
+[1mindex bf961ca..307a9bc 100644[m
+[1m--- a/java-backend/src/main/java/com/greenx/farmapi/security/SecurityConfig.java[m
+[1m+++ b/java-backend/src/main/java/com/greenx/farmapi/security/SecurityConfig.java[m
+[36m@@ -22,6 +22,7 @@[m [mimport org.springframework.web.cors.UrlBasedCorsConfigurationSource;[m
+ [m
+ import java.util.Arrays;[m
+ import java.util.List;[m
+[32m+[m[32mimport java.util.stream.Collectors;[m
+ [m
+ @Configuration[m
+ @EnableWebSecurity[m
+[36m@@ -32,7 +33,7 @@[m [mpublic class SecurityConfig {[m
+     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in[m
+     // production[m
+     // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"[m
+[31m-    @Value("${ALLOWED_ORIGINS:*}")[m
+[32m+[m[32m    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app}")[m
+     private String allowedOrigins;[m
+ [m
+     private final JwtFilter jwtFilter;[m
+[36m@@ -46,8 +47,8 @@[m [mpublic class SecurityConfig {[m
+                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))[m
+                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))[m
+                 .authorizeHttpRequests(auth -> auth[m
+[31m-                        // Public endpoints[m
+[31m-                        .requestMatchers("/auth/**", "/health", "/ws/**").permitAll()[m
+[32m+[m[32m                        // Public endpoints (authentication and health)[m
+[32m+[m[32m                        .requestMatchers("/auth/**", "/api/auth/**", "/health", "/ws/**").permitAll()[m
+                         .requestMatchers("/files/**").permitAll()[m
+                         // Role-protected endpoints[m
+                         .requestMatchers("/admin/**").hasRole("CLUSTER_ADMIN")[m
+[36m@@ -79,12 +80,15 @@[m [mpublic class SecurityConfig {[m
+     @Bean[m
+     public CorsConfigurationSource corsConfigurationSource() {[m
+         CorsConfiguration config = new CorsConfiguration();[m
+[31m-        // If ALLOWED_ORIGINS=* use pattern wildcard (supports credentials); otherwise[m
+[31m-        // use explicit list[m
+[31m-        if ("*".equals(allowedOrigins)) {[m
+[32m+[m[32m        List<String> originList = Arrays.stream(allowedOrigins.split(","))[m
+[32m+[m[32m                .map(String::trim)[m
+[32m+[m[32m                .filter(origin -> !origin.isEmpty())[m
+[32m+[m[32m                .collect(Collectors.toList());[m
+[32m+[m
+[32m+[m[32m        if (originList.size() == 1 && "*".equals(originList.get(0))) {[m
+             config.setAllowedOriginPatterns(List.of("*"));[m
+         } else {[m
+[31m-            config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));[m
+[32m+[m[32m            config.setAllowedOrigins(originList);[m
+         }[m
+         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));[m
+         config.setAllowedHeaders(List.of("*"));[m
