@@ -1,0 +1,602 @@
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { javaApi } from '@/integrations/java-api/client';
+import { GreenXLogo } from '@/components/GreenXLogo';
+import WeatherWidget from '@/components/WeatherWidget';
+import { UserInfoCard } from '@/components/UserInfoCard';
+
+import { LogOut, CheckCircle2, Circle, Clock, Package, Send, X, Camera, Upload, Image as ImageIcon, MapPin, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { upsertWorkflowEvent } from '@/utils/workflowEvents';
+
+export default function WorkerDashboard() {
+  const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showTaskCompleteModal, setShowTaskCompleteModal] = useState<any>(null);
+  const [activeMenu, setActiveMenu] = useState<'attendance' | 'actions' | 'farms' | 'tasks'>('attendance');
+  const [reqItem, setReqItem] = useState('');
+  const [reqCategory, setReqCategory] = useState('chemical');
+  const [reqQty, setReqQty] = useState('1');
+  const [reqUrgency, setReqUrgency] = useState('medium');
+  const [reqNote, setReqNote] = useState('');
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoType, setPhotoType] = useState('crop_progress');
+
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  // Check today's attendance
+  const today = new Date().toISOString().split('T')[0];
+  const { data: todayAttendance = null } = useQuery({
+    queryKey: ['worker-attendance', user?.id, today],
+    queryFn: async () => {
+      const response = await javaApi.select('attendance', {
+        eq: { user_id: user?.id },
+        gte: { check_in: today }
+      });
+      if (response.success && response.data && (response.data as any[]).length > 0) {
+        return (response.data as any[])[0];
+      }
+      return null;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get assigned tasks
+  const { data: myTasks = [] } = useQuery({
+    queryKey: ['worker-tasks', user?.id],
+    queryFn: async () => {
+      const response = await javaApi.select('tasks', {
+        eq: { assigned_to: user?.id },
+        order: { field: 'due_date', ascending: false }
+      });
+      return response.success && response.data ? response.data as any[] : [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get assigned farms
+  const { data: myFarms = [] } = useQuery({
+    queryKey: ['worker-farms', user?.id],
+    queryFn: async () => {
+      const assignResponse = await javaApi.select('farm_assignments', {
+        eq: { user_id: user?.id, role: 'worker' }
+      });
+
+      if (assignResponse.success && assignResponse.data) {
+        const assignments = assignResponse.data as any[];
+        if (assignments.length) {
+          const farmIds = assignments.map((a: any) => a.farm_id);
+          const farmsResponse = await javaApi.select('farms', {
+            in: { id: farmIds }
+          });
+          if (farmsResponse.success && farmsResponse.data) {
+            return farmsResponse.data as any[];
+          }
+        }
+      }
+
+      // Fallback for environments where FARM_ASSIGNMENTS is empty/unavailable:
+      // derive farm list from tasks assigned to this worker.
+      const tasksResponse = await javaApi.select('tasks', { eq: { assigned_to: user?.id } });
+      if (!tasksResponse.success || !tasksResponse.data) return [];
+      const taskRows = tasksResponse.data as any[];
+      const farmIds = [...new Set(taskRows.map((t: any) => t.farm_id).filter(Boolean))];
+      if (!farmIds.length) return [];
+
+      const farmResults = await Promise.all(
+        farmIds.map((farmId: string) => javaApi.select('farms', { eq: { id: farmId } }))
+      );
+
+      return farmResults
+        .filter((r) => r.success && r.data && (r.data as any[]).length > 0)
+        .map((r) => (r.data as any[])[0]);
+    },
+    enabled: !!user?.id,
+  });
+
+  const markAttendance = useMutation({
+    mutationFn: async (type: 'checkin' | 'checkout') => {
+      const farmId = myFarms.length > 0 ? myFarms[0].id : null;
+      if (type === 'checkin') {
+        const response = await javaApi.insert('attendance', {
+          id: crypto.randomUUID(),
+          user_id: user?.id,
+          farm_id: farmId,
+          check_in: new Date().toISOString(),
+          note: 'Daily check-in',
+        });
+        if (!response.success) throw new Error(response.error);
+      } else {
+        // Update existing attendance record with check-out time
+        if (!todayAttendance) throw new Error('No check-in record found');
+        const response = await javaApi.update('attendance', todayAttendance.id, {
+          check_out: new Date().toISOString(),
+        });
+        if (!response.success) throw new Error(response.error);
+      }
+    },
+    onSuccess: (_, type) => {
+      toast({ title: type === 'checkin' ? 'Checked in successfully' : 'Checked out successfully' });
+      queryClient.invalidateQueries({ queryKey: ['worker-attendance'] });
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const completeTaskWithPhoto = useMutation({
+    mutationFn: async (task: any) => {
+      // Mark task as completed
+      await javaApi.update('tasks', task.id, { status: 'completed', updated_at: new Date().toISOString() });
+
+      // Add timeline event
+      await javaApi.insert('farm_timeline', {
+        id: crypto.randomUUID(),
+        farm_id: task.farm_id,
+        event_type: 'task_completed',
+        event_title: 'Task Completed',
+        event_description: `Worker completed task: ${task.title}`,
+        reference_id: task.id,
+        reference_table: 'tasks',
+        user_id: user?.id,
+        user_name: profile?.full_name || user?.email,
+        user_role: 'worker',
+        created_at: new Date().toISOString(),
+      });
+
+      await upsertWorkflowEvent({
+        farmId: task.farm_id,
+        eventKey: 'field_operation_logged',
+        status: 'completed',
+        doneBy: 'worker',
+        note: 'Worker completed assigned field task.',
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Task completed successfully' });
+      queryClient.invalidateQueries({ queryKey: ['worker-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['farm-timeline'] });
+      setShowTaskCompleteModal(null);
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const toggleTask = useMutation({
+    mutationFn: async (task: any) => {
+      const newStatus = task.status === 'pending' ? 'in_progress' : task.status === 'in_progress' ? 'completed' : 'pending';
+      await javaApi.update('tasks', task.id, { status: newStatus, updated_at: new Date().toISOString() });
+
+      await upsertWorkflowEvent({
+        farmId: task.farm_id,
+        eventKey: 'field_operation_logged',
+        status: newStatus === 'completed' ? 'completed' : 'in-progress',
+        doneBy: 'worker',
+        note: `Worker toggled task to ${newStatus}.`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['worker-tasks'] });
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const uploadPhoto = useMutation({
+    mutationFn: async () => {
+      const farmId = myFarms.length > 0 ? myFarms[0].id : null;
+      if (!farmId) throw new Error('No farm assigned');
+
+      await javaApi.insert('farm_photos', {
+        id: crypto.randomUUID(),
+        farm_id: farmId,
+        photo_url: `https://placeholder.com/photo-${Date.now()}.jpg`, // Placeholder URL
+        photo_type: photoType,
+        caption: photoCaption,
+        uploaded_by: user?.id,
+        uploader_role: 'worker',
+        created_at: new Date().toISOString(),
+      });
+
+      // Add timeline event
+      await javaApi.insert('farm_timeline', {
+        id: crypto.randomUUID(),
+        farm_id: farmId,
+        event_type: 'photo_uploaded',
+        event_title: 'Photo Uploaded',
+        event_description: `Worker uploaded ${photoType} photo${photoCaption ? ': ' + photoCaption : ''}`,
+        user_id: user?.id,
+        user_name: profile?.full_name || user?.email,
+        user_role: 'worker',
+        created_at: new Date().toISOString(),
+      });
+
+      await upsertWorkflowEvent({
+        farmId,
+        eventKey: 'field_operation_logged',
+        status: 'in-progress',
+        doneBy: 'worker',
+        note: 'Worker uploaded field photo update.',
+      });
+
+      if (String(photoType).toLowerCase().includes('soil')) {
+        await upsertWorkflowEvent({
+          farmId,
+          eventKey: 'soil_samples_collected',
+          status: 'completed',
+          doneBy: 'field_manager',
+          note: 'Soil sampling evidence uploaded via photo flow.',
+        });
+      }
+    },
+    onSuccess: () => {
+      toast({ title: 'Photo uploaded successfully' });
+      queryClient.invalidateQueries({ queryKey: ['farm-photos'] });
+      queryClient.invalidateQueries({ queryKey: ['farm-timeline'] });
+      setShowPhotoModal(false);
+      setPhotoCaption('');
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const submitRequest = useMutation({
+    mutationFn: async () => {
+      const response = await javaApi.insert('equipment_requests', {
+        id: crypto.randomUUID(),
+        user_id: user?.id,
+        farm_id: myFarms.length > 0 ? myFarms[0].id : null,
+        equipment_type: reqCategory,
+        item: reqItem,
+        quantity: reqQty,
+        priority: reqUrgency,
+        note: reqNote,
+      });
+      if (!response.success) throw new Error(response.error);
+    },
+    onSuccess: () => {
+      toast({ title: 'Request submitted successfully' });
+      setShowRequestModal(false);
+      setReqItem('');
+      setReqNote('');
+    },
+    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+  });
+
+  const pendingTasks = myTasks.filter((t: any) => t.status === 'pending');
+  const inProgressTasks = myTasks.filter((t: any) => t.status === 'in_progress');
+  const completedTasks = myTasks.filter((t: any) => t.status === 'completed');
+
+  return (
+    <div className="dashboard-shell min-h-screen bg-background flex">
+      <aside className="admin-sidebar hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-border">
+        <div className="p-4 border-b border-border">
+          <GreenXLogo size="sm" />
+          <p className="text-xs text-muted-foreground mt-2">Worker</p>
+        </div>
+        <nav className="p-2 space-y-0.5 flex-1 overflow-y-auto">
+          <button type="button" onClick={() => setActiveMenu('attendance')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeMenu === 'attendance' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Clock className="w-4 h-4" />
+            <span>Attendance</span>
+          </button>
+          <button type="button" onClick={() => setActiveMenu('actions')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeMenu === 'actions' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Camera className="w-4 h-4" />
+            <span>Quick Actions</span>
+          </button>
+          <button type="button" onClick={() => setActiveMenu('farms')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeMenu === 'farms' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <MapPin className="w-4 h-4" />
+            <span>My Farms</span>
+          </button>
+          <button type="button" onClick={() => setActiveMenu('tasks')} className={`dashboard-nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground ${activeMenu === 'tasks' ? 'dashboard-nav-link-active text-primary font-medium' : ''}`}>
+            <Calendar className="w-4 h-4" />
+            <span>My Tasks</span>
+          </button>
+        </nav>
+        <div className="p-3 border-t border-border">
+          <button onClick={handleLogout} className="dashboard-logout-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm">
+            <LogOut className="w-4 h-4" /> Logout
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="sticky top-0 z-20 bg-card/90 backdrop-blur-lg border-b border-border px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="lg:hidden"><GreenXLogo size="sm" /></div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">{profile?.full_name || user?.email}</span>
+              <button onClick={handleLogout} className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white shadow-md hover:shadow-lg transition-all"><LogOut className="w-4 h-4" /></button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-4 space-y-4 max-w-lg mx-auto pb-8 lg:max-w-none lg:mx-0 lg:p-6">
+          {/* User Info Card */}
+          <UserInfoCard profile={profile} size="md" />
+
+          {/* Weather */}
+          {myFarms.length > 0 && <WeatherWidget village={myFarms[0].village} pincode={myFarms[0].pincode} compact />}
+
+          {/* Attendance Card */}
+          <div id="attendance" className="rounded-xl border-2 border-primary bg-primary/5 p-4">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Today's Attendance
+            </h3>
+
+            {todayAttendance ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Check-in</p>
+                    <p className="font-semibold">{new Date(todayAttendance.check_in).toLocaleTimeString()}</p>
+                  </div>
+                  {todayAttendance.check_out ? (
+                    <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Check-out</p>
+                      <p className="font-semibold">{new Date(todayAttendance.check_out).toLocaleTimeString()}</p>
+                    </div>
+                  ) : (
+                    <Button onClick={() => markAttendance.mutate('checkout')} disabled={markAttendance.isPending} size="sm">
+                      Check Out
+                    </Button>
+                  )}
+                </div>
+                {!todayAttendance.check_out && (
+                  <div className="flex items-center gap-2 text-xs text-green-600">
+                    <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
+                    <span>You are currently checked in</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Button onClick={() => markAttendance.mutate('checkin')} disabled={markAttendance.isPending} className="w-full" size="lg">
+                <Clock className="w-5 h-5 mr-2" />
+                {markAttendance.isPending ? 'Checking in...' : 'Check In Now'}
+              </Button>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div id="actions" className="grid grid-cols-2 gap-3">
+            <Button variant="outline" onClick={() => setShowPhotoModal(true)} className="h-20 flex-col dashboard-btn-secondary">
+              <Camera className="w-6 h-6 mb-1 text-primary" />
+              <span className="text-xs">Upload Photo</span>
+            </Button>
+            <Button variant="outline" onClick={() => setShowRequestModal(true)} className="h-20 flex-col dashboard-btn-secondary">
+              <Package className="w-6 h-6 mb-1 text-primary" />
+              <span className="text-xs">Request Supplies</span>
+            </Button>
+          </div>
+
+          {/* My Farms */}
+          {myFarms.length > 0 && (
+            <>
+              <h2 id="farms" className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                My Assigned Farms
+              </h2>
+              {myFarms.map((farm: any) => (
+                <div key={farm.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-ops p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground">{farm.name}</h3>
+                    {farm.farm_code && (
+                      <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-mono font-bold">
+                        #{farm.farm_code}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{farm.village} · {farm.total_land} acres · {farm.crop || '—'}</p>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Today's Tasks */}
+          <h2 id="tasks" className="text-lg font-semibold text-foreground flex items-center gap-2 pt-2">
+            <Calendar className="w-5 h-5 text-primary" />
+            My Tasks
+          </h2>
+
+          {myTasks.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-xl">
+              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No tasks assigned yet</p>
+              <p className="text-xs mt-1">Check back later for new assignments</p>
+            </div>
+          ) : (
+            <>
+              {/* Pending Tasks */}
+              {pendingTasks.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-yellow-600 flex items-center gap-2">
+                    <Circle className="w-4 h-4" />
+                    Pending ({pendingTasks.length})
+                  </h3>
+                  {pendingTasks.map((task: any) => (
+                    <div key={task.id} className="rounded-xl border-2 border-yellow-300 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                      <div className="flex items-start gap-3 mb-2">
+                        <button onClick={() => toggleTask.mutate(task)} disabled={toggleTask.isPending} className="mt-0.5 shrink-0">
+                          <Circle className="w-6 h-6 text-yellow-600" />
+                        </button>
+                        <div className="flex-1">
+                          <p className="text-base font-medium text-foreground">{task.title}</p>
+                          {task.description && <p className="text-xs text-muted-foreground mt-1">{task.description}</p>}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {myFarms.find(f => f.id === task.farm_id)?.name} · Due: {new Date(task.due_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={() => toggleTask.mutate(task)} className="w-full" variant="default">
+                        Start Task
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* In Progress Tasks */}
+              {inProgressTasks.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-blue-600 flex items-center gap-2">
+                    <Circle className="w-4 h-4 fill-blue-600" />
+                    In Progress ({inProgressTasks.length})
+                  </h3>
+                  {inProgressTasks.map((task: any) => (
+                    <div key={task.id} className="rounded-xl border-2 border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 p-4">
+                      <div className="flex items-start gap-3 mb-2">
+                        <Circle className="w-6 h-6 fill-blue-600 text-blue-600 mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-base font-medium text-foreground">{task.title}</p>
+                          {task.description && <p className="text-xs text-muted-foreground mt-1">{task.description}</p>}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {myFarms.find(f => f.id === task.farm_id)?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Button size="sm" onClick={() => setShowTaskCompleteModal(task)} className="w-full">
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Mark as Complete
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Completed Tasks */}
+              {completedTasks.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-green-600 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Completed Today ({completedTasks.length})
+                  </h3>
+                  {completedTasks.slice(0, 3).map((task: any) => (
+                    <div key={task.id} className="rounded-xl border border-border bg-card dashboard-card dashboard-card-health p-3 opacity-60">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium line-through text-muted-foreground">{task.title}</p>
+                          <p className="text-xs text-muted-foreground">{myFarms.find(f => f.id === task.farm_id)?.name}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+
+      {/* Equipment Request Modal */}
+      {showRequestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Request Equipment</h3>
+              <button onClick={() => setShowRequestModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <select value={reqCategory} onChange={e => setReqCategory(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
+              <option value="chemical">Pesticide / Chemical</option>
+              <option value="fertilizer">Fertilizer</option>
+              <option value="drone">Drone Service</option>
+              <option value="tool">Tools / Equipment</option>
+              <option value="motor">Motor / Pump</option>
+              <option value="irrigation">Irrigation Parts</option>
+              <option value="other">Other</option>
+            </select>
+            <input value={reqItem} onChange={e => setReqItem(e.target.value)}
+              placeholder="Item name" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+            <div className="grid grid-cols-2 gap-3">
+              <input value={reqQty} onChange={e => setReqQty(e.target.value)}
+                placeholder="Quantity" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+              <select value={reqUrgency} onChange={e => setReqUrgency(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <textarea value={reqNote} onChange={e => setReqNote(e.target.value)} rows={2}
+              placeholder="Note (optional)" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm resize-none" />
+            <Button onClick={() => submitRequest.mutate()} disabled={submitRequest.isPending || !reqItem} className="w-full">
+              <Send className="w-4 h-4 mr-2" /> {submitRequest.isPending ? 'Sending...' : 'Submit Request'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Upload Modal */}
+      {showPhotoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Upload Field Photo</h3>
+              <button onClick={() => setShowPhotoModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+
+            <div className="rounded-lg border-2 border-dashed border-border bg-muted/50 p-8 text-center">
+              <Camera className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground mb-2">Camera integration coming soon</p>
+              <Button size="sm" variant="outline">
+                <Upload className="w-4 h-4 mr-2" />
+                Select Photo
+              </Button>
+            </div>
+
+            <select value={photoType} onChange={e => setPhotoType(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm">
+              <option value="crop_progress">Crop Progress</option>
+              <option value="pest_damage">Pest Damage</option>
+              <option value="disease">Disease</option>
+              <option value="before">Before Work</option>
+              <option value="after">After Work</option>
+              <option value="general">General</option>
+            </select>
+
+            <input value={photoCaption} onChange={e => setPhotoCaption(e.target.value)}
+              placeholder="Add a caption (optional)" className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm" />
+
+            <Button onClick={() => uploadPhoto.mutate()} disabled={uploadPhoto.isPending} className="w-full">
+              <ImageIcon className="w-4 h-4 mr-2" /> {uploadPhoto.isPending ? 'Uploading...' : 'Upload Photo'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Task Complete Confirmation Modal */}
+      {showTaskCompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-sm p-4">
+          <div className="bg-card rounded-xl border border-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">Complete Task</h3>
+              <button onClick={() => setShowTaskCompleteModal(null)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+
+            <div className="rounded-lg bg-muted/50 p-4">
+              <p className="font-semibold mb-1">{showTaskCompleteModal.title}</p>
+              {showTaskCompleteModal.description && <p className="text-sm text-muted-foreground">{showTaskCompleteModal.description}</p>}
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Mark this task as completed? This will notify the field manager.
+            </p>
+
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setShowTaskCompleteModal(null)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={() => completeTaskWithPhoto.mutate(showTaskCompleteModal)} disabled={completeTaskWithPhoto.isPending} className="flex-1">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {completeTaskWithPhoto.isPending ? 'Completing...' : 'Complete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

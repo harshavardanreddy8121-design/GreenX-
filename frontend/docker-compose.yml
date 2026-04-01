@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Oracle Database
+  oracle:
+    image: gvenzl/oracle-xe:latest
+    container_name: farm-app-oracle
+    environment:
+      ORACLE_PASSWORD: oracle_password
+      APP_USER: oracle_user
+      APP_USER_PASSWORD: oracle_password
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./java-backend/src/main/resources/db/migration/V1__init_schema.sql:/opt/oracle/scripts/startup/01_init_schema.sql
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    networks:
+      - farm-network
+
+  # Java Backend
+  backend:
+    build:
+      context: ./java-backend
+      dockerfile: Dockerfile
+    container_name: farm-app-backend
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@oracle:1521:XE
+      SPRING_DATASOURCE_USERNAME: oracle_user
+      SPRING_DATASOURCE_PASSWORD: oracle_password
+      JWT_SECRET: your-secret-key-change-this-in-production-at-least-32-characters-long!
+      JWT_EXPIRATION: 86400000
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - farm-network
+    restart: unless-stopped
+
+  # Frontend (optional - for development only)
+  frontend:
+    image: node:18-alpine
+    container_name: farm-app-frontend
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_JAVA_API_URL: http://backend:8080/api
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - backend
+    networks:
+      - farm-network
+
+volumes:
+  oracle_data:
+
+networks:
+  farm-network:
+    driver: bridge

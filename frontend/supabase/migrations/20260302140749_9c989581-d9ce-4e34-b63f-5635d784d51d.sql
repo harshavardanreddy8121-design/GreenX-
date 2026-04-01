@@ -1,0 +1,1 @@
+ALTER TABLE public.farms ADD COLUMN IF NOT EXISTS pincode TEXT DEFAULT '';
