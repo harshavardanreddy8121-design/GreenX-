@@ -60,8 +60,8 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Server Configuration
-# Railway injects PORT automatically; default 8080 matches Railway's expected port
-server.port: ${PORT:8080}
+# Railway injects PORT automatically; default 8001 matches Emergent's expected port
+server.port: ${PORT:8001}
 server.servlet.context-path: /api
 
 # JWT Configuration
