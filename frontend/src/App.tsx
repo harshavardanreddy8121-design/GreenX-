@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import "@/i18n";
+import "@/lib/apiConfig"; // Validate API configuration on app load
 import Index from "./pages/LandingPage";
 import Login from "./pages/Login";
 import LandRegister from "./pages/LandRegister";

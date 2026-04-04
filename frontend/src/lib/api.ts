@@ -5,7 +5,20 @@
  */
 
 import { API_BASE_URL } from './backend';
+
+// Validate BASE URL exists
+if (!API_BASE_URL) {
+    throw new Error('VITE_API_URL environment variable is not set! Cannot make API requests.');
+}
+
+// Remove trailing slashes for consistent URL construction
 const BASE = API_BASE_URL.replace(/\/+$/, '');
+
+// Log API configuration (only in development)
+if (import.meta.env.DEV) {
+    console.log('🔗 API Base URL:', BASE);
+}
+
 const TOKEN_KEY = 'greenx_token';
 const COOKIE_NAME = 'greenx_token';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
@@ -49,37 +62,70 @@ async function request<T>(
     body?: unknown,
     isFormData = false
 ): Promise<T> {
+    // Validate BASE URL is set
+    if (!BASE) {
+        console.error('❌ Cannot make API request: VITE_API_URL not configured');
+        console.error('Set VITE_API_URL in your environment variables');
+        throw new Error('API URL not configured. Check environment variables.');
+    }
+
+    // Construct full URL
+    const fullUrl = `${BASE}${path}`;
+    
+    // Log request (only in development)
+    if (import.meta.env.DEV) {
+        console.log(`🌐 ${method} ${fullUrl}`);
+    }
+
     const headers: Record<string, string> = {};
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (!isFormData && body) headers['Content-Type'] = 'application/json';
 
-    const res = await fetch(`${BASE}${path}`, {
-        method,
-        headers,
-        body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
-    });
+    try {
+        const res = await fetch(fullUrl, {
+            method,
+            headers,
+            body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+        });
 
-    if (res.status === 401 || res.status === 403) {
-        clearToken();
-        window.location.href = '/login';
-        throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
+        if (res.status === 401 || res.status === 403) {
+            clearToken();
+            window.location.href = '/login';
+            throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
+        }
+
+        const text = await res.text();
+        
+        // Check if response is HTML (wrong URL/CORS issue)
+        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+            console.error('❌ Received HTML instead of JSON from:', fullUrl);
+            console.error('This usually means:');
+            console.error('1. VITE_API_URL is not set correctly');
+            console.error('2. API request is hitting Vercel instead of Railway backend');
+            console.error('Current VITE_API_URL:', import.meta.env.VITE_API_URL);
+            throw new Error('API configuration error: receiving HTML instead of JSON. Check VITE_API_URL.');
+        }
+
+        const json = text ? JSON.parse(text) : {};
+
+        if (!res.ok) {
+            throw new Error(json.error || json.message || `HTTP ${res.status}`);
+        }
+
+        // Backend wraps everything in { success, data, error }
+        if (json && typeof json === 'object' && 'success' in json) {
+            if (!json.success) throw new Error(json.error || 'Request failed');
+            return json.data as T;
+        }
+
+        return json as T;
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(`❌ API Error (${method} ${path}):`, error.message);
+        }
+        throw error;
     }
-
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-
-    if (!res.ok) {
-        throw new Error(json.error || json.message || `HTTP ${res.status}`);
-    }
-
-    // Backend wraps everything in { success, data, error }
-    if (json && typeof json === 'object' && 'success' in json) {
-        if (!json.success) throw new Error(json.error || 'Request failed');
-        return json.data as T;
-    }
-
-    return json as T;
 }
 
 // ─── AUTH ───────────────────────────────────────────────────────────────────
