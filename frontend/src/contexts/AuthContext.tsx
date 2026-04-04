@@ -35,23 +35,19 @@ function normalizeRole(rawRole: unknown): AppRole | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  // AUTH DISABLED - Provide mock user data
+  const [user, setUser] = useState<AuthUser | null>({
+    id: 'test-user-123',
+    email: 'test@greenx.com',
+    name: 'Test User',
+    role: 'ADMIN'
+  });
+  const [role, setRole] = useState<AppRole | null>('admin');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) { setLoading(false); return; }
-    apiAuth.me()
-      .then(u => {
-        console.log('[AuthContext] Backend user.role:', u.role);
-        const normRole = normalizeRole(u.role);
-        console.log('[AuthContext] Normalized role:', normRole);
-        setUser(u);
-        setRole(normRole);
-      })
-      .catch(() => clearToken())
-      .finally(() => setLoading(false));
+    // AUTH DISABLED - Skip token check, use mock data
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -80,7 +76,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user,
-      profile: null,
+      profile: {
+        id: 'test-profile-123',
+        full_name: 'Test User',
+        role: 'admin' as AppRole,
+        email: 'test@greenx.com',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
       isAuthenticated: !!user,
       role,
       loading,
