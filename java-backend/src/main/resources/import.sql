@@ -1,0 +1,2 @@
+-- Widen FARM_CODE column (was 10, now 30) — PostgreSQL syntax
+ALTER TABLE FARMS ALTER COLUMN FARM_CODE TYPE VARCHAR(30);
