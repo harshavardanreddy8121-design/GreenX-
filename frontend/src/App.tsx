@@ -52,16 +52,13 @@ import Prescriptions from "./pages/expert/Prescriptions";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  const { isAuthenticated, role, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" />;
+  // AUTHENTICATION DISABLED - Direct access allowed for testing
   return <>{children}</>;
 }
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Index />} />
+    <Route path="/" element={<Navigate to="/admin" replace />} />
     <Route path="/workflow" element={<Workflow />} />
     <Route path="/login" element={<Login />} />
     <Route path="/land-register" element={<LandRegister />} />
