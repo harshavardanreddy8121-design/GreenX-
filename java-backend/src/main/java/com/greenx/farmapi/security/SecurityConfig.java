@@ -34,7 +34,7 @@ public class SecurityConfig {
     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
     // production
     // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
-    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app}")
+    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app,https://green-x-93cq-qu4ajwpjr-harshavardanreddy8121-designs-projects.vercel.app}")
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
@@ -85,6 +85,7 @@ public class SecurityConfig {
         }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

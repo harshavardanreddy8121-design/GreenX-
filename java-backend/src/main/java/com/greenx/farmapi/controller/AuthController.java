@@ -14,6 +14,11 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -107,6 +112,53 @@ public class AuthController {
     @PostMapping("/logout")
     public ApiResponse<String> logout() {
         return ApiResponse.success("Logged out");
+    }
+
+    /**
+     * Debug endpoint — returns request headers and CORS/token diagnostics.
+     * Useful for diagnosing auth issues from the frontend.
+     * Accessible at GET /api/auth/debug (no authentication required).
+     */
+    @GetMapping("/debug")
+    public ApiResponse<Map<String, Object>> debug(HttpServletRequest request) {
+        Map<String, Object> info = new LinkedHashMap<>();
+
+        // Collect all request headers (mask Authorization value for safety)
+        Map<String, String> headers = Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(
+                        h -> h,
+                        h -> "authorization".equalsIgnoreCase(h)
+                                ? (request.getHeader(h) != null ? "[PRESENT - " + request.getHeader(h).length() + " chars]" : "[MISSING]")
+                                : request.getHeader(h),
+                        (a, b) -> a,
+                        LinkedHashMap::new));
+
+        info.put("headers", headers);
+        info.put("remoteAddr", request.getRemoteAddr());
+        info.put("method", request.getMethod());
+        info.put("requestURI", request.getRequestURI());
+        info.put("scheme", request.getScheme());
+        info.put("serverName", request.getServerName());
+        info.put("serverPort", request.getServerPort());
+
+        // Token presence check
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            boolean valid = jwtUtil.validateToken(token);
+            info.put("tokenPresent", true);
+            info.put("tokenValid", valid);
+            if (valid) {
+                info.put("tokenUserId", jwtUtil.extractUserId(token));
+                info.put("tokenEmail", jwtUtil.extractEmail(token));
+                info.put("tokenRole", jwtUtil.extractRole(token));
+            }
+        } else {
+            info.put("tokenPresent", false);
+            info.put("tokenValid", false);
+        }
+
+        return ApiResponse.success(info);
     }
 
     private String extractToken(HttpServletRequest req) {

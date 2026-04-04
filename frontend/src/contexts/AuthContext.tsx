@@ -56,6 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await apiAuth.login(email, password);
+    console.log('[AuthContext] Login response:', JSON.stringify({ token: res?.token ? `${res.token.substring(0, 20)}...` : res?.token, user: res?.user }));
+
+    if (!res || !res.token) {
+      console.error('[AuthContext] Login succeeded but token is missing in response:', res);
+      throw new Error('Login failed: server did not return a token. Please try again.');
+    }
+    if (!res.user) {
+      console.error('[AuthContext] Login succeeded but user is missing in response:', res);
+      throw new Error('Login failed: server did not return user info. Please try again.');
+    }
+
     console.log('[AuthContext] Backend user.role (login):', res.user.role);
     const normRole = normalizeRole(res.user.role);
     console.log('[AuthContext] Normalized role (login):', normRole);
@@ -66,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, name: string, rawRole: string) => {
     const res = await apiAuth.register(email, password, name, rawRole);
+    if (!res || !res.token) {
+      throw new Error('Registration failed: server did not return a token. Please try again.');
+    }
     setToken(res.token);
     setUser(res.user);
     setRole(normalizeRole(res.user.role));

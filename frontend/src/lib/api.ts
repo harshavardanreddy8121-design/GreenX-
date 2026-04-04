@@ -60,23 +60,36 @@ async function request<T>(
         body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     });
 
-    if (res.status === 401 || res.status === 403) {
+    const text = await res.text();
+    let json: Record<string, unknown> = {};
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(`Invalid JSON response from server (HTTP ${res.status})`);
+    }
+
+    // For auth endpoints, surface the error message directly without redirecting.
+    // Only redirect on 401/403 for non-auth requests (i.e. expired session mid-session).
+    if ((res.status === 401 || res.status === 403) && !path.startsWith('/auth/')) {
         clearToken();
         window.location.href = '/login';
         throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
     }
 
-    const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
-
     if (!res.ok) {
-        throw new Error(json.error || json.message || `HTTP ${res.status}`);
+        // Backend wraps errors in { success: false, error: "..." }
+        const errMsg = (json.error as string) || (json.message as string) || `HTTP ${res.status}`;
+        throw new Error(errMsg);
     }
 
     // Backend wraps everything in { success, data, error }
     if (json && typeof json === 'object' && 'success' in json) {
-        if (!json.success) throw new Error(json.error || 'Request failed');
-        return json.data as T;
+        if (!json.success) throw new Error((json.error as string) || 'Request failed');
+        const data = json.data;
+        if (data === undefined || data === null) {
+            console.warn(`[api] ${method} ${path} → success:true but data is ${data}`);
+        }
+        return data as T;
     }
 
     return json as T;
