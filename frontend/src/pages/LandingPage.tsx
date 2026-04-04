@@ -20,16 +20,8 @@ export default function LandingPage() {
     const cursorRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
 
-    // Redirect authenticated users to their dashboard
-    useEffect(() => {
-        if (user) {
-            const roleLower = user.role?.toLowerCase() || "";
-            const route = roleRoutes[roleLower];
-            if (route) {
-                navigate(route);
-            }
-        }
-    }, [user, navigate]);
+    // Authentication removed - direct access enabled
+    // Users can select their role from landing page
 
     // Trigger plant animation
     useEffect(() => {
@@ -971,10 +963,11 @@ export default function LandingPage() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '28px', marginTop: '56px' }}>
                         {[
-                            { icon: <Building2 size={40} strokeWidth={1.5} />, title: 'Landowners', desc: 'Professionals in cities with inherited/idle farmland. Want passive farm income without relocating.' },
-                            { icon: <HardHat size={40} strokeWidth={1.5} />, title: 'Field Workers', desc: 'On-ground labor executing daily farm operations: planting, irrigation, harvest. GPS-tracked tasks.' },
-                            { icon: <Microscope size={40} strokeWidth={1.5} />, title: 'Expert Agronomists', desc: 'Qualified agriculture scientists who design crop plans, diagnose issues, prescribe treatments.' },
-                            { icon: <Briefcase size={40} strokeWidth={1.5} />, title: 'Field Managers', desc: 'Regional coordinators overseeing 20-30 farms, managing workers, logistics, and quality control.' }
+                            { icon: <Building2 size={40} strokeWidth={1.5} />, title: 'Landowners', desc: 'Professionals in cities with inherited/idle farmland. Want passive farm income without relocating.', path: '/landowner' },
+                            { icon: <HardHat size={40} strokeWidth={1.5} />, title: 'Field Workers', desc: 'On-ground labor executing daily farm operations: planting, irrigation, harvest. GPS-tracked tasks.', path: '/worker' },
+                            { icon: <Microscope size={40} strokeWidth={1.5} />, title: 'Expert Agronomists', desc: 'Qualified agriculture scientists who design crop plans, diagnose issues, prescribe treatments.', path: '/expert' },
+                            { icon: <Briefcase size={40} strokeWidth={1.5} />, title: 'Field Managers', desc: 'Regional coordinators overseeing 20-30 farms, managing workers, logistics, and quality control.', path: '/fieldmanager' },
+                            { icon: <BarChart3 size={40} strokeWidth={1.5} />, title: 'Admin', desc: 'System administrators with full access to manage users, farms, operations, and system settings.', path: '/admin' }
                         ].map((role, i) => (
                             <div key={i} style={{
                                 background: 'var(--surface)',
@@ -984,7 +977,7 @@ export default function LandingPage() {
                                 textAlign: 'center',
                                 transition: 'all 0.3s',
                                 cursor: 'pointer'
-                            }} onClick={() => navigate('/login')}>
+                            }} onClick={() => navigate(role.path)}>
                                 <div style={{ fontSize: '48px', marginBottom: '16px' }}>{role.icon}</div>
                                 <div style={{
                                     fontSize: '20px',

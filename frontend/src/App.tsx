@@ -58,9 +58,9 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
 
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="/admin" replace />} />
+    <Route path="/" element={<Index />} />
     <Route path="/workflow" element={<Workflow />} />
-    <Route path="/login" element={<Login />} />
+    {/* Login removed - direct access enabled */}
     <Route path="/land-register" element={<LandRegister />} />
     <Route path="/dashboard/landowner" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><Navigate to="/landowner" replace /></ProtectedRoute>} />
     <Route path="/dashboard/cluster-admin" element={<ProtectedRoute allowedRoles={['admin']}><Navigate to="/admin" replace /></ProtectedRoute>} />
