@@ -56,9 +56,12 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   return <>{children}</>;
 }
 
+import TestDashboard from "./pages/TestDashboard";
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
+    <Route path="/test" element={<TestDashboard />} />
     <Route path="/workflow" element={<Workflow />} />
     {/* Login removed - direct access enabled */}
     <Route path="/land-register" element={<LandRegister />} />
