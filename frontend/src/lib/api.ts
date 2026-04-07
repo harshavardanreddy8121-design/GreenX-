@@ -5,6 +5,7 @@
  */
 
 import { API_BASE_URL } from './backend';
+import { initDemoToken } from './apiConfig';
 
 // Validate BASE URL exists
 if (!API_BASE_URL) {
@@ -91,8 +92,10 @@ async function request<T>(
 
         if (res.status === 401 || res.status === 403) {
             clearToken();
-            window.location.href = '/login';
-            throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
+            // Login is disabled — re-fetch a fresh demo token instead of
+            // redirecting to /login, then throw so the caller can retry.
+            await initDemoToken();
+            throw new Error(res.status === 401 ? 'Session expired — demo token refreshed, please retry' : 'Access denied');
         }
 
         const text = await res.text();
@@ -159,6 +162,9 @@ export const auth = {
     me: () => request<AuthUser>('/auth/me'),
 
     logout: () => request('/auth/logout', 'POST'),
+
+    /** Fetch a demo token (no credentials required) and store it in localStorage. */
+    getDemoToken: () => request<LoginResponse>('/auth/demo-token'),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
