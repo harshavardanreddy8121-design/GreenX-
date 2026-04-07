@@ -1,7 +1,52 @@
 /**
  * API Configuration Validator
- * Ensures the application is properly configured before making any API calls
+ * Ensures the application is properly configured before making any API calls.
+ * Also bootstraps a demo JWT token so the dashboard works without a login flow.
  */
+
+const TOKEN_KEY = 'greenx_token';
+
+/**
+ * Fetches a demo JWT token from the backend and stores it in localStorage.
+ * Called once on app load when no token is present. This allows the dashboard
+ * to reach protected endpoints without requiring the user to log in.
+ */
+export async function initDemoToken(): Promise<void> {
+    // Skip if a token is already stored
+    if (localStorage.getItem(TOKEN_KEY)) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) return; // Can't fetch without a base URL
+
+    const base = apiUrl.replace(/\/+$/, '');
+
+    try {
+        const res = await fetch(`${base}/auth/demo-token`);
+        if (!res.ok) {
+            console.warn('⚠️ Demo token fetch returned non-OK status:', res.status);
+            return;
+        }
+
+        const json = await res.json();
+
+        // Backend wraps responses in { success, data, error }
+        const token: string | undefined =
+            json?.data?.token ?? json?.token;
+
+        if (token) {
+            localStorage.setItem(TOKEN_KEY, token);
+            // Keep javaApiToken in sync for any secondary API clients
+            localStorage.setItem('javaApiToken', token);
+            if (import.meta.env.DEV) {
+                console.log('✅ Demo token acquired and stored in localStorage');
+            }
+        } else {
+            console.warn('⚠️ Demo token response did not contain a token:', json);
+        }
+    } catch (err) {
+        console.warn('⚠️ Could not fetch demo token:', err);
+    }
+}
 
 export function validateAPIConfiguration(): void {
     const apiUrl = import.meta.env.VITE_API_URL;
@@ -75,3 +120,6 @@ export function validateAPIConfiguration(): void {
 
 // Run validation on import
 validateAPIConfiguration();
+
+// Bootstrap demo token so protected endpoints work without a login flow
+initDemoToken();

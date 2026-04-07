@@ -104,6 +104,38 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/demo-token")
+    public ApiResponse<AuthResponse> getDemoToken() {
+        try {
+            final String DEMO_EMAIL = "demo@greenx.local";
+            final String DEMO_ID = "demo-user";
+            final String DEMO_NAME = "Demo Land Owner";
+            final String DEMO_ROLE = "LAND_OWNER";
+
+            // Find or create the demo user so the JWT filter can load it by email
+            User demoUser = userRepository.findByEmail(DEMO_EMAIL).orElseGet(() -> {
+                User u = User.builder()
+                        .id(DEMO_ID)
+                        .email(DEMO_EMAIL)
+                        .uid("0000")
+                        .passwordHash(passwordEncoder.encode("demo-password-not-used"))
+                        .name(DEMO_NAME)
+                        .role(DEMO_ROLE)
+                        .isActive(true)
+                        .build();
+                return userRepository.save(u);
+            });
+
+            String token = jwtUtil.generateToken(demoUser.getId(), demoUser.getEmail(), demoUser.getRole());
+            return ApiResponse.success(AuthResponse.builder()
+                    .token(token)
+                    .user(UserDto.fromEntity(demoUser))
+                    .build());
+        } catch (Exception e) {
+            return ApiResponse.error("Failed to generate demo token: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/logout")
     public ApiResponse<String> logout() {
         return ApiResponse.success("Logged out");
