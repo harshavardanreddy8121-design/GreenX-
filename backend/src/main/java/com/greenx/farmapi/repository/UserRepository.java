@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+@Repository("farmApiUserRepository")
 public interface UserRepository extends JpaRepository<User, String> {
     Optional<User> findByEmail(String email);
 

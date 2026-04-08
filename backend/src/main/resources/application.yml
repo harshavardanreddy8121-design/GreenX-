@@ -67,8 +67,12 @@ server.servlet.context-path: /api
 # JWT Configuration
 # Set JWT_SECRET env var in Railway/Render to a strong random string
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-at-least-32-characters-long!}
+  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-with-at-least-32-characters-minimum}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours default
+
+# CORS Configuration
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
 
 # File upload directory
 app:

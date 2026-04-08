@@ -2,11 +2,14 @@ package com.greenx.farmapi;
 
 import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
@@ -15,6 +18,9 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
+@ComponentScan(basePackages = {"com.greenx"})
+@EnableJpaRepositories(basePackages = {"com.greenx"})
+@EntityScan(basePackages = {"com.greenx"})
 public class FarmManagementApiApplication {
 
     public static void main(String[] args) {
@@ -22,12 +28,7 @@ public class FarmManagementApiApplication {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    CommandLineRunner fixAdminPassword(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    CommandLineRunner fixAdminPassword(@Qualifier("farmApiUserRepository") UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Ensure every existing user has a unique 4-digit UID.
             Set<String> usedUids = new HashSet<>();
