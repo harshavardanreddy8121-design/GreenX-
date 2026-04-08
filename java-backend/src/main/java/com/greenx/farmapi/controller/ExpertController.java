@@ -28,6 +28,15 @@ public class ExpertController {
     private final FarmRepository farmRepository;
     private final NotificationService notificationService;
 
+    @GetMapping("/dashboard")
+    public ApiResponse<Map<String, Object>> dashboard(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        Map<String, Object> result = new java.util.HashMap<>(expertService.getStats(user.getId()));
+        result.put("role", "EXPERT");
+        result.put("message", "Welcome to the GreenX Expert Dashboard");
+        return ApiResponse.success(result);
+    }
+
     @GetMapping("/samples/pending")
     public ApiResponse<List<SoilSample>> getPendingSamples(Authentication auth) {
         User user = (User) auth.getPrincipal();

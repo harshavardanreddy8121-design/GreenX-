@@ -15,7 +15,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/landowner")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('LAND_OWNER')")
+@PreAuthorize("hasRole('LAND_OWNER') or hasRole('LANDOWNER')")
 public class LandOwnerController {
 
     private final LandOwnerService landOwnerService;
@@ -24,6 +24,15 @@ public class LandOwnerController {
     private final FarmRepository farmRepository;
     private final SoilSampleRepository soilSampleRepository;
     private final NotificationService notificationService;
+
+    @GetMapping("/dashboard")
+    public ApiResponse<Map<String, Object>> dashboard(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        Map<String, Object> result = new java.util.HashMap<>(landOwnerService.getStats(user.getId()));
+        result.put("role", "LANDOWNER");
+        result.put("message", "Welcome to the GreenX Land Owner Dashboard");
+        return ApiResponse.success(result);
+    }
 
     @GetMapping("/farms")
     public ApiResponse<List<Farm>> myFarms(Authentication auth) {

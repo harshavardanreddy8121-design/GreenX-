@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CLUSTER_ADMIN')")
+@PreAuthorize("hasRole('CLUSTER_ADMIN') or hasRole('ADMIN')")
 public class ClusterAdminController {
 
     private final ClusterAdminService adminService;
@@ -29,6 +29,15 @@ public class ClusterAdminController {
     private final NotificationService notificationService;
     private final FileStorageService fileStorageService;
     private final PasswordEncoder passwordEncoder;
+
+    @GetMapping("/dashboard")
+    public ApiResponse<Map<String, Object>> dashboard(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        Map<String, Object> stats = adminService.getStats(user.getClusterId());
+        stats.put("role", "ADMIN");
+        stats.put("message", "Welcome to the GreenX Admin Dashboard");
+        return ApiResponse.success(stats);
+    }
 
     @GetMapping("/stats")
     public ApiResponse<Map<String, Object>> getStats(Authentication auth) {
