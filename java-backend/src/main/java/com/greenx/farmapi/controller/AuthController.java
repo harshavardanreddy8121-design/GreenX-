@@ -2,15 +2,21 @@ package com.greenx.farmapi.controller;
 
 import com.greenx.farmapi.dto.*;
 import com.greenx.farmapi.model.User;
+import com.greenx.farmapi.model.UserRole;
 import com.greenx.farmapi.repository.UserRepository;
+import com.greenx.farmapi.service.AuthService;
 import com.greenx.farmapi.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +32,44 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
+
+    /**
+     * POST /auth/signup — validated registration using the unified AuthRequest DTO.
+     * Returns 201 Created on success, 409 Conflict if email already exists.
+     */
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@jakarta.validation.Valid @RequestBody AuthRequest authRequest) {
+        try {
+            AuthResponse response = authService.register(authRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error("Registration failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /auth/signin — validated login using the unified AuthRequest DTO.
+     * Returns 200 OK with token, 401 Unauthorized on bad credentials.
+     */
+    @PostMapping("/signin")
+    public ResponseEntity<?> signin(@jakarta.validation.Valid @RequestBody AuthRequest authRequest) {
+        try {
+            AuthResponse response = authService.login(authRequest);
+            return ResponseEntity.ok(response);
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException
+                 | org.springframework.security.authentication.BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Authentication failed: " + e.getMessage()));
+        }
+    }
 
     @PostMapping("/register")
     public ApiResponse<AuthResponse> register(@RequestBody RegisterRequest request) {
@@ -86,6 +130,20 @@ public class AuthController {
         } catch (Exception e) {
             return ApiResponse.error("Login failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * GET /api/profile — returns the full profile of the authenticated user.
+     * Mapped outside /auth/** so it requires a valid JWT (enforced by SecurityConfig).
+     */
+    @GetMapping("/profile-info")
+    public ResponseEntity<ProfileResponse> getProfile(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String email = authentication.getName();
+        ProfileResponse profile = authService.getProfile(email);
+        return ResponseEntity.ok(profile);
     }
 
     @GetMapping("/me")

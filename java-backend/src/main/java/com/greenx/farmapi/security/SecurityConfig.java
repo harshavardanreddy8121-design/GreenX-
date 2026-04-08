@@ -38,6 +38,7 @@ public class SecurityConfig {
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
@@ -48,11 +49,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
                         .requestMatchers("/auth/**", "/health").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Role-specific path rules
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "CLUSTER_ADMIN")
+                        .requestMatchers("/expert/**").hasRole("EXPERT")
+                        .requestMatchers("/field/**").hasRole("FIELD_MANAGER")
+                        .requestMatchers("/fieldmanager/**").hasRole("FIELD_MANAGER")
+                        .requestMatchers("/worker/**").hasRole("WORKER")
+                        .requestMatchers("/land/**").hasAnyRole("LANDOWNER", "LAND_OWNER")
+                        .requestMatchers("/landowner/**").hasAnyRole("LANDOWNER", "LAND_OWNER")
+                        .requestMatchers("/profile").authenticated()
+                        // Everything else requires authentication
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                // JwtAuthenticationFilter runs first and sets the SecurityContext with
+                // the resolved UserRole enum.  JwtFilter is kept for backward compatibility
+                // but will skip processing when authentication is already present.
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

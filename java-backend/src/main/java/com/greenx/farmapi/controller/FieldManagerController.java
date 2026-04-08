@@ -29,6 +29,15 @@ public class FieldManagerController {
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
+    @GetMapping("/dashboard")
+    public ApiResponse<Map<String, Object>> dashboard(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        Map<String, Object> result = new java.util.HashMap<>(fieldManagerService.getStats(user.getId()));
+        result.put("role", "FIELD_MANAGER");
+        result.put("message", "Welcome to the GreenX Field Manager Dashboard");
+        return ApiResponse.success(result);
+    }
+
     @GetMapping("/farms")
     public ApiResponse<List<Farm>> getAssignedFarms(Authentication auth) {
         User user = (User) auth.getPrincipal();

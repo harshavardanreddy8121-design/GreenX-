@@ -2,7 +2,6 @@ package com.greenx.farmapi.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -10,12 +9,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
+/**
+ * JWT utility using JJWT 0.12.x API with HS512 signing.
+ */
 @Component
 public class JwtUtil {
 
@@ -27,14 +29,14 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
-    private Key getSigningKey() {
+    private SecretKey getSigningKey() {
         byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
 
-        // HS512 requires >= 64 bytes. Derive a stable strong key if env secret is too
-        // short.
+        // HS512 requires >= 64 bytes. Derive a stable strong key if env secret is too short.
         if (secretBytes.length < 64) {
             log.warn(
-                    "JWT secret is shorter than 64 bytes; deriving HS512 key via SHA-512. Configure JWT_SECRET to at least 64 bytes in production.");
+                    "JWT secret is shorter than 64 bytes; deriving HS512 key via SHA-512. "
+                    + "Configure JWT_SECRET to at least 64 bytes in production.");
             try {
                 secretBytes = MessageDigest.getInstance("SHA-512").digest(secretBytes);
             } catch (NoSuchAlgorithmException e) {
@@ -47,16 +49,16 @@ public class JwtUtil {
 
     public String generateToken(String userId, String email, String role) {
         return Jwts.builder()
-                .setSubject(userId)
+                .subject(userId)
                 .claim("email", email)
                 .claim("role", role)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey(), Jwts.SIG.HS512)
                 .compact();
     }
 
-    /** Backward-compat overload used by callers that don't have role */
+    /** Backward-compat overload used by callers that don't have role. */
     public String generateToken(String userId, String email) {
         return generateToken(userId, email, "USER");
     }
@@ -85,6 +87,11 @@ public class JwtUtil {
         }
     }
 
+    /** Returns the configured expiration time in milliseconds. */
+    public long getExpirationTime() {
+        return jwtExpirationMs;
+    }
+
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -103,10 +110,10 @@ public class JwtUtil {
     }
 
     private Claims parseClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

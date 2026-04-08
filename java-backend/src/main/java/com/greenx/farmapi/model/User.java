@@ -80,15 +80,25 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         String r = role != null ? role.toUpperCase().replace("-", "_").replace(" ", "_") : "USER";
-        // Treat ADMIN as CLUSTER_ADMIN so Spring Security role checks pass
-        if ("ADMIN".equals(r))
-            r = "CLUSTER_ADMIN";
-        // Normalize roles without underscores to their expected forms
+
+        // Normalise legacy spellings
         if ("FIELDMANAGER".equals(r))
             r = "FIELD_MANAGER";
-        if ("LANDOWNER".equals(r))
-            r = "LAND_OWNER";
-        return List.of(new SimpleGrantedAuthority("ROLE_" + r));
+
+        // Emit both the stored role name AND the canonical UserRole name so that
+        // @PreAuthorize checks work regardless of which spelling is in the DB.
+        java.util.Set<SimpleGrantedAuthority> authorities = new java.util.LinkedHashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + r));
+
+        // Add canonical aliases
+        switch (r) {
+            case "ADMIN"         -> authorities.add(new SimpleGrantedAuthority("ROLE_CLUSTER_ADMIN"));
+            case "CLUSTER_ADMIN" -> authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            case "LAND_OWNER"    -> authorities.add(new SimpleGrantedAuthority("ROLE_LANDOWNER"));
+            case "LANDOWNER"     -> authorities.add(new SimpleGrantedAuthority("ROLE_LAND_OWNER"));
+        }
+
+        return authorities;
     }
 
     @Override
