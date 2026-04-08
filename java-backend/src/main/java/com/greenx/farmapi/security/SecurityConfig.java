@@ -50,6 +50,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/health").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("CLUSTER_ADMIN")
+                        .requestMatchers("/expert/**").hasRole("EXPERT")
+                        .requestMatchers("/fieldmanager/**").hasRole("FIELD_MANAGER")
+                        .requestMatchers("/worker/**").hasRole("WORKER")
+                        .requestMatchers("/landowner/**").hasAnyRole("LAND_OWNER", "LANDOWNER")
+                        .requestMatchers("/profile").authenticated()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
