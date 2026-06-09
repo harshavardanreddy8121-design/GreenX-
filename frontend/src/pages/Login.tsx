@@ -107,7 +107,7 @@ export default function Login() {
 
   useEffect(() => {
     if (!loading && isAuthenticated && role) {
-      navigate(roleRoutes[role] || '/');
+      navigate(roleRoutes[role] || '/', { replace: true });
     }
   }, [isAuthenticated, role, loading, navigate]);
 
