@@ -4,6 +4,7 @@ import { admin } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 
 import { AlertTriangle, BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
@@ -11,7 +12,7 @@ export default function AdminDashboard() {
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
-  const { data: farms = [], isError: farmsError, error: farmsErr } = useQuery({
+  const { data: farms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['admin-farms'],
     queryFn: () => admin.getFarms(),
     retry: 2,
@@ -109,10 +110,18 @@ export default function AdminDashboard() {
         <div className="gx-page-sub">{farms.length} farms · {users.length} users · {pendingSamples.length} samples pending</div>
       </div>
 
-      {(farmsError || samplesError) && (
+      {farmsLoading && <DashboardSkeleton />}
+
+      {!farmsLoading && (farmsError || samplesError) && (
         <div className="gx-alert-box gx-alert-red">
           <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-          <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
+          <div>
+            <strong>Backend Connection Error:</strong>{' '}
+            {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
+            <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+              Please check your connection or try refreshing the page.
+            </div>
+          </div>
         </div>
       )}
 

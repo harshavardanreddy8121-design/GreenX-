@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
 import { files } from '@/lib/api';
-import { Bot, Camera, CheckCircle2, CircleDot, CircleX, ClipboardList, Clock, HardHat, Lightbulb, Loader2, LogOut, Package, Square, Trash2, Upload, Wheat } from 'lucide-react';
+import { AlertTriangle, Bot, Camera, CheckCircle2, CircleDot, CircleX, ClipboardList, Clock, HardHat, Lightbulb, Loader2, LogOut, Package, Square, Trash2, Upload, Wheat } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -33,25 +34,29 @@ export default function WorkerDashboard() {
   const today = new Date().toISOString().split('T')[0];
   const ai = useAI();
 
-  const { data: todayAttendance = null } = useQuery({
+  const { data: todayAttendance = null, isLoading: attendanceLoading, isError: attendanceError, error: attendanceErr } = useQuery({
     queryKey: ['worker-attendance', user?.id, today],
     queryFn: async () => {
       const r = await javaApi.select('attendance', { eq: { user_id: user?.id }, gte: { check_in: today } });
-      return r.success && r.data && (r.data as any[]).length > 0 ? (r.data as any[])[0] : null;
+      if (!r.success) throw new Error(r.error || 'Failed to load attendance');
+      return r.data && (r.data as any[]).length > 0 ? (r.data as any[])[0] : null;
     },
     enabled: !!user?.id,
+    retry: 2,
   });
 
-  const { data: myTasks = [] } = useQuery({
+  const { data: myTasks = [], isLoading: tasksLoading, isError: tasksError, error: tasksErr } = useQuery({
     queryKey: ['worker-tasks', user?.id],
     queryFn: async () => {
       const r = await javaApi.select('tasks', { eq: { assigned_to: user?.id }, order: { field: 'due_date', ascending: false } });
-      return r.success && r.data ? r.data as any[] : [];
+      if (!r.success) throw new Error(r.error || 'Failed to load tasks');
+      return r.data ? r.data as any[] : [];
     },
     enabled: !!user?.id,
+    retry: 2,
   });
 
-  const { data: myFarms = [] } = useQuery({
+  const { data: myFarms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['worker-farms', user?.id],
     queryFn: async () => {
       const aR = await javaApi.select('farm_assignments', { eq: { user_id: user?.id, role: 'worker' } });
@@ -65,7 +70,14 @@ export default function WorkerDashboard() {
       return [];
     },
     enabled: !!user?.id,
+    retry: 2,
   });
+
+  const isLoading = attendanceLoading || tasksLoading || farmsLoading;
+  const hasError = attendanceError || tasksError || farmsError;
+  const errorMessage = (attendanceErr || tasksErr || farmsErr) instanceof Error
+    ? (attendanceErr || tasksErr || farmsErr)!.message
+    : 'Could not load data from the server.';
 
   const markAttendance = useMutation({
     mutationFn: async (type: 'checkin' | 'checkout') => {
@@ -179,6 +191,21 @@ export default function WorkerDashboard() {
           <div className="gx-page-title">Worker Dashboard — {userName} <HardHat className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{pendingTasks.length} tasks pending · {myFarms.length} farms</div>
         </div>
+
+        {isLoading && <DashboardSkeleton />}
+
+        {!isLoading && hasError && (
+          <div className="gx-alert-box gx-alert-red">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+            <div>
+              <strong>Backend Connection Error:</strong>{' '}
+              {errorMessage}
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+                Please check your connection or try refreshing the page.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Row — always visible */}
         <div className="gx-stats-row">

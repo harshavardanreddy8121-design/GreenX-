@@ -43,11 +43,15 @@ export function clearToken() {
     localStorage.removeItem('javaApiToken');
 }
 
+// Track whether a token refresh is already in progress to avoid loops
+let _refreshing = false;
+
 async function request<T>(
     path: string,
     method = 'GET',
     body?: unknown,
-    isFormData = false
+    isFormData = false,
+    _isRetry = false
 ): Promise<T> {
     const headers: Record<string, string> = {};
     const token = getToken();
@@ -60,23 +64,64 @@ async function request<T>(
         body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     });
 
-    if (res.status === 401 || res.status === 403) {
+    if (res.status === 401) {
+        // Attempt a single token refresh before giving up
+        if (!_isRetry && !_refreshing && path !== '/auth/login' && path !== '/auth/refresh') {
+            _refreshing = true;
+            try {
+                const refreshRes = await fetch(`${BASE}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                if (refreshRes.ok) {
+                    const refreshText = await refreshRes.text();
+                    const refreshJson = refreshText ? JSON.parse(refreshText) : {};
+                    const newToken: string | undefined =
+                        refreshJson?.token ?? refreshJson?.data?.token;
+                    if (newToken) {
+                        setToken(newToken);
+                        _refreshing = false;
+                        // Retry the original request with the new token
+                        return request<T>(path, method, body, isFormData, true);
+                    }
+                }
+            } catch {
+                // Refresh failed — fall through to clear and redirect
+            } finally {
+                _refreshing = false;
+            }
+        }
         clearToken();
         window.location.href = '/login';
-        throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
+        throw new Error('Session expired — please log in again');
+    }
+
+    if (res.status === 403) {
+        throw new Error('Access denied — you do not have permission to perform this action');
     }
 
     const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
+    let json: unknown;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(`Invalid response from server (HTTP ${res.status})`);
+    }
 
     if (!res.ok) {
-        throw new Error(json.error || json.message || `HTTP ${res.status}`);
+        const errJson = json as Record<string, unknown>;
+        throw new Error(
+            (errJson?.error as string) ||
+            (errJson?.message as string) ||
+            `HTTP ${res.status}`
+        );
     }
 
     // Backend wraps everything in { success, data, error }
-    if (json && typeof json === 'object' && 'success' in json) {
-        if (!json.success) throw new Error(json.error || 'Request failed');
-        return json.data as T;
+    if (json && typeof json === 'object' && 'success' in (json as object)) {
+        const wrapped = json as { success: boolean; data?: T; error?: string };
+        if (!wrapped.success) throw new Error(wrapped.error || 'Request failed');
+        return wrapped.data as T;
     }
 
     return json as T;

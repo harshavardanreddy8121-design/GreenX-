@@ -52,9 +52,24 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { isAuthenticated, role, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" />;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--background)' }}>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-transparent border-t-green-500 border-r-green-500" />
+        <p className="text-sm text-muted-foreground">Verifying session…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // If allowedRoles is specified and the user's role is known but not allowed, redirect home
+  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
+
+  // If allowedRoles is specified but role is still null (shouldn't happen after loading), redirect login
+  if (allowedRoles && !role) return <Navigate to="/login" replace />;
+
   return <>{children}</>;
 }
 

@@ -11,6 +11,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { useNotifications } from '@/hooks/useNotifications';
+import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 
 type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
 
@@ -23,7 +24,7 @@ export default function LandownerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
+  const { data: myFarms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['landowner-farms', user?.id],
     queryFn: () => landOwner.getFarms(),
     enabled: !!user?.id,
@@ -144,10 +145,18 @@ export default function LandownerDashboard() {
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="LAND_OWNER" /></div>
         </div>
 
-        {(farmsError || samplesError) && (
+        {farmsLoading && <DashboardSkeleton />}
+
+        {!farmsLoading && (farmsError || samplesError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
+            <div>
+              <strong>Backend Connection Error:</strong>{' '}
+              {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+                Please check your connection or try refreshing the page.
+              </div>
+            </div>
           </div>
         )}
 
