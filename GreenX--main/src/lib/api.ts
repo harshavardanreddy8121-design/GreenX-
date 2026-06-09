@@ -43,6 +43,21 @@ export function clearToken() {
     localStorage.removeItem('javaApiToken');
 }
 
+/** Tracks whether a session-expiry redirect is already in progress to avoid loops */
+let _sessionExpiredRedirectPending = false;
+
+/**
+ * Clears the stored token and navigates to /login.
+ * Debounced so that concurrent 401 responses only trigger one redirect.
+ */
+function handleSessionExpired() {
+    if (_sessionExpiredRedirectPending) return;
+    _sessionExpiredRedirectPending = true;
+    clearToken();
+    // Use replace so the user can't navigate back to the protected page
+    window.location.replace('/login');
+}
+
 async function request<T>(
     path: string,
     method = 'GET',
@@ -54,29 +69,53 @@ async function request<T>(
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (!isFormData && body) headers['Content-Type'] = 'application/json';
 
-    const res = await fetch(`${BASE}${path}`, {
-        method,
-        headers,
-        body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
-    });
+    let res: Response;
+    try {
+        res = await fetch(`${BASE}${path}`, {
+            method,
+            headers,
+            body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+        });
+    } catch (networkErr) {
+        // fetch() itself threw — network is unreachable
+        throw new Error('Network error — please check your connection and try again.');
+    }
 
-    if (res.status === 401 || res.status === 403) {
-        clearToken();
-        window.location.href = '/login';
-        throw new Error(res.status === 401 ? 'Session expired' : 'Access denied — please log in again');
+    // 401 = token expired / invalid; 403 = valid token but insufficient permissions
+    if (res.status === 401) {
+        // Don't redirect for auth endpoints themselves (login / register)
+        if (!path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+            handleSessionExpired();
+        }
+        throw new Error('Session expired — please log in again.');
+    }
+
+    if (res.status === 403) {
+        throw new Error('Access denied — you do not have permission to perform this action.');
     }
 
     const text = await res.text();
-    const json = text ? JSON.parse(text) : {};
+    let json: unknown;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch {
+        json = {};
+    }
 
     if (!res.ok) {
-        throw new Error(json.error || json.message || `HTTP ${res.status}`);
+        const errJson = json as Record<string, unknown>;
+        throw new Error(
+            (errJson?.error as string) ||
+            (errJson?.message as string) ||
+            `HTTP ${res.status}`
+        );
     }
 
     // Backend wraps everything in { success, data, error }
-    if (json && typeof json === 'object' && 'success' in json) {
-        if (!json.success) throw new Error(json.error || 'Request failed');
-        return json.data as T;
+    if (json && typeof json === 'object' && 'success' in (json as object)) {
+        const wrapped = json as { success: boolean; data?: T; error?: string };
+        if (!wrapped.success) throw new Error(wrapped.error || 'Request failed');
+        return wrapped.data as T;
     }
 
     return json as T;

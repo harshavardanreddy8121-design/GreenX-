@@ -95,21 +95,35 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [name, setName] = useState("");
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { isAuthenticated, role, loading, login, register } = useAuth();
+  const { isAuthenticated, role, loading, isLoading, login, register, clearError } = useAuth();
   const { t } = useTranslation();
 
+  // Redirect already-authenticated users to their dashboard
   useEffect(() => {
     if (!loading && isAuthenticated && role) {
       navigate(roleRoutes[role] || '/');
     }
   }, [isAuthenticated, role, loading, navigate]);
+
+  // Clear local error when the user starts editing any field
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (error) { setError(""); clearError(); }
+  };
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (error) { setError(""); clearError(); }
+  };
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (error) { setError(""); clearError(); }
+  };
 
   /* ── 3D tilt on card ── */
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -127,9 +141,8 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!email || !password) { setError("Please enter email and password."); return; }
+    if (!email || !password) { setError("Please enter your email and password."); return; }
     if (showRegister && !name) { setError("Please enter your name."); return; }
-    setLoginLoading(true);
 
     try {
       if (showRegister) {
@@ -137,10 +150,10 @@ export default function Login() {
       } else {
         await login(email, password);
       }
+      // On success the useEffect above will redirect to the role dashboard
     } catch (err: unknown) {
+      // Error is already categorized and stored in AuthContext; mirror it locally for display
       setError(err instanceof Error ? err.message : "An unexpected error occurred.");
-    } finally {
-      setLoginLoading(false);
     }
   };
 
@@ -493,20 +506,41 @@ export default function Login() {
           {showRegister && (
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>Name</label>
-              <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} className="login-input" />
+              <input
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={handleNameChange}
+                disabled={isLoading}
+                className="login-input"
+              />
             </div>
           )}
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>{t('login_page.email')}</label>
-            <input type="email" placeholder={t('login_page.email')} value={email} onChange={e => setEmail(e.target.value)} className="login-input" />
+            <input
+              type="email"
+              placeholder={t('login_page.email')}
+              value={email}
+              onChange={handleEmailChange}
+              disabled={isLoading}
+              className="login-input"
+            />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>{t('login_page.password')}</label>
             <div style={{ position: 'relative' }}>
-              <input type={showPassword ? "text" : "password"} placeholder={t('login_page.password')} value={password} onChange={e => setPassword(e.target.value)}
-                className="login-input" style={{ paddingRight: 48 }} />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder={t('login_page.password')}
+                value={password}
+                onChange={handlePasswordChange}
+                disabled={isLoading}
+                className="login-input"
+                style={{ paddingRight: 48 }}
+              />
               <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
                 position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer', color: '#3d5a44',
@@ -518,11 +552,24 @@ export default function Login() {
           </div>
 
           {error && (
-            <p style={{ fontSize: 13, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)' }}>{error}</p>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#ef4444', padding: '10px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)' }}>
+              <span style={{ flexShrink: 0, marginTop: 1 }}>⚠</span>
+              <span>{error}</span>
+            </div>
           )}
 
-          <button type="submit" disabled={loginLoading} className="login-btn-primary">
-            <LogIn size={18} /> {loginLoading ? (showRegister ? 'Creating account...' : t('login_page.signing_in')) : (showRegister ? 'Create Account' : t('login_page.login'))}
+          <button type="submit" disabled={isLoading} className="login-btn-primary">
+            {isLoading ? (
+              <>
+                <span style={{ width: 16, height: 16, border: '2px solid rgba(0,0,0,0.2)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'loginSpin 0.7s linear infinite', display: 'inline-block' }} />
+                {showRegister ? 'Creating account…' : t('login_page.signing_in')}
+              </>
+            ) : (
+              <>
+                <LogIn size={18} />
+                {showRegister ? 'Create Account' : t('login_page.login')}
+              </>
+            )}
           </button>
         </form>
 
