@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { admin } from '@/lib/api';
 import { toast } from 'sonner';
@@ -390,7 +390,7 @@ export default function AdminDashboard() {
   );
 }
 
-function RoleCard({ title, users, color }: { title: string; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange' }) {
+function RoleCard({ title, users, color }: { title: React.ReactNode; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange' }) {
   const colorVar = `var(--gx-${color})`;
   return (
     <div className="gx-card">
