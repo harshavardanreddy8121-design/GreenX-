@@ -16,9 +16,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   role: AppRole | null;
   loading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: string) => Promise<void>;
   logout: () => void;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const token = getToken();
@@ -50,32 +53,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         setRole(normRole);
       })
-      .catch(() => clearToken())
+      .catch(() => {
+        clearToken();
+        setUser(null);
+        setRole(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await apiAuth.login(email, password);
-    console.log('[AuthContext] Backend user.role (login):', res.user.role);
-    const normRole = normalizeRole(res.user.role);
-    console.log('[AuthContext] Normalized role (login):', normRole);
-    setToken(res.token);
-    setUser(res.user);
-    setRole(normRole);
+    setError(null);
+    try {
+      const res = await apiAuth.login(email, password);
+      console.log('[AuthContext] Backend user.role (login):', res.user.role);
+      const normRole = normalizeRole(res.user.role);
+      console.log('[AuthContext] Normalized role (login):', normRole);
+      setToken(res.token);
+      setUser(res.user);
+      setRole(normRole);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Login failed. Please try again.';
+      setError(message);
+      throw err;
+    }
   };
 
   const register = async (email: string, password: string, name: string, rawRole: string) => {
-    const res = await apiAuth.register(email, password, name, rawRole);
-    setToken(res.token);
-    setUser(res.user);
-    setRole(normalizeRole(res.user.role));
+    setError(null);
+    try {
+      const res = await apiAuth.register(email, password, name, rawRole);
+      setToken(res.token);
+      setUser(res.user);
+      setRole(normalizeRole(res.user.role));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Registration failed. Please try again.';
+      setError(message);
+      throw err;
+    }
   };
 
   const logout = () => {
     clearToken();
     setUser(null);
     setRole(null);
+    setError(null);
   };
+
+  const clearError = () => setError(null);
 
   return (
     <AuthContext.Provider value={{
@@ -84,9 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: !!user,
       role,
       loading,
+      error,
       login,
       register,
       logout,
+      clearError,
     }}>
       {children}
     </AuthContext.Provider>

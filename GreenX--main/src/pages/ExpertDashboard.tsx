@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { expert } from '@/lib/api';
 import { AlertTriangle, Archive, BarChart3, BookOpen, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, CloudSun, Dna, FileText, FlaskConical, Inbox, Loader2, LogOut, Microscope, Pill, Sprout, TestTubes, Thermometer, Trash2, Upload, Wheat } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -59,7 +60,7 @@ export default function ExpertDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: pendingSamples = [], isError: samplesError, error: samplesErr } = useQuery({
+  const { data: pendingSamples = [], isLoading: samplesLoading, isError: samplesError, error: samplesErr } = useQuery({
     queryKey: ['expert-pending-samples', user?.id],
     queryFn: () => expert.getPendingSamples(),
     enabled: !!user?.id,
@@ -314,10 +315,18 @@ export default function ExpertDashboard() {
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="EXPERT" /></div>
         </div>
 
-        {(samplesError || farmsError) && (
+        {samplesLoading && <DashboardSkeleton />}
+
+        {!samplesLoading && (samplesError || farmsError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
+            <div>
+              <strong>Backend Connection Error:</strong>{' '}
+              {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+                Please check your connection or try refreshing the page.
+              </div>
+            </div>
           </div>
         )}
 

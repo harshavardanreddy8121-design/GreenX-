@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
 import { AlertTriangle, BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
+import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -75,7 +76,7 @@ export default function FieldManagerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
+  const { data: myFarms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['fm-farms', user?.id],
     queryFn: () => fieldManager.getAssignedFarms(),
     enabled: !!user?.id,
@@ -364,10 +365,18 @@ export default function FieldManagerDashboard() {
           <div style={{ position: 'absolute', right: 18, top: 14 }}><NotificationBell role="FIELD_MANAGER" /></div>
         </div>
 
-        {(farmsError || samplesError) && (
+        {farmsLoading && <DashboardSkeleton />}
+
+        {!farmsLoading && (farmsError || samplesError) && (
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
+            <div>
+              <strong>Backend Connection Error:</strong>{' '}
+              {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
+              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+                Please check your connection or try refreshing the page.
+              </div>
+            </div>
           </div>
         )}
 

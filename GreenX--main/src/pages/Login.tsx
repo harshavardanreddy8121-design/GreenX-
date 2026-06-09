@@ -102,7 +102,7 @@ export default function Login() {
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { isAuthenticated, role, loading, login, register } = useAuth();
+  const { isAuthenticated, role, loading, login, register, error: authError, clearError } = useAuth();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -127,6 +127,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    clearError();
     if (!email || !password) { setError("Please enter email and password."); return; }
     if (showRegister && !name) { setError("Please enter your name."); return; }
     setLoginLoading(true);
@@ -138,7 +139,15 @@ export default function Login() {
         await login(email, password);
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+      // Provide user-friendly messages for common errors
+      if (msg.toLowerCase().includes('401') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials') || msg.toLowerCase().includes('unauthorized')) {
+        setError("Invalid email or password. Please try again.");
+      } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch')) {
+        setError("Network error — unable to reach the server. Please check your connection.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoginLoading(false);
     }
