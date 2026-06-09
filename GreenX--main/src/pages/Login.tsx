@@ -95,19 +95,19 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [name, setName] = useState("");
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { isAuthenticated, role, loading, login, register, error: authError, clearError } = useAuth();
+  const { isAuthenticated, role, loading, isLoading: loginLoading, login, register, error: authError, clearError } = useAuth();
   const { t } = useTranslation();
 
+  // Auto-redirect after successful login
   useEffect(() => {
     if (!loading && isAuthenticated && role) {
-      navigate(roleRoutes[role] || '/');
+      navigate(roleRoutes[role] || '/', { replace: true });
     }
   }, [isAuthenticated, role, loading, navigate]);
 
@@ -130,7 +130,6 @@ export default function Login() {
     clearError();
     if (!email || !password) { setError("Please enter email and password."); return; }
     if (showRegister && !name) { setError("Please enter your name."); return; }
-    setLoginLoading(true);
 
     try {
       if (showRegister) {
@@ -138,18 +137,11 @@ export default function Login() {
       } else {
         await login(email, password);
       }
+      // Navigation is handled by the useEffect watching isAuthenticated + role
     } catch (err: unknown) {
+      // AuthContext already categorizes the error; surface it locally too
       const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
-      // Provide user-friendly messages for common errors
-      if (msg.toLowerCase().includes('401') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials') || msg.toLowerCase().includes('unauthorized')) {
-        setError("Invalid email or password. Please try again.");
-      } else if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch')) {
-        setError("Network error — unable to reach the server. Please check your connection.");
-      } else {
-        setError(msg);
-      }
-    } finally {
-      setLoginLoading(false);
+      setError(msg);
     }
   };
 
@@ -502,20 +494,20 @@ export default function Login() {
           {showRegister && (
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>Name</label>
-              <input type="text" placeholder="Your name" value={name} onChange={e => setName(e.target.value)} className="login-input" />
+              <input type="text" placeholder="Your name" value={name} onChange={e => { setName(e.target.value); setError(""); clearError(); }} className="login-input" disabled={loginLoading} />
             </div>
           )}
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>{t('login_page.email')}</label>
-            <input type="email" placeholder={t('login_page.email')} value={email} onChange={e => setEmail(e.target.value)} className="login-input" />
+            <input type="email" placeholder={t('login_page.email')} value={email} onChange={e => { setEmail(e.target.value); setError(""); clearError(); }} className="login-input" disabled={loginLoading} />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#7a9a82', marginBottom: 6 }}>{t('login_page.password')}</label>
             <div style={{ position: 'relative' }}>
-              <input type={showPassword ? "text" : "password"} placeholder={t('login_page.password')} value={password} onChange={e => setPassword(e.target.value)}
-                className="login-input" style={{ paddingRight: 48 }} />
+              <input type={showPassword ? "text" : "password"} placeholder={t('login_page.password')} value={password} onChange={e => { setPassword(e.target.value); setError(""); clearError(); }}
+                className="login-input" style={{ paddingRight: 48 }} disabled={loginLoading} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} style={{
                 position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                 background: 'none', border: 'none', cursor: 'pointer', color: '#3d5a44',
@@ -526,12 +518,15 @@ export default function Login() {
             </div>
           </div>
 
-          {error && (
-            <p style={{ fontSize: 13, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)' }}>{error}</p>
+          {(error || authError) && (
+            <p style={{ fontSize: 13, color: '#ef4444', padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)' }}>{error || authError}</p>
           )}
 
           <button type="submit" disabled={loginLoading} className="login-btn-primary">
-            <LogIn size={18} /> {loginLoading ? (showRegister ? 'Creating account...' : t('login_page.signing_in')) : (showRegister ? 'Create Account' : t('login_page.login'))}
+            {loginLoading
+              ? <><span style={{ width: 18, height: 18, border: '2px solid rgba(0,0,0,0.2)', borderTop: '2px solid #000', borderRadius: '50%', animation: 'loginSpin 0.8s linear infinite', display: 'inline-block', flexShrink: 0 }} /> {showRegister ? 'Creating account...' : t('login_page.signing_in')}</>
+              : <><LogIn size={18} /> {showRegister ? 'Create Account' : t('login_page.login')}</>
+            }
           </button>
         </form>
 

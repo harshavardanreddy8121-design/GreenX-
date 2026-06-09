@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import "@/i18n";
 import Index from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -49,29 +50,6 @@ import PestAlerts from "./pages/expert/PestAlerts";
 import Prescriptions from "./pages/expert/Prescriptions";
 
 const queryClient = new QueryClient();
-
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  const { isAuthenticated, role, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: 'var(--background)' }}>
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-transparent border-t-green-500 border-r-green-500" />
-        <p className="text-sm text-muted-foreground">Verifying session…</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-
-  // If allowedRoles is specified and the user's role is known but not allowed, redirect home
-  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" replace />;
-
-  // If allowedRoles is specified but role is still null (shouldn't happen after loading), redirect login
-  if (allowedRoles && !role) return <Navigate to="/login" replace />;
-
-  return <>{children}</>;
-}
 
 const AppRoutes = () => (
   <Routes>

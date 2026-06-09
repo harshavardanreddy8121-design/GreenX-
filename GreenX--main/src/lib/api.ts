@@ -45,6 +45,8 @@ export function clearToken() {
 
 // Track whether a token refresh is already in progress to avoid loops
 let _refreshing = false;
+// Debounce guard: prevent multiple simultaneous session-expiry redirects
+let _redirecting = false;
 
 async function request<T>(
     path: string,
@@ -58,11 +60,20 @@ async function request<T>(
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (!isFormData && body) headers['Content-Type'] = 'application/json';
 
-    const res = await fetch(`${BASE}${path}`, {
-        method,
-        headers,
-        body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
-    });
+    let res: Response;
+    try {
+        res = await fetch(`${BASE}${path}`, {
+            method,
+            headers,
+            body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+        });
+    } catch (networkErr) {
+        throw new Error(
+            networkErr instanceof Error && networkErr.message
+                ? `Network error — ${networkErr.message}`
+                : 'Network error — unable to reach the server. Please check your connection.'
+        );
+    }
 
     if (res.status === 401) {
         // Attempt a single token refresh before giving up
@@ -92,7 +103,14 @@ async function request<T>(
             }
         }
         clearToken();
-        window.location.href = '/login';
+        if (!_redirecting) {
+            _redirecting = true;
+            // Small delay so any in-flight React state updates can settle
+            setTimeout(() => {
+                window.location.href = '/login';
+                _redirecting = false;
+            }, 100);
+        }
         throw new Error('Session expired — please log in again');
     }
 
