@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import "@/i18n";
 import Index from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -49,14 +50,6 @@ import PestAlerts from "./pages/expert/PestAlerts";
 import Prescriptions from "./pages/expert/Prescriptions";
 
 const queryClient = new QueryClient();
-
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  const { isAuthenticated, role, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
-  if (allowedRoles && role && !allowedRoles.includes(role)) return <Navigate to="/" />;
-  return <>{children}</>;
-}
 
 const AppRoutes = () => (
   <Routes>
