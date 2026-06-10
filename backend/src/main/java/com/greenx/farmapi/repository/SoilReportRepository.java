@@ -16,4 +16,14 @@ public interface SoilReportRepository extends JpaRepository<SoilReport, String> 
     Optional<SoilReport> findBySampleId(String sampleId);
 
     List<SoilReport> findAllByOrderByCreatedAtDesc();
+
+    List<SoilReport> findByFarmIdAndShareLandownerTrue(String farmId);
+
+    List<SoilReport> findByFarmIdAndShareFieldmgrTrue(String farmId);
+
+    List<SoilReport> findByFarmIdAndShareClusterTrue(String farmId);
+
+    List<SoilReport> findByExpertIdAndFarmIdIn(String expertId, List<String> farmIds);
+
+    List<SoilReport> findByFarmIdIn(List<String> farmIds);
 }

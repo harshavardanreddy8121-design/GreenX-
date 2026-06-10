@@ -20,6 +20,7 @@ public class ExpertController {
 
     private final ExpertService expertService;
     private final SoilReportRepository soilReportRepository;
+    private final SoilSampleRepository soilSampleRepository;
     private final CropSuggestionRepository cropSuggestionRepository;
     private final CropCalendarRepository cropCalendarRepository;
     private final CalendarTaskRepository calendarTaskRepository;
@@ -38,6 +39,72 @@ public class ExpertController {
     public ApiResponse<List<Farm>> getAssignedFarms(Authentication auth) {
         User user = (User) auth.getPrincipal();
         return ApiResponse.success(farmRepository.findByExpertId(user.getId()));
+    }
+
+    @GetMapping("/shared/samples")
+    public ApiResponse<List<SoilSample>> getSharedSamples(
+            @RequestParam(required = false) String status,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByExpertId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<SoilSample> samples = status != null
+                ? soilSampleRepository.findByFarmIdInAndStatus(farmIds, status)
+                : soilSampleRepository.findByFarmIdIn(farmIds);
+        samples.sort((a, b) -> {
+            java.time.LocalDateTime ad = a.getCreatedAt();
+            java.time.LocalDateTime bd = b.getCreatedAt();
+            if (ad == null && bd == null) return 0;
+            if (ad == null) return 1;
+            if (bd == null) return -1;
+            return bd.compareTo(ad);
+        });
+        return ApiResponse.success(samples);
+    }
+
+    @GetMapping("/shared/soil-reports")
+    public ApiResponse<List<SoilReport>> getSharedSoilReports(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByExpertId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(soilReportRepository.findByExpertIdAndFarmIdIn(user.getId(), farmIds));
+    }
+
+    @GetMapping("/shared/pest-alerts")
+    public ApiResponse<List<PestAlert>> getSharedPestAlerts(
+            @RequestParam(required = false) String status,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByExpertId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(status != null
+                ? pestAlertRepository.findByFarmIdInAndStatus(farmIds, status)
+                : pestAlertRepository.findByFarmIdIn(farmIds));
+    }
+
+    @GetMapping("/shared/prescriptions")
+    public ApiResponse<List<Prescription>> getSharedPrescriptions(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByExpertId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<String> alertIds = pestAlertRepository.findByFarmIdIn(farmIds)
+                .stream().map(PestAlert::getId).toList();
+        if (alertIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(prescriptionRepository.findByAlertIdIn(alertIds));
     }
 
     @PostMapping("/soil-reports")

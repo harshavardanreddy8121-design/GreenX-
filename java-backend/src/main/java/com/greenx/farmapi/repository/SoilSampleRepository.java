@@ -17,4 +17,6 @@ public interface SoilSampleRepository extends JpaRepository<SoilSample, String> 
     List<SoilSample> findByAssignedExpertIdAndStatus(String expertId, String status);
 
     List<SoilSample> findByStatus(String status);
+
+    List<SoilSample> findByFarmIdInAndStatus(List<String> farmIds, String status);
 }

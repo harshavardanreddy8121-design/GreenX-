@@ -23,6 +23,9 @@ public class LandOwnerController {
     private final CalendarTaskRepository calendarTaskRepository;
     private final FarmRepository farmRepository;
     private final SoilSampleRepository soilSampleRepository;
+    private final SoilReportRepository soilReportRepository;
+    private final CropSuggestionRepository cropSuggestionRepository;
+    private final FieldOperationRepository fieldOperationRepository;
     private final NotificationService notificationService;
 
     @GetMapping("/dashboard")
@@ -43,7 +46,53 @@ public class LandOwnerController {
     @GetMapping("/soil-reports")
     public ApiResponse<List<SoilReport>> getSoilReports(Authentication auth) {
         User user = (User) auth.getPrincipal();
-        return ApiResponse.success(landOwnerService.getSoilReports(user.getId()));
+        List<Farm> farms = farmRepository.findByOwnerId(user.getId());
+        List<SoilReport> reports = new ArrayList<>();
+        farms.forEach(f -> reports.addAll(soilReportRepository.findByFarmIdAndShareLandownerTrue(f.getId())));
+        reports.sort(java.util.Comparator.comparing(SoilReport::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+        return ApiResponse.success(reports);
+    }
+
+    @GetMapping("/shared/soil-reports")
+    public ApiResponse<List<SoilReport>> getSharedSoilReports(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByOwnerId(user.getId());
+        List<SoilReport> reports = new ArrayList<>();
+        farms.forEach(f -> reports.addAll(soilReportRepository.findByFarmIdAndShareLandownerTrue(f.getId())));
+        reports.sort(java.util.Comparator.comparing(SoilReport::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+        return ApiResponse.success(reports);
+    }
+
+    @GetMapping("/shared/crop-suggestions")
+    public ApiResponse<List<CropSuggestion>> getSharedCropSuggestions(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByOwnerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(cropSuggestionRepository.findByFarmIdIn(farmIds));
+    }
+
+    @GetMapping("/shared/calendars")
+    public ApiResponse<List<CropCalendar>> getSharedCalendars(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByOwnerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<CropCalendar> cals = new ArrayList<>();
+        farmIds.forEach(fid -> cals.addAll(cropCalendarRepository.findByFarmIdAndStatus(fid, "PUBLISHED")));
+        return ApiResponse.success(cals);
+    }
+
+    @GetMapping("/shared/field-operations")
+    public ApiResponse<List<FieldOperation>> getSharedFieldOperations(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ApiResponse.success(landOwnerService.getOperationsFeed(user.getId()));
     }
 
     @GetMapping("/crop-suggestions")

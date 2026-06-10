@@ -17,4 +17,6 @@ public interface CropSuggestionRepository extends JpaRepository<CropSuggestion, 
     List<CropSuggestion> findByReportId(String reportId);
 
     void deleteByFarmId(String farmId);
+
+    List<CropSuggestion> findByFarmIdIn(List<String> farmIds);
 }

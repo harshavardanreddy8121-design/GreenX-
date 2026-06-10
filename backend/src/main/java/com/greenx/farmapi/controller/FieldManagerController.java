@@ -26,6 +26,10 @@ public class FieldManagerController {
     private final PrescriptionRepository prescriptionRepository;
     private final CalendarTaskRepository calendarTaskRepository;
     private final SoilSampleRepository soilSampleRepository;
+    private final SoilReportRepository soilReportRepository;
+    private final CropSuggestionRepository cropSuggestionRepository;
+    private final CropCalendarRepository cropCalendarRepository;
+    private final PestAlertRepository pestAlertRepository;
     private final NotificationService notificationService;
     private final ObjectMapper objectMapper;
 
@@ -180,9 +184,59 @@ public class FieldManagerController {
     @GetMapping("/prescriptions")
     public ApiResponse<List<Prescription>> getPrescriptions(Authentication auth) {
         User user = (User) auth.getPrincipal();
-        // Get farms assigned to this manager
         List<Farm> farms = farmRepository.findByFieldManagerId(user.getId());
-        return ApiResponse.success(prescriptionRepository.findByIsAcknowledgedFalse());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<String> alertIds = pestAlertRepository.findByFarmIdIn(farmIds)
+                .stream().map(PestAlert::getId).toList();
+        if (alertIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(prescriptionRepository.findByAlertIdIn(alertIds));
+    }
+
+    @GetMapping("/shared/soil-reports")
+    public ApiResponse<List<SoilReport>> getSharedSoilReports(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByFieldManagerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        List<SoilReport> reports = soilReportRepository.findByFarmIdIn(farmIds).stream()
+                .filter(SoilReport::isShareFieldmgr)
+                .sorted(java.util.Comparator.comparing(SoilReport::getCreatedAt,
+                        java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
+                .toList();
+        return ApiResponse.success(reports);
+    }
+
+    @GetMapping("/shared/crop-suggestions")
+    public ApiResponse<List<CropSuggestion>> getSharedCropSuggestions(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByFieldManagerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(cropSuggestionRepository.findByFarmIdIn(farmIds));
+    }
+
+    @GetMapping("/shared/calendars")
+    public ApiResponse<List<CropCalendar>> getSharedCalendars(
+            @RequestParam(required = false) String status,
+            Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        List<Farm> farms = farmRepository.findByFieldManagerId(user.getId());
+        List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        if (farmIds.isEmpty()) {
+            return ApiResponse.success(List.of());
+        }
+        return ApiResponse.success(status != null
+                ? cropCalendarRepository.findByFarmIdInAndStatus(farmIds, status)
+                : cropCalendarRepository.findByFarmIdIn(farmIds));
     }
 
     @PutMapping("/prescriptions/{id}/acknowledge")
