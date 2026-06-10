@@ -81,6 +81,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        // Ensure CORS headers are present on error responses so the browser
+        // reports the actual 401 rather than a misleading CORS/network error.
+        if (!response.containsHeader("Access-Control-Allow-Origin")) {
+            response.setHeader("Access-Control-Allow-Origin", "*");
+        }
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\":\"" + message + "\"}");

@@ -32,9 +32,16 @@ import java.util.stream.Collectors;
 public class SecurityConfig {
 
     // Comma-separated list of allowed origins; set ALLOWED_ORIGINS env var in
-    // production
-    // e.g. "https://your-app.vercel.app,https://www.yourdomain.com"
-    @Value("${ALLOWED_ORIGINS:https://greenx-1.onrender.com,https://greenx.vercel.app,https://mygreenx.vercel.app}")
+    // production to override the defaults below.
+    // e.g. ALLOWED_ORIGINS=https://your-app.vercel.app,https://www.yourdomain.com
+    @Value("${cors.allowed-origins:${ALLOWED_ORIGINS:" +
+            "http://localhost:3000," +
+            "http://localhost:5173," +
+            "http://localhost:8080," +
+            "https://greenx.vercel.app," +
+            "https://mygreenx.vercel.app," +
+            "https://greenx-1.onrender.com," +
+            "https://spring-boot-backend-production-13e6.up.railway.app}}")
     private String allowedOrigins;
 
     private final JwtFilter jwtFilter;
@@ -95,12 +102,17 @@ public class SecurityConfig {
                 .collect(Collectors.toList());
 
         if (originList.size() == 1 && "*".equals(originList.get(0))) {
+            // Wildcard — use pattern matching so credentials still work
             config.setAllowedOriginPatterns(List.of("*"));
         } else {
+            // Always add Vercel preview-deployment pattern so any *.vercel.app
+            // subdomain (e.g. greenx-git-main-xyz.vercel.app) is also allowed.
+            config.setAllowedOriginPatterns(List.of("https://*.vercel.app", "http://localhost:*"));
             config.setAllowedOrigins(originList);
         }
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
