@@ -13,4 +13,6 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Stri
     List<Prescription> findByExpertId(String expertId);
 
     List<Prescription> findByIsAcknowledgedFalse();
+
+    List<Prescription> findByAlertIdIn(List<String> alertIds);
 }

@@ -15,4 +15,8 @@ public interface CropCalendarRepository extends JpaRepository<CropCalendar, Stri
     List<CropCalendar> findByStatus(String status);
 
     List<CropCalendar> findByFarmIdAndStatus(String farmId, String status);
+
+    List<CropCalendar> findByFarmIdIn(List<String> farmIds);
+
+    List<CropCalendar> findByFarmIdInAndStatus(List<String> farmIds, String status);
 }

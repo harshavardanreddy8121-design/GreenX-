@@ -24,4 +24,8 @@ public interface CalendarTaskRepository extends JpaRepository<CalendarTask, Stri
     @Query("SELECT t FROM CalendarTask t WHERE t.farmId IN :farmIds AND t.scheduledDate = :date")
     List<CalendarTask> findTodayTasksForFarms(@Param("farmIds") List<String> farmIds,
             @Param("date") LocalDate date);
+
+    List<CalendarTask> findByFarmIdIn(List<String> farmIds);
+
+    List<CalendarTask> findByFarmIdInAndStatus(List<String> farmIds, String status);
 }

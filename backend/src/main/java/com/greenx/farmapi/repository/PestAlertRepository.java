@@ -15,4 +15,8 @@ public interface PestAlertRepository extends JpaRepository<PestAlert, String> {
     List<PestAlert> findByFarmIdAndStatus(String farmId, String status);
 
     List<PestAlert> findAllByOrderByCreatedAtDesc();
+
+    List<PestAlert> findByFarmIdIn(List<String> farmIds);
+
+    List<PestAlert> findByFarmIdInAndStatus(List<String> farmIds, String status);
 }
