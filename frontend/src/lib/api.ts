@@ -9,10 +9,8 @@ import { API_BASE_URL } from './backend';
 // Remove trailing slashes for consistent URL construction
 const BASE = API_BASE_URL.replace(/\/+$/, '');
 
-// Log API configuration (only in development)
-if (import.meta.env.DEV) {
-    console.log('[GreenX] API Base URL:', BASE);
-}
+// Always log the base URL so it is visible in production DevTools.
+console.log('[GreenX] api.ts — BASE URL:', BASE);
 
 const TOKEN_KEY = 'greenx_token';
 const COOKIE_NAME = 'greenx_token';
@@ -68,17 +66,44 @@ async function request<T>(
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (!isFormData && body) headers['Content-Type'] = 'application/json';
 
+    const fullUrl = `${BASE}${path}`;
+    console.log(`[GreenX] ${method} ${fullUrl}`);
+
     let res: Response;
     try {
-        res = await fetch(`${BASE}${path}`, {
+        res = await fetch(fullUrl, {
             method,
             headers,
             body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
         });
     } catch (networkErr) {
+        const errMsg =
+            networkErr instanceof Error ? networkErr.message : String(networkErr);
+
+        // A TypeError with "Failed to fetch" almost always means a CORS
+        // preflight rejection or the server being unreachable.
+        const isCors =
+            networkErr instanceof TypeError &&
+            (errMsg.includes('Failed to fetch') ||
+                errMsg.includes('NetworkError') ||
+                errMsg.includes('CORS'));
+
+        console.error(
+            `[GreenX] ${isCors ? 'CORS/Network' : 'Network'} error on ${method} ${fullUrl}:`,
+            errMsg,
+            networkErr
+        );
+
+        if (isCors) {
+            throw new Error(
+                `Network error — CORS or connectivity issue reaching ${fullUrl}. ` +
+                `Check that the backend allows this origin and is reachable. (${errMsg})`
+            );
+        }
+
         throw new Error(
-            networkErr instanceof Error && networkErr.message
-                ? `Network error — ${networkErr.message}`
+            errMsg
+                ? `Network error — ${errMsg}`
                 : 'Network error — unable to reach the server. Please check your connection.'
         );
     }
