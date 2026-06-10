@@ -4,9 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import "@/i18n";
-import "@/lib/apiConfig"; // Validate API configuration on app load
 import Index from "./pages/LandingPage";
 import Login from "./pages/Login";
 import LandRegister from "./pages/LandRegister";
@@ -51,19 +51,11 @@ import Prescriptions from "./pages/expert/Prescriptions";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  // AUTHENTICATION DISABLED - Direct access allowed for testing
-  return <>{children}</>;
-}
-
-import TestDashboard from "./pages/TestDashboard";
-
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
-    <Route path="/test" element={<TestDashboard />} />
     <Route path="/workflow" element={<Workflow />} />
-    {/* Login removed - direct access enabled */}
+    <Route path="/login" element={<Login />} />
     <Route path="/land-register" element={<LandRegister />} />
     <Route path="/dashboard/landowner" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><Navigate to="/landowner" replace /></ProtectedRoute>} />
     <Route path="/dashboard/cluster-admin" element={<ProtectedRoute allowedRoles={['admin']}><Navigate to="/admin" replace /></ProtectedRoute>} />

@@ -5,19 +5,13 @@
  */
 
 import { API_BASE_URL } from './backend';
-import { initDemoToken } from './apiConfig';
-
-// Validate BASE URL exists
-if (!API_BASE_URL) {
-    throw new Error('VITE_API_URL environment variable is not set! Cannot make API requests.');
-}
 
 // Remove trailing slashes for consistent URL construction
 const BASE = API_BASE_URL.replace(/\/+$/, '');
 
 // Log API configuration (only in development)
 if (import.meta.env.DEV) {
-    console.log('🔗 API Base URL:', BASE);
+    console.log('[GreenX] API Base URL:', BASE);
 }
 
 const TOKEN_KEY = 'greenx_token';
@@ -57,78 +51,104 @@ export function clearToken() {
     localStorage.removeItem('javaApiToken');
 }
 
+// Track whether a token refresh is already in progress to avoid loops
+let _refreshing = false;
+// Debounce guard: prevent multiple simultaneous session-expiry redirects
+let _redirecting = false;
+
 async function request<T>(
     path: string,
     method = 'GET',
     body?: unknown,
-    isFormData = false
+    isFormData = false,
+    _isRetry = false
 ): Promise<T> {
-    // Validate BASE URL is set
-    if (!BASE) {
-        console.error('❌ Cannot make API request: VITE_API_URL not configured');
-        console.error('Set VITE_API_URL in your environment variables');
-        throw new Error('API URL not configured. Check environment variables.');
-    }
-
-    // Construct full URL
-    const fullUrl = `${BASE}${path}`;
-    
-    // Log request (only in development)
-    if (import.meta.env.DEV) {
-        console.log(`🌐 ${method} ${fullUrl}`);
-    }
-
     const headers: Record<string, string> = {};
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
     if (!isFormData && body) headers['Content-Type'] = 'application/json';
 
+    let res: Response;
     try {
-        const res = await fetch(fullUrl, {
+        res = await fetch(`${BASE}${path}`, {
             method,
             headers,
             body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
         });
-
-        if (res.status === 401 || res.status === 403) {
-            clearToken();
-            // Login is disabled — re-fetch a fresh demo token instead of
-            // redirecting to /login, then throw so the caller can retry.
-            await initDemoToken();
-            throw new Error(res.status === 401 ? 'Session expired — demo token refreshed, please retry' : 'Access denied');
-        }
-
-        const text = await res.text();
-        
-        // Check if response is HTML (wrong URL/CORS issue)
-        if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
-            console.error('❌ Received HTML instead of JSON from:', fullUrl);
-            console.error('This usually means:');
-            console.error('1. VITE_API_URL is not set correctly');
-            console.error('2. API request is hitting Vercel instead of Railway backend');
-            console.error('Current VITE_API_URL:', import.meta.env.VITE_API_URL);
-            throw new Error('API configuration error: receiving HTML instead of JSON. Check VITE_API_URL.');
-        }
-
-        const json = text ? JSON.parse(text) : {};
-
-        if (!res.ok) {
-            throw new Error(json.error || json.message || `HTTP ${res.status}`);
-        }
-
-        // Backend wraps everything in { success, data, error }
-        if (json && typeof json === 'object' && 'success' in json) {
-            if (!json.success) throw new Error(json.error || 'Request failed');
-            return json.data as T;
-        }
-
-        return json as T;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(`❌ API Error (${method} ${path}):`, error.message);
-        }
-        throw error;
+    } catch (networkErr) {
+        throw new Error(
+            networkErr instanceof Error && networkErr.message
+                ? `Network error — ${networkErr.message}`
+                : 'Network error — unable to reach the server. Please check your connection.'
+        );
     }
+
+    if (res.status === 401) {
+        // Attempt a single token refresh before giving up
+        if (!_isRetry && !_refreshing && path !== '/auth/login' && path !== '/auth/refresh') {
+            _refreshing = true;
+            try {
+                const refreshRes = await fetch(`${BASE}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                if (refreshRes.ok) {
+                    const refreshText = await refreshRes.text();
+                    const refreshJson = refreshText ? JSON.parse(refreshText) : {};
+                    const newToken: string | undefined =
+                        refreshJson?.token ?? refreshJson?.data?.token;
+                    if (newToken) {
+                        setToken(newToken);
+                        _refreshing = false;
+                        return request<T>(path, method, body, isFormData, true);
+                    }
+                }
+            } catch {
+                // Refresh failed — fall through to clear and redirect
+            } finally {
+                _refreshing = false;
+            }
+        }
+        clearToken();
+        if (!_redirecting) {
+            _redirecting = true;
+            setTimeout(() => {
+                window.location.href = '/login';
+                _redirecting = false;
+            }, 100);
+        }
+        throw new Error('Session expired — please log in again');
+    }
+
+    if (res.status === 403) {
+        throw new Error('Access denied — you do not have permission to perform this action');
+    }
+
+    const text = await res.text();
+    let json: unknown;
+    try {
+        json = text ? JSON.parse(text) : {};
+    } catch {
+        throw new Error(`Invalid response from server (HTTP ${res.status})`);
+    }
+
+    if (!res.ok) {
+        const errJson = json as Record<string, unknown>;
+        throw new Error(
+            (errJson?.error as string) ||
+            (errJson?.message as string) ||
+            `HTTP ${res.status}`
+        );
+    }
+
+    // Backend wraps everything in { success, data, error }
+    if (json && typeof json === 'object' && 'success' in (json as object)) {
+        const wrapped = json as { success: boolean; data?: T; error?: string };
+        if (!wrapped.success) throw new Error(wrapped.error || 'Request failed');
+        return wrapped.data as T;
+    }
+
+    return json as T;
 }
 
 // ─── AUTH ───────────────────────────────────────────────────────────────────
@@ -162,9 +182,6 @@ export const auth = {
     me: () => request<AuthUser>('/auth/me'),
 
     logout: () => request('/auth/logout', 'POST'),
-
-    /** Fetch a demo token (no credentials required) and store it in localStorage. */
-    getDemoToken: () => request<LoginResponse>('/auth/demo-token'),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────

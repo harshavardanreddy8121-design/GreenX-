@@ -1,15 +1,10 @@
-// Get API URL from environment variable
-const envUrl = import.meta.env.VITE_API_URL;
+// VITE_API_URL must be set in Vercel → Settings → Environment Variables.
+// Fallback to the known Railway backend so the app works even if the env var
+// is missing (avoids 404s when Vercel serves /api as a static path).
+const RAILWAY_BACKEND = 'https://spring-boot-backend-production-13e6.up.railway.app/api';
 
-// Validate and set API base URL
-if (!envUrl) {
-  console.error('❌ VITE_API_URL is not set! API calls will fail.');
-  console.error('Set VITE_API_URL in Vercel environment variables to your Railway backend URL');
-}
-
-// Always use the full URL from environment variable
-// Remove trailing slashes for consistent URL construction
-export const API_BASE_URL = (envUrl || '').replace(/\/+$/, '');
+const envUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
+export const API_BASE_URL = envUrl || RAILWAY_BACKEND;
 
 // WebSocket URL
 const trimmedApiBase = API_BASE_URL.replace(/\/+$/, '');
@@ -17,6 +12,5 @@ export const WS_BASE_URL = `${trimmedApiBase}/ws`;
 
 // Log for debugging (only in development)
 if (import.meta.env.DEV) {
-  console.log('🔗 API Base URL:', API_BASE_URL);
-  console.log('🔗 WebSocket URL:', WS_BASE_URL);
+  console.log('[GreenX] API_BASE_URL =', API_BASE_URL);
 }
