@@ -427,6 +427,57 @@ export const landOwner = {
     getStats: () => request<Record<string, number | object>>('/landowner/stats'),
 };
 
+// ─── AI ──────────────────────────────────────────────────────────────────────
+
+export const ai = {
+    /** POST /api/ai/ask — conversational AI query */
+    ask: (question: string, sessionId?: string, userId?: string, farmId?: string) =>
+        request<{ answer: string; sessionId: string; modelUsed: string }>(
+            '/ai/ask', 'POST', { question, sessionId, userId, farmId }
+        ),
+
+    /** POST /api/ai/analyze-farm — comprehensive farm analysis */
+    analyzeFarm: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/analyze-farm', 'POST', farmData),
+
+    /** POST /api/ai/analyze — AI agent analysis (crop health, alerts, recommendations) */
+    analyze: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/analyze', 'POST', farmData),
+
+    /** POST /api/ai/crop-recommendation — crop suggestions */
+    cropRecommendation: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/crop-recommendation', 'POST', input),
+
+    /** POST /api/ai/pest-prediction — pest and disease risk */
+    pestPrediction: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/pest-prediction', 'POST', input),
+
+    /** POST /api/ai/resource-optimization — water/fertilizer/labor optimization */
+    resourceOptimization: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/resource-optimization', 'POST', input),
+
+    /** GET /api/ai/insights — active AI insights for a farm or user */
+    getInsights: (farmId?: string, userId?: string) => {
+        const params = new URLSearchParams();
+        if (farmId) params.set('farmId', farmId);
+        if (userId) params.set('userId', userId);
+        const qs = params.toString();
+        return request<Record<string, unknown>[]>(`/ai/insights${qs ? `?${qs}` : ''}`);
+    },
+
+    /** POST /api/ai/generate-report — comprehensive farm management report */
+    generateReport: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/ai/generate-report', 'POST', farmData),
+
+    /** GET /api/ai/conversation/:sessionId — conversation history */
+    getConversation: (sessionId: string) =>
+        request<Record<string, unknown>[]>(`/ai/conversation/${sessionId}`),
+
+    /** GET /api/ai/status — AI service status (public, no auth required) */
+    getStatus: () =>
+        request<Record<string, unknown>>('/ai/status'),
+};
+
 // ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
 
 export const files = {

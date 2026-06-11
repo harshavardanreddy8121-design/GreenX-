@@ -25,7 +25,7 @@ export function AIAnalysisPanel(props: AIAnalysisPanelProps) {
             if (!props.farmData) return null;
 
             const response = await javaApi.call<any>(
-                '/api/ai/analyze',
+                '/ai/analyze',
                 'POST',
                 props.farmData
             );
