@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, Building2, CloudSun, Factory, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Users, Wallet, Wheat } from 'lucide-react';
+import { BarChart3, Building2, ClipboardList, CloudSun, Factory, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Users, Wallet, Wheat } from 'lucide-react';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/NotificationBell';
 
 const adminNavItems = [
   { icon: <BarChart3 size={18} />, label: 'Dashboard', path: '/admin' },
+  { icon: <ClipboardList size={18} />, label: 'Submissions', path: '/admin/submissions' },
   { icon: <Map size={18} />, label: 'Land Management', path: '/admin/land' },
   { icon: <Wheat size={18} />, label: 'Farm Registration', path: '/admin/farm-registration' },
   { icon: <TestTubes size={18} />, label: 'Lab & Samples', path: '/admin/lab-samples' },

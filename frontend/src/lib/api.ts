@@ -285,6 +285,39 @@ export const admin = {
 
     registerFarm: (data: FormData) =>
         request<{ farmId: string; farmCode: string; ownerId: string; ownerUid?: string; ownerEmail: string; tempPassword: string }>('/admin/farms/register', 'POST', data, true),
+
+    getLandRegistrations: (status?: string, phone?: string, location?: string) => {
+        const params = new URLSearchParams();
+        if (status)   params.set('status', status);
+        if (phone)    params.set('phone', phone);
+        if (location) params.set('location', location);
+        const qs = params.toString();
+        return request<LandRegistrationSubmission[]>(`/admin/land-registrations${qs ? `?${qs}` : ''}`);
+    },
+
+    getLandRegistration: (id: string) =>
+        request<LandRegistrationSubmission>(`/admin/land-registrations/${id}`),
+
+    updateSubmissionStatus: (id: string, status: string) =>
+        request<LandRegistrationSubmission>(`/admin/land-registrations/${id}/status`, 'PUT', { status }),
+
+    addSubmissionNotes: (id: string, notes: string) =>
+        request<LandRegistrationSubmission>(`/admin/land-registrations/${id}/notes`, 'PUT', { notes }),
+
+    deleteSubmission: (id: string) =>
+        request<string>(`/admin/land-registrations/${id}`, 'DELETE'),
+};
+
+// ─── LAND REGISTRATION (public) ──────────────────────────────────────────────
+
+export const landRegistration = {
+    submit: (data: {
+        fullName: string;
+        phone: string;
+        location: string;
+        landSize: string;
+        message?: string;
+    }) => request<LandRegistrationSubmission>('/land-registration/submit', 'POST', data),
 };
 
 // ─── EXPERT ──────────────────────────────────────────────────────────────────
@@ -606,4 +639,17 @@ export interface FinanceSummary {
     costByType: Record<string, number>;
     landOwnerShare70: number;
     farmCount: number;
+}
+
+export interface LandRegistrationSubmission {
+    id: string;
+    fullName: string;
+    phone: string;
+    location: string;
+    landSize: string;
+    message?: string;
+    status: string;
+    submittedAt?: string;
+    notes?: string;
+    createdAt?: string;
 }

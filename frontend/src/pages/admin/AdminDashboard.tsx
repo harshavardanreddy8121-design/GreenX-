@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { admin } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 
-import { AlertTriangle, BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Building2, ClipboardList, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
@@ -42,6 +44,12 @@ export default function AdminDashboard() {
   const { data: alerts = [] } = useQuery({
     queryKey: ['admin-alerts'],
     queryFn: () => admin.getAllAlerts(),
+    retry: 2,
+  });
+
+  const { data: submissions = [] } = useQuery({
+    queryKey: ['land-registrations'],
+    queryFn: () => admin.getLandRegistrations(),
     retry: 2,
   });
 
@@ -145,6 +153,11 @@ export default function AdminDashboard() {
           <div className="gx-stat-label">Pending Tasks</div>
           <div className="gx-stat-value">{taskStats.pending}</div>
           <div className="gx-stat-change gx-down">{taskStats.completed} completed</div>
+        </div>
+        <div className="gx-stat-card blue" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/submissions')}>
+          <div className="gx-stat-label"><ClipboardList className="inline-block w-3 h-3 mr-1" />Land Submissions</div>
+          <div className="gx-stat-value">{(submissions as any[]).length}</div>
+          <div className="gx-stat-change gx-neutral">{(submissions as any[]).filter((s: any) => s.status === 'PENDING').length} pending review</div>
         </div>
       </div>
 

@@ -28,6 +28,7 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDiagnostics from "./pages/admin/AdminDiagnostics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLabSamples from "./pages/admin/AdminLabSamples";
+import SubmissionsPage from "./pages/admin/SubmissionsPage";
 import Workflow from "./pages/Workflow";
 import MyFarms from "./pages/landowner/MyFarms";
 import SoilReports from "./pages/landowner/SoilReports";
@@ -86,6 +87,7 @@ const AppRoutes = () => (
     <Route path="/worker" element={<ProtectedRoute allowedRoles={['worker', 'user', 'admin']}><WorkerDashboard /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
       <Route index element={<AdminDashboard />} />
+      <Route path="submissions" element={<SubmissionsPage />} />
       <Route path="land" element={<AdminLand />} />
       <Route path="farm-registration" element={<AdminFarmRegistration />} />
       <Route path="lab-samples" element={<AdminLabSamples />} />
