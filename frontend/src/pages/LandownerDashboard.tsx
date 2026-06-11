@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { AiAssistant } from '@/components/AiAssistant';
 import { useNotifications } from '@/hooks/useNotifications';
 
 type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
@@ -606,6 +607,15 @@ export default function LandownerDashboard() {
               />
             </div>
           </div>
+
+          {/* Generative AI Chat */}
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Chat Assistant</div>
+          <AiAssistant
+            userId={user?.id}
+            farmId={farm?.id}
+            farmData={farm}
+            contextMessage="**Land Owner AI Advisor** — I can help you understand your farm's performance, predict revenue, analyze crop suggestions from your expert, and plan for the next season. Ask me anything!"
+          />
         </>)}
 
         {/* ═══ SEASON REPORTS TAB ═══ */}

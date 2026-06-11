@@ -10,6 +10,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { AiAssistant } from '@/components/AiAssistant';
 import { javaApi } from '@/integrations/java-api/client';
 
 type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex' | 'ai';
@@ -851,6 +852,14 @@ export default function ExpertDashboard() {
             onAsk={ai.ask}
             onAcceptTask={handleAiTaskAssign}
             title="AI Agent — Complete Analysis"
+          />
+
+          {/* Generative AI Chat */}
+          <div className="gx-section-divider" style={{ marginTop: 20 }}><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Chat Assistant</div>
+          <AiAssistant
+            userId={user?.id}
+            contextMessage="**Expert AI Assistant** — I can help you analyze soil reports, identify pests and diseases, create crop recommendations, and generate prescriptions. Ask me anything about agronomy!"
+            onTaskSuggested={(task) => toast.info(`AI suggested task: ${task.title}`)}
           />
         </>)}
 

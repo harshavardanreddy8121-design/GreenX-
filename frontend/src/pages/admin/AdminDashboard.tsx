@@ -5,6 +5,7 @@ import { admin } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { AiAssistant } from '@/components/AiAssistant';
 
 import { AlertTriangle, BarChart3, Bot, Bug, Building2, ClipboardList, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
@@ -390,6 +391,13 @@ export default function AdminDashboard() {
           />
         </div>
       </div>
+
+      {/* Generative AI Chat Assistant */}
+      <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Chat Assistant</div>
+      <AiAssistant
+        contextMessage="**GreenX Admin AI** — I have access to cluster-wide farm data. Ask me about farm performance, crop recommendations, pest risks, or generate comprehensive reports for any farm."
+        compact
+      />
     </>
   );
 }

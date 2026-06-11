@@ -76,6 +76,15 @@ app:
   upload:
     dir: ${UPLOAD_DIR:./uploads}
 
+# OpenAI / Generative AI Configuration
+# Set OPENAI_API_KEY in Railway environment variables to enable GPT-4.
+# Without a key the service falls back to the deterministic rule-based engine.
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: ${AI_MODEL:gpt-4}
+  temperature: ${AI_TEMPERATURE:0.7}
+  max-tokens: ${AI_MAX_TOKENS:2000}
+
 # CORS Configuration
 # Override at runtime by setting the ALLOWED_ORIGINS environment variable
 # (comma-separated list of origins) in Railway / Render / Vercel.

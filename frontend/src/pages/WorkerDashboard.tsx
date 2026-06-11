@@ -11,6 +11,7 @@ import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { AiAssistant } from '@/components/AiAssistant';
 
 type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests' | 'ai';
 
@@ -419,6 +420,13 @@ export default function WorkerDashboard() {
               />
             </div>
           </div>
+
+          {/* Generative AI Chat */}
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Work Assistant</div>
+          <AiAssistant
+            userId={user?.id}
+            contextMessage="**Worker AI Guide** — I can help you understand your tasks, learn about crop care, safe pesticide handling, and best farming practices. Ask me anything about your work!"
+          />
         </>)}
       </div>
     </div>
