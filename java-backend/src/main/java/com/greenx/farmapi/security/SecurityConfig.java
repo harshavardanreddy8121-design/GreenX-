@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/auth/**", "/health", "/land-registration/submit").permitAll()
+                        .requestMatchers("/ai/status").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Role-specific path rules
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "CLUSTER_ADMIN")

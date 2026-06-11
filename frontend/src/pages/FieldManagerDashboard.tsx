@@ -12,6 +12,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { AiAssistant } from '@/components/AiAssistant';
 
 type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports' | 'ai';
 
@@ -941,6 +942,17 @@ export default function FieldManagerDashboard() {
               />
             </div>
           </div>
+
+          {/* Generative AI Chat */}
+          <div className="gx-section-divider"><Bot className="inline-block w-4 h-4 mr-1 align-middle" /> AI Chat Assistant</div>
+          <AiAssistant
+            userId={user?.id}
+            farmId={opFarmId || (myFarms[0] as any)?.id}
+            contextMessage="**Field Manager AI** — I can help you plan field operations, optimize irrigation, manage tasks, and respond to pest alerts. Ask me anything about your farm operations!"
+            onTaskSuggested={(task) => {
+              toast.info(`AI suggested: ${task.title}`);
+            }}
+          />
         </>)}
 
         {/* ═══ ACTIVITY LOG / REPORTS TAB ═══ */}
