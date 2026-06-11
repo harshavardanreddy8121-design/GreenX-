@@ -55,6 +55,8 @@ logging:
   level:
     root: INFO
     com.greenx: INFO
+    # Raise AiService to DEBUG so rule-based fallback decisions are visible in logs
+    com.greenx.farmapi.service.AiService: DEBUG
     org.springframework.security: WARN
     org.hibernate.SQL: WARN
   pattern:
@@ -77,12 +79,25 @@ app:
     dir: ${UPLOAD_DIR:./uploads}
 
 # OpenAI / Generative AI Configuration
-# Set OPENAI_API_KEY in Railway environment variables to enable GPT-4.
-# Without a key the service falls back to the deterministic rule-based engine.
+# ─────────────────────────────────────────────────────────────────────────────
+# To enable GPT-4, set OPENAI_API_KEY in Railway → Service → Variables.
+# The value must be a valid sk-... key from https://platform.openai.com/api-keys
+#
+# Without a key the service falls back to the deterministic rule-based engine
+# and every response will include "modelUsed": "rule-based".
+#
+# Verify the key was picked up after deploy by calling GET /api/ai/status —
+# the response will show "openAiConfigured": true and "apiKeyStatus": "sk-proj****"
+# when the key is correctly injected.
+# ─────────────────────────────────────────────────────────────────────────────
 openai:
+  # Primary resolution: OPENAI_API_KEY env var (set in Railway Variables panel)
   api-key: ${OPENAI_API_KEY:}
+  # Model to use — override with AI_MODEL env var if needed (e.g. gpt-4o, gpt-3.5-turbo)
   model: ${AI_MODEL:gpt-4}
+  # Sampling temperature: 0.0 = deterministic, 1.0 = creative
   temperature: ${AI_TEMPERATURE:0.7}
+  # Maximum tokens per response
   max-tokens: ${AI_MAX_TOKENS:2000}
 
 # CORS Configuration
