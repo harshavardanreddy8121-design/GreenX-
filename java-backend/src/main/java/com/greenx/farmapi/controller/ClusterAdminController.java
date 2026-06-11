@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('CLUSTER_ADMIN') or hasRole('ADMIN')")
 public class ClusterAdminController {

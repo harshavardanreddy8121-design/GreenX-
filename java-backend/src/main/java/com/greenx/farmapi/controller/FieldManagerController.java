@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 
 @RestController
-@RequestMapping("/fieldmanager")
+@RequestMapping("/api/fieldmanager")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('FIELD_MANAGER')")
 public class FieldManagerController {

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/admin/migration")
+@RequestMapping("/api/admin/migration")
 @RequiredArgsConstructor
 public class MigrationController {
 

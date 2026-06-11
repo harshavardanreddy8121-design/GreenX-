@@ -6,8 +6,8 @@
  * In local dev leave it empty — Vite proxy forwards /api → http://localhost:8082
  */
 
-export { health, auth, getToken, setToken, clearToken } from '@/lib/api';
-export type { AuthUser, LoginResponse, GxNotification } from '@/lib/api';
+export { health, auth, ai, getToken, setToken, clearToken } from '@/lib/api';
+export type { AuthUser, LoginResponse, GxNotification, AiStatusResponse } from '@/lib/api';
 
 /**
  * Convenience: check if the backend is reachable and healthy.

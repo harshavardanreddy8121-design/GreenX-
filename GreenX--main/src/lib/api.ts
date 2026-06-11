@@ -163,19 +163,68 @@ export interface LoginResponse {
 }
 
 export const health = {
-    check: () => request<{ status: string; timestamp: string; service: string; version: string }>('/health'),
+    check: () => request<{ status: string; timestamp: string; service: string; version: string }>('/api/health'),
 };
 
 export const auth = {
     login: (email: string, password: string) =>
-        request<LoginResponse>('/auth/login', 'POST', { email, password }),
+        request<LoginResponse>('/api/auth/login', 'POST', { email, password }),
 
     register: (email: string, password: string, name: string, role: string) =>
-        request<LoginResponse>('/auth/register', 'POST', { email, password, name, role }),
+        request<LoginResponse>('/api/auth/register', 'POST', { email, password, name, role }),
 
-    me: () => request<AuthUser>('/auth/me'),
+    me: () => request<AuthUser>('/api/auth/me'),
 
-    logout: () => request('/auth/logout', 'POST'),
+    logout: () => request('/api/auth/logout', 'POST'),
+};
+
+// ─── AI ──────────────────────────────────────────────────────────────────────
+
+export interface AiStatusResponse {
+    service: string;
+    version: string;
+    status: string;
+    openAiConfigured: boolean;
+    activeModel: string;
+    apiKeyStatus: string;
+    capabilities: string[];
+}
+
+export const ai = {
+    status: () =>
+        request<AiStatusResponse>('/api/ai/status'),
+
+    ask: (question: string, sessionId?: string, userId?: string, farmId?: string) =>
+        request<Record<string, unknown>>('/api/ai/ask', 'POST', { question, sessionId, userId, farmId }),
+
+    analyzeFarm: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/analyze-farm', 'POST', farmData),
+
+    cropRecommendation: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/crop-recommendation', 'POST', input),
+
+    pestPrediction: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/pest-prediction', 'POST', input),
+
+    resourceOptimization: (input: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/resource-optimization', 'POST', input),
+
+    insights: (farmId?: string, userId?: string) => {
+        const params = new URLSearchParams();
+        if (farmId) params.set('farmId', farmId);
+        if (userId) params.set('userId', userId);
+        const qs = params.toString() ? `?${params.toString()}` : '';
+        return request<Record<string, unknown>[]>(`/api/ai/insights${qs}`);
+    },
+
+    generateReport: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/generate-report', 'POST', farmData),
+
+    conversation: (sessionId: string) =>
+        request<Record<string, unknown>[]>(`/api/ai/conversation/${sessionId}`),
+
+    analyze: (farmData: Record<string, unknown>) =>
+        request<Record<string, unknown>>('/api/ai/analyze', 'POST', farmData),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
@@ -197,12 +246,12 @@ export interface GxNotification {
 
 function notifEndpoint(role: string) {
     const map: Record<string, string> = {
-        CLUSTER_ADMIN: '/admin',
-        EXPERT: '/expert',
-        FIELD_MANAGER: '/fieldmanager',
-        LAND_OWNER: '/landowner',
+        CLUSTER_ADMIN: '/api/admin',
+        EXPERT: '/api/expert',
+        FIELD_MANAGER: '/api/fieldmanager',
+        LAND_OWNER: '/api/landowner',
     };
-    return map[role] ?? '/admin';
+    return map[role] ?? '/api/admin';
 }
 
 export const notifications = {
@@ -217,22 +266,22 @@ export const notifications = {
 // ─── CLUSTER ADMIN ───────────────────────────────────────────────────────────
 
 export const admin = {
-    getStats: () => request<Record<string, number>>('/admin/stats'),
+    getStats: () => request<Record<string, number>>('/api/admin/stats'),
 
     getFarms: (status?: string) =>
-        request<Farm[]>(`/admin/farms${status ? `?status=${status}` : ''}`),
+        request<Farm[]>(`/api/admin/farms${status ? `?status=${status}` : ''}`),
 
-    getUnassignedFarms: () => request<Farm[]>('/admin/farms/unassigned'),
+    getUnassignedFarms: () => request<Farm[]>('/api/admin/farms/unassigned'),
 
     assignManager: (farmId: string, managerId: string) =>
-        request<Farm>('/admin/farms/assign-manager', 'POST', { farmId, managerId }),
+        request<Farm>('/api/admin/farms/assign-manager', 'POST', { farmId, managerId }),
 
     assignExpert: (farmId: string, expertId: string) =>
-        request<Farm>('/admin/farms/assign-expert', 'POST', { farmId, expertId }),
+        request<Farm>('/api/admin/farms/assign-expert', 'POST', { farmId, expertId }),
 
-    getAvailableManagers: () => request<User[]>('/admin/managers/available'),
+    getAvailableManagers: () => request<User[]>('/api/admin/managers/available'),
 
-    getExperts: () => request<User[]>('/admin/experts'),
+    getExperts: () => request<User[]>('/api/admin/experts'),
 
     receiveSoilSample: (data: {
         farmId: string;
@@ -240,127 +289,127 @@ export const admin = {
         assignedExpertId: string;
         numPoints?: number;
         priority?: string;
-    }) => request<SoilSample>('/admin/samples/receive', 'POST', data),
+    }) => request<SoilSample>('/api/admin/samples/receive', 'POST', data),
 
-    getPendingSamples: () => request<SoilSample[]>('/admin/samples/pending'),
+    getPendingSamples: () => request<SoilSample[]>('/api/admin/samples/pending'),
 
-    getAllAlerts: () => request<PestAlert[]>('/admin/alerts'),
+    getAllAlerts: () => request<PestAlert[]>('/api/admin/alerts'),
 
-    getUsers: () => request<User[]>('/admin/users'),
+    getUsers: () => request<User[]>('/api/admin/users'),
 
-    deleteUser: (userId: string) => request<void>('/data/users/' + userId, 'DELETE'),
+    deleteUser: (userId: string) => request<void>('/api/data/users/' + userId, 'DELETE'),
 
-    deleteFarm: (farmId: string) => request<void>('/data/farms/' + farmId, 'DELETE'),
+    deleteFarm: (farmId: string) => request<void>('/api/data/farms/' + farmId, 'DELETE'),
 
     registerFarm: (data: FormData) =>
-        request<{ farmId: string; farmCode: string; ownerId: string; ownerUid?: string; ownerEmail: string; tempPassword: string }>('/admin/farms/register', 'POST', data, true),
+        request<{ farmId: string; farmCode: string; ownerId: string; ownerUid?: string; ownerEmail: string; tempPassword: string }>('/api/admin/farms/register', 'POST', data, true),
 };
 
 // ─── EXPERT ──────────────────────────────────────────────────────────────────
 
 export const expert = {
-    getPendingSamples: () => request<SoilSample[]>('/expert/samples/pending'),
+    getPendingSamples: () => request<SoilSample[]>('/api/expert/samples/pending'),
 
-    getAssignedFarms: () => request<Farm[]>('/expert/farms'),
+    getAssignedFarms: () => request<Farm[]>('/api/expert/farms'),
 
     submitSoilReport: (report: Partial<SoilReport>) =>
-        request<SoilReport>('/expert/soil-reports', 'POST', report),
+        request<SoilReport>('/api/expert/soil-reports', 'POST', report),
 
-    getMyReports: () => request<SoilReport[]>('/expert/soil-reports'),
+    getMyReports: () => request<SoilReport[]>('/api/expert/soil-reports'),
 
     getFarmReports: (farmId: string) =>
-        request<SoilReport[]>(`/expert/farms/${farmId}/reports`),
+        request<SoilReport[]>(`/api/expert/farms/${farmId}/reports`),
 
     saveCropSuggestions: (suggestions: Partial<CropSuggestion>[]) =>
-        request<CropSuggestion[]>('/expert/crop-suggestions', 'POST', suggestions),
+        request<CropSuggestion[]>('/api/expert/crop-suggestions', 'POST', suggestions),
 
-    getMySuggestions: () => request<CropSuggestion[]>('/expert/crop-suggestions'),
+    getMySuggestions: () => request<CropSuggestion[]>('/api/expert/crop-suggestions'),
 
-    getFarmsAwaitingSuggestions: () => request<Farm[]>('/expert/farms-awaiting-suggestions'),
+    getFarmsAwaitingSuggestions: () => request<Farm[]>('/api/expert/farms-awaiting-suggestions'),
 
     createCalendar: (data: unknown) =>
-        request<CropCalendar>('/expert/calendars', 'POST', data),
+        request<CropCalendar>('/api/expert/calendars', 'POST', data),
 
     publishCalendar: (id: string) =>
-        request<CropCalendar>(`/expert/calendars/${id}/publish`, 'POST'),
+        request<CropCalendar>(`/api/expert/calendars/${id}/publish`, 'POST'),
 
-    getPestAlerts: () => request<PestAlert[]>('/expert/pest-alerts'),
+    getPestAlerts: () => request<PestAlert[]>('/api/expert/pest-alerts'),
 
     issuePrescription: (p: Partial<Prescription>) =>
-        request<Prescription>('/expert/prescriptions', 'POST', p),
+        request<Prescription>('/api/expert/prescriptions', 'POST', p),
 
-    getMyPrescriptions: () => request<Prescription[]>('/expert/prescriptions'),
+    getMyPrescriptions: () => request<Prescription[]>('/api/expert/prescriptions'),
 
-    getStats: () => request<Record<string, number>>('/expert/stats'),
+    getStats: () => request<Record<string, number>>('/api/expert/stats'),
 };
 
 // ─── FIELD MANAGER ───────────────────────────────────────────────────────────
 
 export const fieldManager = {
-    getAssignedFarms: () => request<Farm[]>('/fieldmanager/farms'),
+    getAssignedFarms: () => request<Farm[]>('/api/fieldmanager/farms'),
 
-    getTodayTasks: () => request<CalendarTask[]>('/fieldmanager/tasks/today'),
+    getTodayTasks: () => request<CalendarTask[]>('/api/fieldmanager/tasks/today'),
 
     getTasks: (farmId?: string, status?: string) => {
         const params = new URLSearchParams();
         if (farmId) params.set('farmId', farmId);
         if (status) params.set('status', status);
-        return request<CalendarTask[]>(`/fieldmanager/tasks?${params}`);
+        return request<CalendarTask[]>(`/api/fieldmanager/tasks?${params}`);
     },
 
     updateTaskStatus: (id: string, status: string, notes?: string) =>
-        request<CalendarTask>(`/fieldmanager/tasks/${id}/status`, 'PUT', { status, notes }),
+        request<CalendarTask>(`/api/fieldmanager/tasks/${id}/status`, 'PUT', { status, notes }),
 
     logOperation: (data: FormData) =>
-        request<FieldOperation>('/fieldmanager/operations', 'POST', data, true),
+        request<FieldOperation>('/api/fieldmanager/operations', 'POST', data, true),
 
     logOperationJson: (op: Partial<FieldOperation>) =>
-        request<FieldOperation>('/fieldmanager/operations', 'POST', op),
+        request<FieldOperation>('/api/fieldmanager/operations', 'POST', op),
 
     getOperations: (farmId?: string) =>
-        request<FieldOperation[]>(`/fieldmanager/operations${farmId ? `?farmId=${farmId}` : ''}`),
+        request<FieldOperation[]>(`/api/fieldmanager/operations${farmId ? `?farmId=${farmId}` : ''}`),
 
     logSampleCollection: (data: FormData) =>
-        request<SoilSample>('/fieldmanager/samples', 'POST', data, true),
+        request<SoilSample>('/api/fieldmanager/samples', 'POST', data, true),
 
-    getSamples: () => request<SoilSample[]>('/fieldmanager/samples'),
+    getSamples: () => request<SoilSample[]>('/api/fieldmanager/samples'),
 
     reportPest: (data: FormData | Partial<PestAlert>) =>
         data instanceof FormData
-            ? request<PestAlert>('/fieldmanager/pest-alerts', 'POST', data, true)
-            : request<PestAlert>('/fieldmanager/pest-alerts', 'POST', data),
+            ? request<PestAlert>('/api/fieldmanager/pest-alerts', 'POST', data, true)
+            : request<PestAlert>('/api/fieldmanager/pest-alerts', 'POST', data),
 
-    getPrescriptions: () => request<Prescription[]>('/fieldmanager/prescriptions'),
+    getPrescriptions: () => request<Prescription[]>('/api/fieldmanager/prescriptions'),
 
     acknowledgePrescription: (id: string) =>
-        request<Prescription>(`/fieldmanager/prescriptions/${id}/acknowledge`, 'PUT'),
+        request<Prescription>(`/api/fieldmanager/prescriptions/${id}/acknowledge`, 'PUT'),
 
-    getStats: () => request<Record<string, number>>('/fieldmanager/stats'),
+    getStats: () => request<Record<string, number>>('/api/fieldmanager/stats'),
 };
 
 // ─── LAND OWNER ──────────────────────────────────────────────────────────────
 
 export const landOwner = {
-    getFarms: () => request<Farm[]>('/landowner/farms'),
+    getFarms: () => request<Farm[]>('/api/landowner/farms'),
 
-    getSoilReports: () => request<SoilReport[]>('/landowner/soil-reports'),
+    getSoilReports: () => request<SoilReport[]>('/api/landowner/soil-reports'),
 
-    getCropSuggestions: () => request<CropSuggestion[]>('/landowner/crop-suggestions'),
+    getCropSuggestions: () => request<CropSuggestion[]>('/api/landowner/crop-suggestions'),
 
     selectCrop: (id: string) =>
-        request<CropSuggestion>(`/landowner/crop-suggestions/${id}/select`, 'POST'),
+        request<CropSuggestion>(`/api/landowner/crop-suggestions/${id}/select`, 'POST'),
 
-    getCalendars: () => request<CropCalendar[]>('/landowner/calendars'),
+    getCalendars: () => request<CropCalendar[]>('/api/landowner/calendars'),
 
-    getCalendarTasks: () => request<CalendarTask[]>('/landowner/calendar-tasks'),
+    getCalendarTasks: () => request<CalendarTask[]>('/api/landowner/calendar-tasks'),
 
-    getOperationsFeed: () => request<FieldOperation[]>('/landowner/operations'),
+    getOperationsFeed: () => request<FieldOperation[]>('/api/landowner/operations'),
 
-    getSamples: () => request<SoilSample[]>('/landowner/samples'),
+    getSamples: () => request<SoilSample[]>('/api/landowner/samples'),
 
-    getFinanceSummary: () => request<FinanceSummary>('/landowner/finance/summary'),
+    getFinanceSummary: () => request<FinanceSummary>('/api/landowner/finance/summary'),
 
-    getStats: () => request<Record<string, number | object>>('/landowner/stats'),
+    getStats: () => request<Record<string, number | object>>('/api/landowner/stats'),
 };
 
 // ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
@@ -375,7 +424,7 @@ export const files = {
         fd.append('file', file);
         fd.append('category', category);
         if (farmId) fd.append('farmId', farmId);
-        return request('/files/upload', 'POST', fd, true);
+        return request('/api/files/upload', 'POST', fd, true);
     },
 };
 

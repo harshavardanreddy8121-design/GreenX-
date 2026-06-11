@@ -19,7 +19,7 @@ public class LandRegistrationController {
 
     // ─── Public: submit from landing page ────────────────────────────────────
 
-    @PostMapping("/land-registration/submit")
+    @PostMapping("/api/land-registration/submit")
     public ApiResponse<LandRegistrationSubmission> submit(@RequestBody Map<String, String> body) {
         String fullName = body.get("fullName");
         String phone    = body.get("phone");
@@ -45,7 +45,7 @@ public class LandRegistrationController {
 
     // ─── Admin: list all submissions (with optional status filter) ────────────
 
-    @GetMapping("/admin/land-registrations")
+    @GetMapping("/api/admin/land-registrations")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLUSTER_ADMIN')")
     public ApiResponse<List<LandRegistrationSubmission>> getAll(
             @RequestParam(required = false) String status,
@@ -69,7 +69,7 @@ public class LandRegistrationController {
 
     // ─── Admin: get single submission ─────────────────────────────────────────
 
-    @GetMapping("/admin/land-registrations/{id}")
+    @GetMapping("/api/admin/land-registrations/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLUSTER_ADMIN')")
     public ApiResponse<LandRegistrationSubmission> getById(@PathVariable String id) {
         Optional<LandRegistrationSubmission> opt = submissionRepository.findById(id);
@@ -79,7 +79,7 @@ public class LandRegistrationController {
 
     // ─── Admin: update status ─────────────────────────────────────────────────
 
-    @PutMapping("/admin/land-registrations/{id}/status")
+    @PutMapping("/api/admin/land-registrations/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLUSTER_ADMIN')")
     public ApiResponse<LandRegistrationSubmission> updateStatus(
             @PathVariable String id,
@@ -96,7 +96,7 @@ public class LandRegistrationController {
 
     // ─── Admin: add/update notes ──────────────────────────────────────────────
 
-    @PutMapping("/admin/land-registrations/{id}/notes")
+    @PutMapping("/api/admin/land-registrations/{id}/notes")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLUSTER_ADMIN')")
     public ApiResponse<LandRegistrationSubmission> updateNotes(
             @PathVariable String id,
@@ -111,7 +111,7 @@ public class LandRegistrationController {
 
     // ─── Admin: delete submission ─────────────────────────────────────────────
 
-    @DeleteMapping("/admin/land-registrations/{id}")
+    @DeleteMapping("/api/admin/land-registrations/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CLUSTER_ADMIN')")
     public ApiResponse<String> delete(@PathVariable String id) {
         if (!submissionRepository.existsById(id)) {

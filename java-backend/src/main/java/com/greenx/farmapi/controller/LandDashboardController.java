@@ -20,7 +20,7 @@ import java.util.Map;
  * This controller exposes the /land/dashboard path required by the RBAC spec.
  */
 @RestController
-@RequestMapping("/land")
+@RequestMapping("/api/land")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('LANDOWNER') or hasRole('LAND_OWNER')")
 public class LandDashboardController {
