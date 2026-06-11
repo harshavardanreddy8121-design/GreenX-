@@ -6,6 +6,8 @@ import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.*;
 import com.greenx.farmapi.service.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,8 @@ import java.util.*;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('EXPERT')")
 public class ExpertController {
+
+    private static final Logger log = LoggerFactory.getLogger(ExpertController.class);
 
     private final ExpertService expertService;
     private final SoilReportRepository soilReportRepository;
@@ -167,14 +171,39 @@ public class ExpertController {
                 }).toList());
     }
 
+    @GetMapping("/calendars")
+    public ApiResponse<List<CropCalendar>> getMyCalendars(Authentication auth) {
+        User user = (User) auth.getPrincipal();
+        return ApiResponse.success(cropCalendarRepository.findByExpertId(user.getId()));
+    }
+
     @PostMapping("/calendars")
     public ApiResponse<CropCalendar> createCalendar(@RequestBody Map<String, Object> body, Authentication auth) {
         try {
+            log.info("createCalendar request body: {}", body);
             User user = (User) auth.getPrincipal();
+
+            // Resolve cropName: prefer explicit field, fall back to linked suggestion
+            String cropName = (String) body.get("cropName");
+            if (cropName == null || cropName.isBlank()) {
+                String suggestionId = (String) body.get("suggestionId");
+                if (suggestionId != null && !suggestionId.isBlank()) {
+                    cropName = cropSuggestionRepository.findById(suggestionId)
+                            .map(CropSuggestion::getCropName)
+                            .orElse(null);
+                    log.info("cropName resolved from suggestionId {}: {}", suggestionId, cropName);
+                }
+            }
+
+            if (cropName == null || cropName.isBlank()) {
+                log.warn("createCalendar validation failed: cropName is missing. body={}", body);
+                return ApiResponse.error("cropName is required to create a crop calendar");
+            }
+
             CropCalendar cal = CropCalendar.builder()
                     .farmId((String) body.get("farmId"))
                     .expertId(user.getId())
-                    .cropName((String) body.get("cropName"))
+                    .cropName(cropName)
                     .season((String) body.get("season"))
                     .suggestionId((String) body.get("suggestionId"))
                     .build();
