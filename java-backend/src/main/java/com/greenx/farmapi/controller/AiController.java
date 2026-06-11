@@ -3,6 +3,7 @@ package com.greenx.farmapi.controller;
 import com.greenx.farmapi.dto.ApiResponse;
 import com.greenx.farmapi.service.AiService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -11,13 +12,17 @@ import java.util.Map;
 /**
  * AI Controller — Generative AI endpoints for the GreenX farm platform.
  *
- * All endpoints are under /api/ai and require authentication (except /ai/status).
- * The service layer transparently uses GPT-4 when OPENAI_API_KEY is set,
- * otherwise falls back to the deterministic rule-based engine.
+ * All endpoints are under /api/ai and require authentication (except /ai/status
+ * and /ai/health).  The service layer transparently uses GPT-4 when
+ * OPENAI_API_KEY is set, otherwise falls back to the deterministic rule-based
+ * engine.
+ *
+ * Context path: /api  →  full prefix: /api/ai
  */
 @RestController
 @RequestMapping("/ai")
 @RequiredArgsConstructor
+@Slf4j
 @CrossOrigin(origins = "*")
 public class AiController {
 
@@ -29,10 +34,12 @@ public class AiController {
      */
     @PostMapping("/analyze-farm")
     public ApiResponse<Map<String, Object>> analyzeFarm(@RequestBody Map<String, Object> farmData) {
+        log.info("[AiController] POST /ai/analyze-farm called");
         try {
             Map<String, Object> result = aiService.analyzeFarm(farmData);
             return ApiResponse.success(result);
         } catch (Exception e) {
+            log.error("[AiController] analyzeFarm error: {}", e.getMessage());
             return ApiResponse.error("Farm analysis failed: " + e.getMessage());
         }
     }
@@ -121,6 +128,7 @@ public class AiController {
      */
     @PostMapping("/ask")
     public ApiResponse<Map<String, Object>> ask(@RequestBody Map<String, Object> request) {
+        log.info("[AiController] POST /ai/ask called");
         try {
             String question = (String) request.get("question");
             if (question == null || question.isBlank()) {
@@ -130,9 +138,11 @@ public class AiController {
             String userId = (String) request.get("userId");
             String farmId = (String) request.get("farmId");
 
+            log.debug("[AiController] ask — question='{}' sessionId={} userId={}", question, sessionId, userId);
             Map<String, Object> result = aiService.ask(question, sessionId, userId, farmId);
             return ApiResponse.success(result);
         } catch (Exception e) {
+            log.error("[AiController] ask error: {}", e.getMessage());
             return ApiResponse.error("AI query failed: " + e.getMessage());
         }
     }
@@ -184,6 +194,22 @@ public class AiController {
     }
 
     /**
+     * GET /api/ai/health
+     * Simple liveness probe — public, no auth required.
+     * Returns 200 OK immediately so load balancers and front-ends can verify
+     * that the AI controller is registered and reachable.
+     */
+    @GetMapping("/health")
+    public ApiResponse<Map<String, Object>> health() {
+        log.info("[AiController] GET /ai/health called");
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("status", "UP");
+        body.put("controller", "AiController");
+        body.put("timestamp", java.time.LocalDateTime.now().toString());
+        return ApiResponse.success(body);
+    }
+
+    /**
      * GET /api/ai/status
      * Check AI service status, capabilities, and OpenAI configuration.
      * This endpoint is public (no auth required) so it can be used to verify
@@ -191,6 +217,7 @@ public class AiController {
      */
     @GetMapping("/status")
     public ApiResponse<Map<String, Object>> getStatus() {
+        log.info("[AiController] GET /ai/status called");
         boolean openAiActive = aiService.isOpenAiActive();
         Map<String, Object> status = new java.util.LinkedHashMap<>();
         status.put("service", "GreenX AI");

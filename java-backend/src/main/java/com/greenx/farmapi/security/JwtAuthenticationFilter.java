@@ -39,7 +39,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.equals("/api/auth")
                 || path.startsWith("/api/auth/")
                 || path.equals("/health")
-                || path.equals("/api/health");
+                || path.equals("/api/health")
+                // AI public endpoints — no token required
+                || path.equals("/ai/status")
+                || path.equals("/api/ai/status")
+                || path.equals("/ai/health")
+                || path.equals("/api/ai/health");
     }
 
     @Override
