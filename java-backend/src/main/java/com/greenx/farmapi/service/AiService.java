@@ -5,6 +5,7 @@ import com.greenx.farmapi.entity.AiConversation;
 import com.greenx.farmapi.entity.AiInsight;
 import com.greenx.farmapi.repository.AiConversationRepository;
 import com.greenx.farmapi.repository.AiInsightRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,19 +36,40 @@ public class AiService {
     private final CropHealthAnalyzer healthAnalyzer;
     private final AlertService alertService;
 
-    @Value("${openai.api-key:}")
+    // Reads openai.api-key from application.yml, which itself resolves OPENAI_API_KEY.
+    // The second fallback ${OPENAI_API_KEY:} ensures the raw env var is also tried
+    // in case the YAML property chain is not resolved (e.g. during early context init).
+    @Value("${openai.api-key:${OPENAI_API_KEY:}}")
     private String openAiApiKey;
 
-    @Value("${openai.model:gpt-4}")
+    @Value("${openai.model:${AI_MODEL:gpt-4}}")
     private String openAiModel;
 
-    @Value("${openai.temperature:0.7}")
+    @Value("${openai.temperature:${AI_TEMPERATURE:0.7}}")
     private double temperature;
 
-    @Value("${openai.max-tokens:2000}")
+    @Value("${openai.max-tokens:${AI_MAX_TOKENS:2000}}")
     private int maxTokens;
 
     private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    @PostConstruct
+    public void logConfigurationStatus() {
+        String trimmedKey = openAiApiKey != null ? openAiApiKey.trim() : "";
+        if (trimmedKey.isEmpty()) {
+            log.warn("[GreenX AI] OPENAI_API_KEY is not set — falling back to rule-based engine. " +
+                     "Set OPENAI_API_KEY in Railway environment variables to enable GPT-4.");
+        } else if (trimmedKey.equals("your-openai-api-key")) {
+            log.warn("[GreenX AI] OPENAI_API_KEY is still the placeholder value — " +
+                     "replace it with a real key to enable GPT-4.");
+        } else {
+            String masked = trimmedKey.substring(0, Math.min(7, trimmedKey.length())) + "****";
+            log.info("[GreenX AI] OpenAI configured ✓  key={} model={} maxTokens={}",
+                     masked, openAiModel, maxTokens);
+        }
+    }
 
     // ── Public API ────────────────────────────────────────────────────────────
 
@@ -71,6 +93,7 @@ public class AiService {
                 baseAnalysis.put("modelUsed", "rule-based");
             }
         } else {
+            log.debug("[GreenX AI] OpenAI not configured — using rule-based engine for farm analysis");
             baseAnalysis.put("aiNarrative", buildRuleBasedNarrative(farmData, baseAnalysis));
             baseAnalysis.put("modelUsed", "rule-based");
         }
@@ -423,7 +446,23 @@ public class AiService {
     // ── OpenAI Integration ────────────────────────────────────────────────────
 
     private boolean isOpenAiConfigured() {
-        return openAiApiKey != null && !openAiApiKey.isBlank() && !openAiApiKey.equals("your-openai-api-key");
+        if (openAiApiKey == null) return false;
+        String key = openAiApiKey.trim();
+        return !key.isEmpty() && !key.equals("your-openai-api-key");
+    }
+
+    /** Returns a masked version of the API key for safe logging/display. */
+    public String getMaskedApiKey() {
+        if (openAiApiKey == null) return "not-set";
+        String key = openAiApiKey.trim();
+        if (key.isEmpty()) return "not-set";
+        if (key.equals("your-openai-api-key")) return "placeholder";
+        return key.substring(0, Math.min(7, key.length())) + "****";
+    }
+
+    /** Returns whether OpenAI is currently active. */
+    public boolean isOpenAiActive() {
+        return isOpenAiConfigured();
     }
 
     @SuppressWarnings("unchecked")

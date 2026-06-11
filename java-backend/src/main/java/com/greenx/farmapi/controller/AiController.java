@@ -185,30 +185,35 @@ public class AiController {
 
     /**
      * GET /api/ai/status
-     * Check AI service status and capabilities.
+     * Check AI service status, capabilities, and OpenAI configuration.
+     * This endpoint is public (no auth required) so it can be used to verify
+     * that OPENAI_API_KEY has been picked up correctly after a Railway deploy.
      */
     @GetMapping("/status")
     public ApiResponse<Map<String, Object>> getStatus() {
-        Map<String, Object> status = Map.of(
-                "service", "GreenX AI",
-                "version", "2.0.0",
-                "status", "active",
-                "capabilities", List.of(
-                        "farm-analysis",
-                        "crop-recommendation",
-                        "pest-prediction",
-                        "resource-optimization",
-                        "conversational-ai",
-                        "autonomous-insights",
-                        "report-generation"
-                ),
-                "knowledgeBase", Map.of(
-                        "crops", 15,
-                        "pests", 6,
-                        "diseases", 5,
-                        "soilTypes", 7
-                )
-        );
+        boolean openAiActive = aiService.isOpenAiActive();
+        Map<String, Object> status = new java.util.LinkedHashMap<>();
+        status.put("service", "GreenX AI");
+        status.put("version", "2.0.0");
+        status.put("status", "active");
+        status.put("openAiConfigured", openAiActive);
+        status.put("activeModel", openAiActive ? "gpt-4" : "rule-based");
+        status.put("apiKeyStatus", aiService.getMaskedApiKey());
+        status.put("capabilities", List.of(
+                "farm-analysis",
+                "crop-recommendation",
+                "pest-prediction",
+                "resource-optimization",
+                "conversational-ai",
+                "autonomous-insights",
+                "report-generation"
+        ));
+        status.put("knowledgeBase", Map.of(
+                "crops", 15,
+                "pests", 6,
+                "diseases", 5,
+                "soilTypes", 7
+        ));
         return ApiResponse.success(status);
     }
 }
