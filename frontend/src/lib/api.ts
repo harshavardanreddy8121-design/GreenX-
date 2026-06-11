@@ -306,6 +306,24 @@ export const admin = {
 
     deleteSubmission: (id: string) =>
         request<string>(`/admin/land-registrations/${id}`, 'DELETE'),
+
+    getExpertDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/experts/${id}`),
+
+    getFieldManagerDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/field-managers/${id}`),
+
+    getWorkerDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/workers/${id}`),
+
+    getLandOwnerDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/landowners/${id}`),
+
+    getSampleDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/samples/${id}`),
+
+    getAlertDetail: (id: string) =>
+        request<Record<string, unknown>>(`/admin/alerts/${id}`),
 };
 
 // ─── LAND REGISTRATION (public) ──────────────────────────────────────────────
