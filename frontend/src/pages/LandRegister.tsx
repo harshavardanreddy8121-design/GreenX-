@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Phone, User } from 'lucide-react';
 import { GreenXLogo } from '@/components/GreenXLogo';
 import { toast } from 'sonner';
+import { landRegistration } from '@/lib/api';
 
 const landSizeOptions = [
     '1-2 acres',
@@ -20,8 +21,9 @@ export default function LandRegister() {
         landSize: '',
         message: '',
     });
+    const [loading, setLoading] = useState(false);
 
-    const onSubmit = (e: React.FormEvent) => {
+    const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!form.fullName.trim() || !form.phone.trim() || !form.location.trim() || !form.landSize.trim()) {
@@ -29,8 +31,23 @@ export default function LandRegister() {
             return;
         }
 
-        toast.success('Land details submitted successfully. Our team will contact you soon.');
-        setForm({ fullName: '', phone: '', location: '', landSize: '', message: '' });
+        setLoading(true);
+        try {
+            await landRegistration.submit({
+                fullName: form.fullName.trim(),
+                phone: form.phone.trim(),
+                location: form.location.trim(),
+                landSize: form.landSize.trim(),
+                message: form.message.trim() || undefined,
+            });
+            toast.success('Land details submitted successfully. Our team will contact you soon.');
+            setForm({ fullName: '', phone: '', location: '', landSize: '', message: '' });
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Submission failed. Please try again.';
+            toast.error(msg);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -121,9 +138,11 @@ export default function LandRegister() {
 
                         <button
                             type="submit"
-                            className="w-full btn-gradient text-primary-foreground py-3 rounded-lg text-sm font-semibold"
+                            disabled={loading}
+                            className="w-full btn-gradient text-primary-foreground py-3 rounded-lg text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            Submit Land Details
+                            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {loading ? 'Submitting…' : 'Submit Land Details'}
                         </button>
                     </form>
                 </div>
