@@ -1,20 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GreenXLogo } from '@/components/GreenXLogo';
-import { useAuth } from "@/contexts/AuthContext";
-import { Sprout, FlaskConical, Wheat, Smartphone, Ship, Microscope, DollarSign, Map, HardHat, BarChart3, Briefcase, Building2, ClipboardList, MapPin } from 'lucide-react';
-
-const roleRoutes: Record<string, string> = {
-    admin: "/admin/users",
-    fieldmanager: "/field-manager",
-    expert: "/expert",
-    landowner: "/landowner",
-    worker: "/worker",
-};
+import { Sprout, FlaskConical, Wheat, Ship, Microscope, HardHat, BarChart3, Briefcase, Building2 } from 'lucide-react';
 
 export default function LandingPage() {
     const navigate = useNavigate();
-    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('t1');
     const [showPlant, setShowPlant] = useState(false);
     const cursorRef = useRef<HTMLDivElement>(null);
@@ -85,20 +75,6 @@ export default function LandingPage() {
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
-
-    const showToast = (msg: string) => {
-        const t = document.getElementById('toast');
-        const tmsg = document.getElementById('toast-msg');
-        if (t && tmsg) {
-            tmsg.textContent = msg;
-            t.style.transform = 'translateY(0)';
-            t.style.opacity = '1';
-            setTimeout(() => {
-                t.style.transform = 'translateY(80px)';
-                t.style.opacity = '0';
-            }, 4000);
-        }
-    };
 
     return (
         <div className="landing-page">
@@ -532,8 +508,6 @@ export default function LandingPage() {
                     <li><a href="#problem">Problem</a></li>
                     <li><a href="#solution">Solution</a></li>
                     <li><a href="#platform">Platform</a></li>
-                    <li><a href="#roles">Roles</a></li>
-                    <li><a href="#revenue">Business</a></li>
                 </ul>
                 <div className="nav-cta">
                     <button className="btn-nav-ghost" onClick={() => navigate('/login')}>Sign In</button>
@@ -955,189 +929,11 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ══ ROLES SECTION ══ */}
-            <section id="roles" className="reveal">
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <div className="section-eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>Stakeholders</div>
-                    <h2 className="section-title" style={{ textAlign: 'center' }}>Who Uses <em>GreenX</em>?</h2>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '28px', marginTop: '56px' }}>
-                        {[
-                            { icon: <Building2 size={40} strokeWidth={1.5} />, title: 'Landowners', desc: 'Professionals in cities with inherited/idle farmland. Want passive farm income without relocating.', path: '/landowner' },
-                            { icon: <HardHat size={40} strokeWidth={1.5} />, title: 'Field Workers', desc: 'On-ground labor executing daily farm operations: planting, irrigation, harvest. GPS-tracked tasks.', path: '/worker' },
-                            { icon: <Microscope size={40} strokeWidth={1.5} />, title: 'Expert Agronomists', desc: 'Qualified agriculture scientists who design crop plans, diagnose issues, prescribe treatments.', path: '/expert' },
-                            { icon: <Briefcase size={40} strokeWidth={1.5} />, title: 'Field Managers', desc: 'Regional coordinators overseeing 20-30 farms, managing workers, logistics, and quality control.', path: '/fieldmanager' },
-                            { icon: <BarChart3 size={40} strokeWidth={1.5} />, title: 'Admin', desc: 'System administrators with full access to manage users, farms, operations, and system settings.', path: '/admin' }
-                        ].map((role, i) => (
-                            <div key={i} style={{
-                                background: 'var(--surface)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '16px',
-                                padding: '32px',
-                                textAlign: 'center',
-                                transition: 'all 0.3s',
-                                cursor: 'pointer'
-                            }} onClick={() => navigate(role.path)}>
-                                <div style={{ fontSize: '48px', marginBottom: '16px' }}>{role.icon}</div>
-                                <div style={{
-                                    fontSize: '20px',
-                                    fontWeight: 700,
-                                    color: 'var(--white)',
-                                    marginBottom: '10px'
-                                }}>{role.title}</div>
-                                <div style={{
-                                    fontSize: '13.5px',
-                                    color: 'var(--text2)',
-                                    lineHeight: 1.6
-                                }}>{role.desc}</div>
-                                <button style={{
-                                    marginTop: '20px',
-                                    padding: '8px 20px',
-                                    background: 'transparent',
-                                    border: '1px solid var(--border2)',
-                                    borderRadius: '8px',
-                                    color: 'var(--green)',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    fontFamily: "'Outfit', sans-serif"
-                                }}>
-                                    Access Portal →
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
-            {/* ══ REVENUE MODEL ══ */}
-            <section id="revenue" className="reveal" style={{ background: 'var(--deep)' }}>
-                <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-                    <div className="section-eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>Business Model</div>
-                    <h2 className="section-title" style={{ textAlign: 'center' }}>How <em>Everyone</em> Wins</h2>
 
-                    <div style={{ marginTop: '56px', background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: '20px', padding: '48px' }}>
-                        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                            <div style={{
-                                fontFamily: "'Playfair Display', serif",
-                                fontSize: '72px',
-                                fontWeight: 900,
-                                color: 'var(--gold)',
-                                lineHeight: 1
-                            }}>70 / 30</div>
-                            <div style={{
-                                fontSize: '14px',
-                                color: 'var(--text3)',
-                                marginTop: '8px',
-                                letterSpacing: '1px',
-                                textTransform: 'uppercase'
-                            }}>Revenue Split</div>
-                        </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
-                            <div>
-                                <div style={{ fontSize: '28px', marginBottom: '12px' }}><Wheat size={28} strokeWidth={1.5} /></div>
-                                <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--white)', marginBottom: '8px' }}>
-                                    Landowner (70%)
-                                </div>
-                                <ul style={{ fontSize: '13.5px', color: 'var(--text2)', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-                                    <li>₹22,000+ per acre/year</li>
-                                    <li>Quarterly profit payouts</li>
-                                    <li>Zero operational headache</li>
-                                    <li>2x vs. traditional leasing</li>
-                                </ul>
-                            </div>
 
-                            <div>
-                                <div style={{ fontSize: '28px', marginBottom: '12px' }}><Building2 size={28} strokeWidth={1.5} /></div>
-                                <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--green)', marginBottom: '8px' }}>
-                                    GreenX (30%)
-                                </div>
-                                <ul style={{ fontSize: '13.5px', color: 'var(--text2)', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-                                    <li>Covers all operating costs</li>
-                                    <li>Worker salaries</li>
-                                    <li>Technology & infrastructure</li>
-                                    <li>Export logistics & compliance</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            marginTop: '32px',
-                            padding: '20px',
-                            background: 'var(--green-dim)',
-                            border: '1px solid var(--border2)',
-                            borderRadius: '12px',
-                            fontSize: '13.5px',
-                            color: 'var(--text)',
-                            textAlign: 'center',
-                            fontWeight: 500
-                        }}>
-                            ✓ Transparent ledger. Every rupee tracked. No hidden deductions.
-                        </div>
-                    </div>
-
-                    <div style={{ marginTop: '48px', textAlign: 'center' }}>
-                        <button className="btn-hero-primary" onClick={() => navigate('/land-register')}>
-                            <ClipboardList className="inline-block w-5 h-5 mr-1 align-middle" /> Register Your Land Now
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            {/* ══ SCALE SECTION ══ */}
-            <section className="reveal">
-                <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
-                    <div className="section-eyebrow" style={{ justifyContent: 'center', display: 'flex' }}>Market Opportunity</div>
-                    <h2 className="section-title">INDIA'S FIRST FARM OPERATING SYSTEM: <em>₹30,000 Cr</em> Market</h2>
-
-                    <div style={{ marginTop: '56px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '28px' }}>
-                        {[
-                            { year: 'Year 1', acres: '5,000', revenue: '₹11 Cr' },
-                            { year: 'Year 3', acres: '50,000', revenue: '₹110 Cr' },
-                            { year: 'Year 5', acres: '120,000', revenue: '₹264 Cr' }
-                        ].map((milestone, i) => (
-                            <div key={i} style={{
-                                background: 'var(--surface)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '16px',
-                                padding: '36px 28px',
-                                transition: 'all 0.3s'
-                            }}>
-                                <div style={{
-                                    fontSize: '13px',
-                                    color: 'var(--text3)',
-                                    marginBottom: '12px',
-                                    letterSpacing: '1px',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 600
-                                }}>{milestone.year}</div>
-                                <div style={{
-                                    fontSize: '36px',
-                                    fontWeight: 700,
-                                    color: 'var(--green)',
-                                    marginBottom: '8px'
-                                }}>{milestone.acres}</div>
-                                <div style={{
-                                    fontSize: '13px',
-                                    color: 'var(--text3)',
-                                    marginBottom: '16px'
-                                }}>Acres Under Management</div>
-                                <div style={{
-                                    fontSize: '24px',
-                                    fontWeight: 700,
-                                    color: 'var(--gold)'
-                                }}>{milestone.revenue}</div>
-                                <div style={{
-                                    fontSize: '12px',
-                                    color: 'var(--text3)',
-                                    marginTop: '4px'
-                                }}>Projected ARR</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             {/* ══ VISION QUOTE ══ */}
             <section className="reveal" style={{ background: 'var(--deep)', padding: '100px 60px' }}>
@@ -1166,86 +962,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ══ FINAL CTA ══ */}
-            <section className="reveal" style={{ padding: '120px 60px' }}>
-                <div style={{
-                    maxWidth: '700px',
-                    margin: '0 auto',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border2)',
-                    borderRadius: '24px',
-                    padding: '56px 48px',
-                    textAlign: 'center'
-                }}>
-                    <h2 style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: 'clamp(32px, 5vw, 48px)',
-                        fontWeight: 700,
-                        color: 'var(--white)',
-                        marginBottom: '16px'
-                    }}>
-                        Ready to <em style={{ color: 'var(--green)' }}>Professionalize</em> Your Farm?
-                    </h2>
-                    <p style={{
-                        fontSize: '15px',
-                        color: 'var(--text2)',
-                        lineHeight: 1.7,
-                        marginBottom: '36px',
-                        maxWidth: '480px',
-                        margin: '0 auto 36px'
-                    }}>
-                        Join 200+ landowners earning 2-3x more while living in Hyderabad, Bangalore, or abroad.
-                    </p>
 
-                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '28px' }}>
-                        <input
-                            type="email"
-                            placeholder="your@email.com"
-                            style={{
-                                flex: 1,
-                                maxWidth: '320px',
-                                padding: '14px 18px',
-                                background: 'var(--deep)',
-                                border: '1px solid var(--border2)',
-                                borderRadius: '10px',
-                                color: 'var(--text)',
-                                fontSize: '14px',
-                                fontFamily: "'Outfit', sans-serif",
-                                outline: 'none'
-                            }}
-                        />
-                        <button
-                            onClick={() => showToast('Early access request received! We\'ll contact you within 48 hours.')}
-                            className="btn-hero-primary"
-                        >
-                            Request Access
-                        </button>
-                    </div>
-
-                    <div style={{
-                        fontSize: '12px',
-                        color: 'var(--text3)',
-                        marginTop: '20px'
-                    }}>
-                        <MapPin className="inline-block w-4 h-4 mr-1 align-middle" /> Currently accepting farms in <strong style={{ color: 'var(--green)' }}>India</strong>
-                    </div>
-
-                    <div style={{
-                        marginTop: '36px',
-                        paddingTop: '36px',
-                        borderTop: '1px solid var(--border)',
-                        display: 'flex',
-                        gap: '20px',
-                        justifyContent: 'center',
-                        fontSize: '13px',
-                        color: 'var(--text3)'
-                    }}>
-                        <span>✓ No upfront fees</span>
-                        <span>✓ 30-day trial</span>
-                        <span>✓ Exit anytime</span>
-                    </div>
-                </div>
-            </section>
 
             {/* ══ FOOTER ══ */}
             <footer style={{
@@ -1328,25 +1045,6 @@ export default function LandingPage() {
                 </div>
             </footer>
 
-            <div id="toast" style={{
-                position: 'fixed',
-                bottom: '28px',
-                right: '28px',
-                background: '#1e2d24',
-                border: '1px solid var(--green)',
-                color: '#86efac',
-                padding: '14px 20px',
-                borderRadius: '10px',
-                fontSize: '13.5px',
-                maxWidth: '320px',
-                transform: 'translateY(80px)',
-                opacity: 0,
-                transition: 'all 0.3s',
-                zIndex: 9999,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
-            }}>
-                ✓ <span id="toast-msg"></span>
-            </div>
 
             <style>{`
         @keyframes marquee {
