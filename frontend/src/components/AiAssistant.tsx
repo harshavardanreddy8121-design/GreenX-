@@ -292,7 +292,7 @@ export function AiAssistant({
         const loadingId = addMessage({ role: 'assistant', content: '', isLoading: true });
 
         try {
-            const response = await javaApi.call<any>('/api/ai/ask', 'POST', {
+            const response = await javaApi.call<any>('/ai/ask', 'POST', {
                 question,
                 sessionId,
                 userId,
