@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GreenXLogo } from '@/components/GreenXLogo';
-import { Sprout, FlaskConical, Wheat, Ship, Microscope, HardHat, BarChart3, Briefcase, Building2 } from 'lucide-react';
+import { Sprout, FlaskConical, Wheat, Ship, Microscope, HardHat, BarChart3, Briefcase } from 'lucide-react';
 
 export default function LandingPage() {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('t1');
+    const [activeTab, setActiveTab] = useState('t2');
     const [showPlant, setShowPlant] = useState(false);
     const cursorRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
@@ -740,76 +740,6 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ══ AGRI HOSPITAL MODEL ══ */}
-            <section className="reveal">
-                <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-                    <div className="section-eyebrow" style={{ justifyContent: 'center' }}>Paradigm Shift</div>
-                    <h2 className="section-title">The "<em>Agri-Hospital</em>" Model</h2>
-                    <p className="section-sub" style={{ margin: '16px auto 0' }}>
-                        Just as you don't perform surgery on yourself, you shouldn't manage your own farm without professional infrastructure.
-                    </p>
-
-                    <div style={{
-                        marginTop: '56px',
-                        background: 'var(--surface)',
-                        border: '1px solid var(--border2)',
-                        borderRadius: '20px',
-                        padding: '48px',
-                        textAlign: 'left'
-                    }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '32px', alignItems: 'center' }}>
-                            <div>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}><Building2 size={32} strokeWidth={1.5} /></div>
-                                <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--white)', marginBottom: '8px' }}>
-                                    Hospital
-                                </div>
-                                <ul style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: '1.9', paddingLeft: '20px', margin: 0 }}>
-                                    <li>Professional doctors</li>
-                                    <li>Clinical equipment</li>
-                                    <li>Diagnostic labs</li>
-                                    <li>Standardized treatment</li>
-                                    <li>Insurance-covered</li>
-                                </ul>
-                            </div>
-
-                            <div style={{
-                                width: '2px',
-                                height: '180px',
-                                background: 'var(--border2)'
-                            }}></div>
-
-                            <div>
-                                <div style={{ fontSize: '32px', marginBottom: '12px' }}><Wheat size={32} strokeWidth={1.5} /></div>
-                                <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)', marginBottom: '8px' }}>
-                                    GreenX Farm
-                                </div>
-                                <ul style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: '1.9', paddingLeft: '20px', margin: 0 }}>
-                                    <li>Expert agronomists</li>
-                                    <li>Precision agriculture tools</li>
-                                    <li>Soil testing labs</li>
-                                    <li>Scientific crop plans</li>
-                                    <li>Performance guaranteed</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            marginTop: '32px',
-                            padding: '20px',
-                            background: 'var(--green-dim)',
-                            border: '1px solid var(--border2)',
-                            borderRadius: '12px',
-                            fontSize: '14px',
-                            color: 'var(--text)',
-                            textAlign: 'center',
-                            fontWeight: 500
-                        }}>
-                            ✓ You own the asset (land/body). We provide the expertise & infrastructure.
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* ══ PLATFORM PREVIEW ══ */}
             <section id="platform" className="reveal" style={{ background: 'var(--deep)', paddingTop: '120px', paddingBottom: '120px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -819,7 +749,6 @@ export default function LandingPage() {
                     <div style={{ marginTop: '48px', textAlign: 'center' }}>
                         <div style={{ display: 'inline-flex', gap: '8px', padding: '6px', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                             {[
-                                { id: 't1', label: 'Worker View' },
                                 { id: 't2', label: 'Expert View' },
                                 { id: 't3', label: 'Owner View' },
                                 { id: 't4', label: 'Manager View' }
@@ -856,23 +785,6 @@ export default function LandingPage() {
                             alignItems: 'center',
                             justifyContent: 'center'
                         }}>
-                            {activeTab === 't1' && (
-                                <div style={{ maxWidth: '600px', textAlign: 'left' }}>
-                                    <div style={{ fontSize: '40px', marginBottom: '20px' }}><HardHat size={40} strokeWidth={1.5} /></div>
-                                    <h3 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--white)', marginBottom: '12px' }}>
-                                        Worker Dashboard
-                                    </h3>
-                                    <p style={{ fontSize: '15px', color: 'var(--text2)', lineHeight: 1.7, marginBottom: '24px' }}>
-                                        Field workers receive daily tasks (GPS-tagged), log activities, capture photos, and report issues in real-time via mobile app.
-                                    </p>
-                                    <ul style={{ fontSize: '14px', color: 'var(--text2)', lineHeight: 1.8, paddingLeft: '20px' }}>
-                                        <li>Task checklist with photos</li>
-                                        <li>GPS field verification</li>
-                                        <li>Weather alerts</li>
-                                        <li>Equipment request</li>
-                                    </ul>
-                                </div>
-                            )}
                             {activeTab === 't2' && (
                                 <div style={{ maxWidth: '600px', textAlign: 'left' }}>
                                     <div style={{ fontSize: '40px', marginBottom: '20px' }}><Microscope size={40} strokeWidth={1.5} /></div>
@@ -1008,6 +920,24 @@ export default function LandingPage() {
                                         </a>
                                     </li>
                                 ))}
+                            </ul>
+                        </div>
+
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text3)', marginBottom: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                Contact
+                            </div>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                <li style={{ marginBottom: '10px' }}>
+                                    <a href="tel:+918121710210" style={{ fontSize: '13.5px', color: 'var(--text2)', textDecoration: 'none', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ color: 'var(--green)' }}>📞</span> +91 8121710210
+                                    </a>
+                                </li>
+                                <li style={{ marginBottom: '10px' }}>
+                                    <a href="mailto:greenxagritech@gmail.com" style={{ fontSize: '13.5px', color: 'var(--text2)', textDecoration: 'none', transition: 'color 0.2s', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ color: 'var(--green)' }}>✉</span> greenxagritech@gmail.com
+                                    </a>
+                                </li>
                             </ul>
                         </div>
 
