@@ -129,6 +129,62 @@ public class ClusterAdminController {
         return ApiResponse.success(pestAlertRepository.findAllByOrderByCreatedAtDesc());
     }
 
+    // ─── Detail endpoints ─────────────────────────────────────────────────────
+
+    @GetMapping("/experts/{id}")
+    public ApiResponse<Map<String, Object>> getExpertDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getExpertDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/field-managers/{id}")
+    public ApiResponse<Map<String, Object>> getFieldManagerDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getFieldManagerDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/workers/{id}")
+    public ApiResponse<Map<String, Object>> getWorkerDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getWorkerDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/landowners/{id}")
+    public ApiResponse<Map<String, Object>> getLandOwnerDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getLandOwnerDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/samples/{id}")
+    public ApiResponse<Map<String, Object>> getSampleDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getSampleDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
+    @GetMapping("/alerts/{id}")
+    public ApiResponse<Map<String, Object>> getAlertDetail(@PathVariable String id) {
+        try {
+            return ApiResponse.success(adminService.getAlertDetail(id));
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
     @GetMapping("/users")
     public ApiResponse<List<com.greenx.farmapi.dto.UserDto>> getAllUsers(Authentication auth) {
         User user = (User) auth.getPrincipal();

@@ -5,6 +5,12 @@ import { admin } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import ExpertDetailModal from '@/components/admin/ExpertDetailModal';
+import FieldManagerDetailModal from '@/components/admin/FieldManagerDetailModal';
+import WorkerDetailModal from '@/components/admin/WorkerDetailModal';
+import LandOwnerDetailModal from '@/components/admin/LandOwnerDetailModal';
+import SoilSampleDetailModal from '@/components/admin/SoilSampleDetailModal';
+import PestAlertDetailModal from '@/components/admin/PestAlertDetailModal';
 
 import { AlertTriangle, BarChart3, Bot, Bug, Building2, ClipboardList, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
@@ -12,6 +18,14 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
+
+  // Detail modal state
+  const [expertModal, setExpertModal] = useState<string | null>(null);
+  const [fmModal, setFmModal] = useState<string | null>(null);
+  const [workerModal, setWorkerModal] = useState<string | null>(null);
+  const [ownerModal, setOwnerModal] = useState<string | null>(null);
+  const [sampleModal, setSampleModal] = useState<string | null>(null);
+  const [alertModal, setAlertModal] = useState<string | null>(null);
 
   const { data: farms = [], isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['admin-farms'],
@@ -202,10 +216,10 @@ export default function AdminDashboard() {
       {/* Team Overview */}
       <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> Team Overview</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 20 }}>
-        <RoleCard title=<><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Land Owners</> users={landowners} color="gold" />
-        <RoleCard title=<><Microscope className="inline-block w-4 h-4 mr-1 align-middle" /> Experts</> users={experts} color="blue" />
-        <RoleCard title=<><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Field Managers</> users={fieldManagers} color="orange" />
-        <RoleCard title=<><HardHat className="inline-block w-4 h-4 mr-1 align-middle" /> Workers</> users={workers} color="green" />
+        <RoleCard title=<><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Land Owners</> users={landowners} color="gold" onUserClick={setOwnerModal} />
+        <RoleCard title=<><Microscope className="inline-block w-4 h-4 mr-1 align-middle" /> Experts</> users={experts} color="blue" onUserClick={setExpertModal} />
+        <RoleCard title=<><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Field Managers</> users={fieldManagers} color="orange" onUserClick={setFmModal} />
+        <RoleCard title=<><HardHat className="inline-block w-4 h-4 mr-1 align-middle" /> Workers</> users={workers} color="green" onUserClick={setWorkerModal} />
       </div>
 
       {/* Operational Status */}
@@ -221,14 +235,15 @@ export default function AdminDashboard() {
               <div style={{ textAlign: 'center', padding: 20, opacity: .5 }}>All samples processed</div>
             ) : (
               <table className="gx-data-table">
-                <thead><tr><th>#</th><th>Farm</th><th>Collected By</th><th>Priority</th></tr></thead>
+                <thead><tr><th>#</th><th>Code</th><th>Farm</th><th>Priority</th><th>Status</th></tr></thead>
                 <tbody>
                   {pendingSamples.slice(0, 5).map((s: any, i: number) => (
-                    <tr key={s.id || i}>
+                    <tr key={s.id || i} style={{ cursor: 'pointer' }} onClick={() => setSampleModal(s.id)}>
                       <td>{i + 1}</td>
-                      <td>{s.farmId || s.sampleCode || '—'}</td>
-                      <td>{s.collectedBy || '—'}</td>
+                      <td style={{ fontFamily: 'monospace', fontSize: 11 }}>{s.sampleCode || s.id?.slice(0, 8) || '—'}</td>
+                      <td>{s.farmId || '—'}</td>
                       <td><span className={`gx-status ${s.priority === 'HIGH' ? 'gx-s-alert' : 'gx-s-done'}`}>{s.priority || 'Normal'}</span></td>
+                      <td><span className="gx-status gx-s-pending">{s.status || '—'}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -249,7 +264,7 @@ export default function AdminDashboard() {
                 <thead><tr><th>#</th><th>Pest</th><th>Severity</th><th>Farm</th><th>Status</th></tr></thead>
                 <tbody>
                   {alerts.slice(0, 5).map((a: any, i: number) => (
-                    <tr key={a.id || i}>
+                    <tr key={a.id || i} style={{ cursor: 'pointer' }} onClick={() => setAlertModal(a.id)}>
                       <td>{i + 1}</td>
                       <td>{a.pestName || '—'}</td>
                       <td><span className={`gx-status ${a.severity === 'HIGH' ? 'gx-s-alert' : 'gx-s-pending'}`}>{a.severity || '—'}</span></td>
@@ -390,11 +405,19 @@ export default function AdminDashboard() {
           />
         </div>
       </div>
+
+      {/* Detail Modals */}
+      {expertModal && <ExpertDetailModal expertId={expertModal} onClose={() => setExpertModal(null)} />}
+      {fmModal && <FieldManagerDetailModal managerId={fmModal} onClose={() => setFmModal(null)} />}
+      {workerModal && <WorkerDetailModal workerId={workerModal} onClose={() => setWorkerModal(null)} />}
+      {ownerModal && <LandOwnerDetailModal ownerId={ownerModal} onClose={() => setOwnerModal(null)} />}
+      {sampleModal && <SoilSampleDetailModal sampleId={sampleModal} onClose={() => setSampleModal(null)} />}
+      {alertModal && <PestAlertDetailModal alertId={alertModal} onClose={() => setAlertModal(null)} />}
     </>
   );
 }
 
-function RoleCard({ title, users, color }: { title: string; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange' }) {
+function RoleCard({ title, users, color, onUserClick }: { title: string; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange'; onUserClick?: (id: string) => void }) {
   const colorVar = `var(--gx-${color})`;
   return (
     <div className="gx-card">
@@ -408,11 +431,24 @@ function RoleCard({ title, users, color }: { title: string; users: any[]; color:
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {users.slice(0, 5).map((u: any) => (
-              <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 6, borderLeft: `3px solid ${colorVar}` }}>
+              <div
+                key={u.id}
+                onClick={() => onUserClick?.(u.id)}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '6px 10px', background: 'rgba(255,255,255,.03)', borderRadius: 6,
+                  borderLeft: `3px solid ${colorVar}`,
+                  cursor: onUserClick ? 'pointer' : 'default',
+                  transition: 'background .15s',
+                }}
+                onMouseEnter={e => { if (onUserClick) (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,.07)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,.03)'; }}
+              >
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{u.name || 'Unnamed'}</div>
-                  <div style={{ fontSize: 11, opacity: .5 }}>{u.email}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: onUserClick ? colorVar : 'inherit' }}>{u.name || 'Unnamed'}</div>
+                  <div style={{ fontSize: 11, opacity: .5 }}>{u.email} {u.uid ? `· UID: ${u.uid}` : ''}</div>
                 </div>
+                {onUserClick && <span style={{ fontSize: 10, opacity: .4 }}>→</span>}
               </div>
             ))}
             {users.length > 5 && (
