@@ -14,7 +14,7 @@ import java.util.Map;
  * Endpoints accessible only to users with the WORKER role.
  */
 @RestController
-@RequestMapping("/worker")
+@RequestMapping("/api/worker")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('WORKER')")
 public class WorkerController {

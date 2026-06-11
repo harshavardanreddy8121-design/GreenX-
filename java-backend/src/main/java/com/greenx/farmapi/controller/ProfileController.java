@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Security is enforced by SecurityConfig (.requestMatchers("/profile").authenticated()).
  */
 @RestController
-@RequestMapping("/profile")
+@RequestMapping("/api/profile")
 @RequiredArgsConstructor
 public class ProfileController {
 

@@ -1,7 +1,9 @@
 // VITE_API_URL must be set in Vercel → Settings → Environment Variables.
+// Set it to the bare backend origin WITHOUT a trailing /api — all API paths
+// are now explicit (e.g. /api/auth/login) so the base URL must be the root.
 // Fallback to the known Railway backend so the app works even if the env var
 // is missing (avoids 404s when Vercel serves /api as a static path).
-const RAILWAY_BACKEND = 'https://spring-boot-backend-production-13e6.up.railway.app/api';
+const RAILWAY_BACKEND = 'https://spring-boot-backend-production-13e6.up.railway.app';
 
 const rawEnvUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 
@@ -20,7 +22,7 @@ if (!envUrl) {
     console.warn(
       '[GreenX] VITE_API_URL is not set. ' +
       'Falling back to the Railway backend URL. ' +
-      'Set VITE_API_URL=https://spring-boot-backend-production-13e6.up.railway.app/api in Vercel → Settings → Environment Variables.'
+      'Set VITE_API_URL=https://spring-boot-backend-production-13e6.up.railway.app in Vercel → Settings → Environment Variables.'
     );
   }
 }
@@ -28,7 +30,7 @@ if (!envUrl) {
 export const API_BASE_URL = envUrl || RAILWAY_BACKEND;
 
 const trimmedApiBase = API_BASE_URL.replace(/\/+$/, '');
-export const WS_BASE_URL = `${trimmedApiBase}/ws`;
+export const WS_BASE_URL = `${trimmedApiBase}/api/ws`;
 
 // Always log the active API URL so it is visible in the browser console
 // regardless of environment — makes debugging Vercel deployments easier.

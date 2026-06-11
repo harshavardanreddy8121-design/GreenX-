@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Collections;
 
 @RestController
-@RequestMapping("/data")
+@RequestMapping("/api/data")
 @RequiredArgsConstructor
 public class DataController {
     

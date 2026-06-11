@@ -20,7 +20,7 @@ import java.util.Map;
  * This controller exposes the /field/dashboard path required by the RBAC spec.
  */
 @RestController
-@RequestMapping("/field")
+@RequestMapping("/api/field")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('FIELD_MANAGER')")
 public class FieldDashboardController {

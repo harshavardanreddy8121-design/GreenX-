@@ -16,7 +16,7 @@ import java.util.Map;
  * otherwise falls back to the deterministic rule-based engine.
  */
 @RestController
-@RequestMapping("/ai")
+@RequestMapping("/api/ai")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AiController {

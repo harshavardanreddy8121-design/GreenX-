@@ -65,7 +65,6 @@ logging:
 # Server Configuration
 # Railway injects PORT automatically; default 8001 matches Emergent's expected port
 server.port: ${PORT:8001}
-server.servlet.context-path: /api
 
 # JWT Configuration
 # Set JWT_SECRET env var in Railway/Render to a strong random string

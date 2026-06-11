@@ -143,7 +143,7 @@ class JavaApiClient {
     role: string,
     options?: { persistSession?: boolean }
   ) {
-    const response = await this.request<AuthResponse>('/auth/register', 'POST', {
+    const response = await this.request<AuthResponse>('/api/auth/register', 'POST', {
       email,
       password,
       name,
@@ -159,7 +159,7 @@ class JavaApiClient {
   }
 
   public async signInWithPassword(email: string, password: string) {
-    const response = await this.request<AuthResponse>('/auth/login', 'POST', {
+    const response = await this.request<AuthResponse>('/api/auth/login', 'POST', {
       email,
       password,
     });
@@ -179,7 +179,7 @@ class JavaApiClient {
   }
 
   public async getCurrentUser() {
-    return this.request('/auth/me', 'GET');
+    return this.request('/api/auth/me', 'GET');
   }
 
   // Public escape hatch for non-CRUD API routes.
@@ -212,19 +212,19 @@ class JavaApiClient {
     }
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    return this.request<DatabaseRow[]>(`/data/${tableName}${query}`, 'GET');
+    return this.request<DatabaseRow[]>(`/api/data/${tableName}${query}`, 'GET');
   }
 
   public async insert(tableName: string, data: any) {
-    return this.request(`/data/${tableName}`, 'POST', data);
+    return this.request(`/api/data/${tableName}`, 'POST', data);
   }
 
   public async update(tableName: string, id: string, data: any) {
-    return this.request(`/data/${tableName}/${id}`, 'PUT', data);
+    return this.request(`/api/data/${tableName}/${id}`, 'PUT', data);
   }
 
   public async delete(tableName: string, id: string) {
-    return this.request(`/data/${tableName}/${id}`, 'DELETE');
+    return this.request(`/api/data/${tableName}/${id}`, 'DELETE');
   }
 
   // Shorthand methods for common operations

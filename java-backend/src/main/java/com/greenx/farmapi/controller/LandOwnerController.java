@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/landowner")
+@RequestMapping("/api/landowner")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('LAND_OWNER') or hasRole('LANDOWNER')")
 public class LandOwnerController {
