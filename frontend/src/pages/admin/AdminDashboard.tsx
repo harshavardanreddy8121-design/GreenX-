@@ -90,10 +90,10 @@ export default function AdminDashboard() {
   const totalRevenue = farms.reduce((s: number, f: any) => s + (f.expectedRevenue || 0), 0);
   const ai = useAI();
 
-  const experts = users.filter((u: any) => u.role === 'expert');
-  const fieldManagers = users.filter((u: any) => u.role === 'fieldmanager');
-  const workers = users.filter((u: any) => u.role === 'worker');
-  const landowners = users.filter((u: any) => u.role === 'landowner');
+  const experts = users.filter((u: any) => u.role?.toUpperCase() === 'EXPERT');
+  const fieldManagers = users.filter((u: any) => u.role?.toUpperCase() === 'FIELD_MANAGER');
+  const workers = users.filter((u: any) => u.role?.toUpperCase() === 'WORKER');
+  const landowners = users.filter((u: any) => u.role?.toUpperCase() === 'LAND_OWNER');
 
   const filteredFarms = useMemo(() => {
     const search = farmSearch.trim().toLowerCase();
