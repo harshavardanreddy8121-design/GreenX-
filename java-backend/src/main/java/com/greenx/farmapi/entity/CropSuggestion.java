@@ -60,8 +60,7 @@ public class CropSuggestion {
     @Column(name = "SUITABILITY_SCORE", precision = 3, scale = 1)
     private BigDecimal suitabilityScore;
 
-    @Lob
-    @Column(name = "EXPERT_NOTES")
+    @Column(name = "EXPERT_NOTES", columnDefinition = "TEXT")
     private String expertNotes;
 
     @Column(name = "IS_SELECTED")

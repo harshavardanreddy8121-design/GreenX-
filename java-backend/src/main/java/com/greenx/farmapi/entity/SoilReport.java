@@ -62,8 +62,7 @@ public class SoilReport {
     @Column(name = "IRON_PPM", precision = 5, scale = 2)
     private BigDecimal ironPpm;
 
-    @Lob
-    @Column(name = "EXPERT_REMARKS")
+    @Column(name = "EXPERT_REMARKS", columnDefinition = "TEXT")
     private String expertRemarks;
 
     @Column(name = "OVERALL_RATING", length = 20)

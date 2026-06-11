@@ -46,12 +46,10 @@ public class Prescription {
     @Column(name = "PRE_HARVEST_INTERVAL", length = 100)
     private String preHarvestInterval;
 
-    @Lob
-    @Column(name = "SAFETY_PRECAUTIONS")
+    @Column(name = "SAFETY_PRECAUTIONS", columnDefinition = "TEXT")
     private String safetyPrecautions;
 
-    @Lob
-    @Column(name = "FM_INSTRUCTIONS")
+    @Column(name = "FM_INSTRUCTIONS", columnDefinition = "TEXT")
     private String fmInstructions;
 
     @Column(name = "IS_ACKNOWLEDGED")

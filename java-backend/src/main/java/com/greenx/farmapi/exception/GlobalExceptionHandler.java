@@ -1,6 +1,8 @@
 package com.greenx.farmapi.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Centralised exception → HTTP response mapping for the GreenX API.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -63,9 +66,33 @@ public class GlobalExceptionHandler {
 
     // ── 500 Internal Server Error ─────────────────────────────────────────────
 
+    /**
+     * Handles database-level errors including PostgreSQL LOB stream failures.
+     * These occur when @Lob fields are accessed outside a transaction or when
+     * the connection is closed before the large object stream is fully read.
+     */
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccess(
+            DataAccessException ex, HttpServletRequest request) {
+        String message = ex.getMessage() != null ? ex.getMessage() : "Database error";
+        // Provide a friendlier message for LOB stream errors
+        if (message.contains("lob stream") || message.contains("large object")
+                || message.contains("Unable to access")) {
+            log.error("PostgreSQL LOB stream error at {}: {}", request.getRequestURI(), message);
+            return build(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Database read error: a large object field could not be accessed. "
+                            + "Please try again or contact support.",
+                    request);
+        }
+        log.error("Data access error at {}: {}", request.getRequestURI(), message);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Database error: " + message, request);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(
             Exception ex, HttpServletRequest request) {
+        log.error("Unexpected error at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred: " + ex.getMessage(), request);
     }

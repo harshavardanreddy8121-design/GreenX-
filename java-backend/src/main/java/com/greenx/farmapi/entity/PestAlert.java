@@ -40,8 +40,7 @@ public class PestAlert {
     @Column(name = "FIELD_LOCATION", length = 200)
     private String fieldLocation;
 
-    @Lob
-    @Column(name = "DESCRIPTION")
+    @Column(name = "DESCRIPTION", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "STATUS", length = 30)

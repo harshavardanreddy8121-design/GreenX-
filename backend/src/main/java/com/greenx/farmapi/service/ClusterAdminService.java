@@ -129,19 +129,36 @@ public class ClusterAdminService {
                 return sample;
         }
 
+        @Transactional(readOnly = true)
         public Map<String, Object> getStats(String clusterId) {
                 Map<String, Object> stats = new HashMap<>();
-                List<Farm> farms = clusterId != null ? farmRepository.findByClusterId(clusterId)
-                                : farmRepository.findAll();
+                try {
+                        List<Farm> farms = clusterId != null ? farmRepository.findByClusterId(clusterId)
+                                        : farmRepository.findAll();
 
-                stats.put("totalFarms", farms.size());
-                stats.put("activeFarms", farms.stream().filter(f -> "ACTIVE".equals(f.getStatus())).count());
-                stats.put("pendingFarms", farms.stream().filter(f -> "PENDING".equals(f.getStatus())).count());
+                        stats.put("totalFarms", farms.size());
+                        stats.put("activeFarms", farms.stream().filter(f -> "ACTIVE".equals(f.getStatus())).count());
+                        stats.put("pendingFarms", farms.stream().filter(f -> "PENDING".equals(f.getStatus())).count());
+                        stats.put("registeredFarms",
+                                        farms.stream().filter(f -> "REGISTERED".equals(f.getStatus())).count());
 
-                long pendingSamples = soilSampleRepository.findByStatus("AT_LAB").size()
-                                + soilSampleRepository.findByStatus("TESTING").size();
-                stats.put("pendingSamples", pendingSamples);
+                        long pendingSamples = soilSampleRepository.findByStatus("AT_LAB").size()
+                                        + soilSampleRepository.findByStatus("TESTING").size();
+                        stats.put("pendingSamples", pendingSamples);
 
+                        long totalUsers = clusterId != null ? userRepository.findByClusterId(clusterId).size()
+                                        : userRepository.count();
+                        stats.put("totalUsers", totalUsers);
+                } catch (Exception e) {
+                        // Return partial stats rather than failing the whole dashboard
+                        stats.putIfAbsent("totalFarms", 0);
+                        stats.putIfAbsent("activeFarms", 0L);
+                        stats.putIfAbsent("pendingFarms", 0L);
+                        stats.putIfAbsent("registeredFarms", 0L);
+                        stats.putIfAbsent("pendingSamples", 0L);
+                        stats.putIfAbsent("totalUsers", 0L);
+                        stats.put("statsError", "Unable to load some statistics: " + e.getMessage());
+                }
                 return stats;
         }
 }

@@ -51,8 +51,7 @@ public class SoilSample {
     @Column(name = "GPS_COORDINATES", length = 200)
     private String gpsCoordinates;
 
-    @Lob
-    @Column(name = "COLLECTION_NOTES")
+    @Column(name = "COLLECTION_NOTES", columnDefinition = "TEXT")
     private String collectionNotes;
 
     @Column(name = "STATUS", length = 20)

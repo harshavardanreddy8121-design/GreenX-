@@ -6,15 +6,18 @@ import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.*;
 import com.greenx.farmapi.service.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Slf4j
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -31,32 +34,50 @@ public class ClusterAdminController {
     private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/dashboard")
+    @Transactional(readOnly = true)
     public ApiResponse<Map<String, Object>> dashboard(Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        Map<String, Object> stats = adminService.getStats(user.getClusterId());
-        stats.put("role", "ADMIN");
-        stats.put("message", "Welcome to the GreenX Admin Dashboard");
-        return ApiResponse.success(stats);
+        try {
+            User user = (User) auth.getPrincipal();
+            Map<String, Object> stats = adminService.getStats(user.getClusterId());
+            stats.put("role", "ADMIN");
+            stats.put("message", "Welcome to the GreenX Admin Dashboard");
+            return ApiResponse.success(stats);
+        } catch (Exception e) {
+            log.error("Error loading admin dashboard", e);
+            return ApiResponse.error("Failed to load dashboard: " + e.getMessage());
+        }
     }
 
     @GetMapping("/stats")
+    @Transactional(readOnly = true)
     public ApiResponse<Map<String, Object>> getStats(Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        return ApiResponse.success(adminService.getStats(user.getClusterId()));
+        try {
+            User user = (User) auth.getPrincipal();
+            return ApiResponse.success(adminService.getStats(user.getClusterId()));
+        } catch (Exception e) {
+            log.error("Error loading admin stats", e);
+            return ApiResponse.error("Failed to load stats: " + e.getMessage());
+        }
     }
 
     @GetMapping("/farms")
+    @Transactional(readOnly = true)
     public ApiResponse<List<Farm>> getFarms(
             @RequestParam(required = false) String status,
             Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        List<Farm> farms = user.getClusterId() != null
-                ? farmRepository.findByClusterId(user.getClusterId())
-                : farmRepository.findAll();
-        if (status != null && !status.isBlank()) {
-            farms = farms.stream().filter(f -> status.equalsIgnoreCase(f.getStatus())).toList();
+        try {
+            User user = (User) auth.getPrincipal();
+            List<Farm> farms = user.getClusterId() != null
+                    ? farmRepository.findByClusterId(user.getClusterId())
+                    : farmRepository.findAll();
+            if (status != null && !status.isBlank()) {
+                farms = farms.stream().filter(f -> status.equalsIgnoreCase(f.getStatus())).toList();
+            }
+            return ApiResponse.success(farms);
+        } catch (Exception e) {
+            log.error("Error loading farms", e);
+            return ApiResponse.error("Failed to load farms: " + e.getMessage());
         }
-        return ApiResponse.success(farms);
     }
 
     @GetMapping("/farms/unassigned")
@@ -126,27 +147,45 @@ public class ClusterAdminController {
     }
 
     @GetMapping("/samples/pending")
+    @Transactional(readOnly = true)
     public ApiResponse<List<SoilSample>> getPendingSamples() {
-        List<SoilSample> samples = new ArrayList<>(soilSampleRepository.findByStatus("COLLECTED"));
-        samples.addAll(soilSampleRepository.findByStatus("AT_LAB"));
-        samples.addAll(soilSampleRepository.findByStatus("TESTING"));
-        return ApiResponse.success(samples);
+        try {
+            List<SoilSample> samples = new ArrayList<>(soilSampleRepository.findByStatus("COLLECTED"));
+            samples.addAll(soilSampleRepository.findByStatus("AT_LAB"));
+            samples.addAll(soilSampleRepository.findByStatus("TESTING"));
+            return ApiResponse.success(samples);
+        } catch (Exception e) {
+            log.error("Error loading pending samples", e);
+            return ApiResponse.error("Failed to load pending samples: " + e.getMessage());
+        }
     }
 
     @GetMapping("/alerts")
+    @Transactional(readOnly = true)
     public ApiResponse<List<PestAlert>> getAllAlerts() {
-        return ApiResponse.success(pestAlertRepository.findAllByOrderByCreatedAtDesc());
+        try {
+            return ApiResponse.success(pestAlertRepository.findAllByOrderByCreatedAtDesc());
+        } catch (Exception e) {
+            log.error("Error loading pest alerts", e);
+            return ApiResponse.error("Failed to load alerts: " + e.getMessage());
+        }
     }
 
     @GetMapping("/users")
+    @Transactional(readOnly = true)
     public ApiResponse<List<com.greenx.farmapi.dto.UserDto>> getAllUsers(Authentication auth) {
-        User user = (User) auth.getPrincipal();
-        List<User> users = user.getClusterId() != null
-                ? userRepository.findByClusterId(user.getClusterId())
-                : userRepository.findAll();
-        return ApiResponse.success(users.stream()
-                .map(com.greenx.farmapi.dto.UserDto::fromEntity)
-                .toList());
+        try {
+            User user = (User) auth.getPrincipal();
+            List<User> users = user.getClusterId() != null
+                    ? userRepository.findByClusterId(user.getClusterId())
+                    : userRepository.findAll();
+            return ApiResponse.success(users.stream()
+                    .map(com.greenx.farmapi.dto.UserDto::fromEntity)
+                    .toList());
+        } catch (Exception e) {
+            log.error("Error loading users", e);
+            return ApiResponse.error("Failed to load users: " + e.getMessage());
+        }
     }
 
     @GetMapping("/notifications")
