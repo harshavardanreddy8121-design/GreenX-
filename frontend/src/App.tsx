@@ -50,6 +50,10 @@ import CropSuggestions from "./pages/expert/CropSuggestions";
 import CropCalendar from "./pages/expert/CropCalendar";
 import PestAlerts from "./pages/expert/PestAlerts";
 import Prescriptions from "./pages/expert/Prescriptions";
+import LandownerWeather from "./pages/landowner/LandownerWeather";
+import FieldManagerWeather from "./pages/fieldmanager/FieldManagerWeather";
+import ExpertWeather from "./pages/expert/ExpertWeather";
+import WorkerWeather from "./pages/worker/WorkerWeather";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +75,7 @@ const AppRoutes = () => (
     <Route path="/landowner/input-costs" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><InputCosts /></ProtectedRoute>} />
     <Route path="/landowner/yield-profit" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><YieldProfit /></ProtectedRoute>} />
     <Route path="/landowner/season-reports" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><SeasonReports /></ProtectedRoute>} />
+    <Route path="/landowner/weather" element={<ProtectedRoute allowedRoles={['landowner', 'admin']}><LandownerWeather /></ProtectedRoute>} />
     <Route path="/fieldmanager" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><FieldManagerDashboard /></ProtectedRoute>} />
     <Route path="/fieldmanager/today-tasks" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><TodayTasks /></ProtectedRoute>} />
     <Route path="/fieldmanager/my-farms" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><AssignedFarms /></ProtectedRoute>} />
@@ -78,6 +83,7 @@ const AppRoutes = () => (
     <Route path="/fieldmanager/worker-management" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><WorkerManagement /></ProtectedRoute>} />
     <Route path="/fieldmanager/upload-photos" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><UploadPhotos /></ProtectedRoute>} />
     <Route path="/fieldmanager/flag-issues" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><FlagIssues /></ProtectedRoute>} />
+    <Route path="/fieldmanager/weather" element={<ProtectedRoute allowedRoles={['fieldmanager', 'admin']}><FieldManagerWeather /></ProtectedRoute>} />
     <Route path="/expert" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><ExpertDashboard /></ProtectedRoute>} />
     <Route path="/expert/soil-queue" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><SoilSampleQueue /></ProtectedRoute>} />
     <Route path="/expert/lab-results" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><LabResults /></ProtectedRoute>} />
@@ -85,7 +91,9 @@ const AppRoutes = () => (
     <Route path="/expert/crop-calendar" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><CropCalendar /></ProtectedRoute>} />
     <Route path="/expert/pest-alerts" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><PestAlerts /></ProtectedRoute>} />
     <Route path="/expert/prescriptions" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><Prescriptions /></ProtectedRoute>} />
+    <Route path="/expert/weather" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><ExpertWeather /></ProtectedRoute>} />
     <Route path="/worker" element={<ProtectedRoute allowedRoles={['worker', 'user', 'admin']}><WorkerDashboard /></ProtectedRoute>} />
+    <Route path="/worker/weather" element={<ProtectedRoute allowedRoles={['worker', 'user', 'admin']}><WorkerWeather /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
       <Route index element={<AdminDashboard />} />
       <Route path="submissions" element={<SubmissionsPage />} />
