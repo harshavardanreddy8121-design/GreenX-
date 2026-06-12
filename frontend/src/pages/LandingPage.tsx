@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GreenXLogo } from '@/components/GreenXLogo';
-import { Sprout, FlaskConical, Wheat, Ship, Microscope, HardHat, BarChart3, Briefcase } from 'lucide-react';
+import { Sprout, FlaskConical, Wheat, Ship, Microscope, HardHat, BarChart3, Briefcase, Play, X, Users, Star } from 'lucide-react';
 
 export default function LandingPage() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('t2');
     const [showPlant, setShowPlant] = useState(false);
+    const [videoModalOpen, setVideoModalOpen] = useState(false);
+    const [activeVideo, setActiveVideo] = useState(0);
     const cursorRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
 
@@ -484,12 +486,365 @@ export default function LandingPage() {
           transform: translateY(0);
         }
 
+        /* ══ VIDEO SECTION ══ */
+        .video-section {
+          position: relative;
+          padding: 120px 60px;
+          background: var(--black);
+          overflow: hidden;
+        }
+        .video-section-bg {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 70% 60% at 50% 50%, rgba(34,197,94,0.06) 0%, transparent 65%),
+            radial-gradient(ellipse 40% 50% at 10% 80%, rgba(212,168,71,0.05) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 45% at 90% 15%, rgba(34,197,94,0.04) 0%, transparent 55%);
+          pointer-events: none;
+        }
+        .video-section-grid {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px);
+          background-size: 80px 80px;
+          mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 20%, transparent 75%);
+          pointer-events: none;
+        }
+
+        /* Floating orbs specific to video section */
+        .vid-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(70px);
+          pointer-events: none;
+          animation: float 10s ease-in-out infinite;
+        }
+        .vid-orb-1 {
+          width: 320px; height: 320px;
+          background: rgba(34,197,94,0.07);
+          top: -80px; left: -80px;
+          animation-delay: 0s;
+        }
+        .vid-orb-2 {
+          width: 240px; height: 240px;
+          background: rgba(212,168,71,0.06);
+          bottom: -60px; right: -60px;
+          animation-delay: -4s;
+        }
+        .vid-orb-3 {
+          width: 180px; height: 180px;
+          background: rgba(34,197,94,0.05);
+          top: 50%; left: 75%;
+          animation-delay: -7s;
+        }
+
+        /* Floating particles */
+        .vid-particle {
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          animation: particleDrift linear infinite;
+          opacity: 0;
+        }
+        @keyframes particleDrift {
+          0%   { transform: translateY(0) translateX(0) scale(0.6); opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 0.6; }
+          100% { transform: translateY(-120px) translateX(30px) scale(1.2); opacity: 0; }
+        }
+
+        .video-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 2;
+        }
+        .video-header {
+          text-align: center;
+          margin-bottom: 64px;
+        }
+
+        /* Tab pills for video selection */
+        .video-tabs {
+          display: inline-flex;
+          gap: 8px;
+          padding: 6px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 40px;
+          margin-top: 28px;
+        }
+        .video-tab-btn {
+          padding: 8px 20px;
+          border: none;
+          border-radius: 30px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 12.5px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
+          cursor: pointer;
+          transition: all 0.25s;
+          background: transparent;
+          color: var(--text2);
+        }
+        .video-tab-btn.active {
+          background: var(--green);
+          color: #000;
+          box-shadow: 0 0 20px rgba(34,197,94,0.3);
+        }
+        .video-tab-btn:not(.active):hover {
+          color: var(--green);
+          background: var(--green-dim);
+        }
+
+        /* Main video frame */
+        .video-frame-wrap {
+          position: relative;
+          border-radius: 24px;
+          overflow: hidden;
+          box-shadow:
+            0 0 0 1px rgba(34,197,94,0.18),
+            0 0 60px rgba(34,197,94,0.10),
+            0 40px 100px rgba(0,0,0,0.6);
+          animation: borderGlow 4s ease-in-out infinite;
+        }
+        @keyframes borderGlow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(34,197,94,0.18), 0 0 60px rgba(34,197,94,0.10), 0 40px 100px rgba(0,0,0,0.6); }
+          50%       { box-shadow: 0 0 0 1px rgba(34,197,94,0.40), 0 0 100px rgba(34,197,94,0.20), 0 40px 100px rgba(0,0,0,0.6); }
+        }
+        .video-aspect {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 */
+          background: var(--surface);
+          overflow: hidden;
+        }
+        .video-thumbnail {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s ease, filter 0.4s ease;
+          filter: brightness(0.55) saturate(1.1);
+        }
+        .video-frame-wrap:hover .video-thumbnail {
+          transform: scale(1.03);
+          filter: brightness(0.45) saturate(1.2);
+        }
+
+        /* Gradient overlay on thumbnail */
+        .video-overlay-grad {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(to top, rgba(6,10,7,0.85) 0%, transparent 50%),
+            linear-gradient(to bottom, rgba(6,10,7,0.3) 0%, transparent 40%);
+          pointer-events: none;
+        }
+
+        /* Play button */
+        .video-play-btn {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          width: 80px; height: 80px;
+          border-radius: 50%;
+          background: rgba(34,197,94,0.15);
+          border: 2px solid rgba(34,197,94,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(8px);
+          animation: playPulse 3s ease-in-out infinite;
+          z-index: 5;
+        }
+        @keyframes playPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4), 0 0 30px rgba(34,197,94,0.15); }
+          50%       { box-shadow: 0 0 0 16px rgba(34,197,94,0), 0 0 50px rgba(34,197,94,0.25); }
+        }
+        .video-play-btn:hover {
+          background: rgba(34,197,94,0.30);
+          border-color: var(--green);
+          transform: translate(-50%, -50%) scale(1.12);
+          box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 0 60px rgba(34,197,94,0.4);
+          animation: none;
+        }
+        .video-play-btn svg {
+          color: var(--green);
+          margin-left: 4px; /* optical center for play icon */
+          filter: drop-shadow(0 0 8px rgba(34,197,94,0.6));
+          transition: filter 0.3s;
+        }
+        .video-play-btn:hover svg {
+          filter: drop-shadow(0 0 16px rgba(34,197,94,1));
+        }
+
+        /* Duration badge */
+        .video-duration-badge {
+          position: absolute;
+          bottom: 20px; right: 20px;
+          padding: 5px 12px;
+          background: rgba(6,10,7,0.75);
+          border: 1px solid rgba(34,197,94,0.25);
+          border-radius: 20px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text);
+          backdrop-filter: blur(8px);
+          z-index: 5;
+        }
+
+        /* Video caption bar */
+        .video-caption {
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          padding: 28px 32px 24px;
+          z-index: 5;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 16px;
+        }
+        .video-caption-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--white);
+          line-height: 1.3;
+        }
+        .video-caption-sub {
+          font-size: 13px;
+          color: var(--text2);
+          margin-top: 4px;
+          line-height: 1.5;
+        }
+        .video-watch-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 20px;
+          background: var(--green);
+          border: none;
+          border-radius: 8px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          color: #000;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.25s;
+          flex-shrink: 0;
+        }
+        .video-watch-cta:hover {
+          background: var(--green3);
+          transform: translateY(-1px);
+          box-shadow: 0 0 30px rgba(34,197,94,0.4);
+        }
+
+        /* Social proof strip below video */
+        .video-proof-strip {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 40px;
+          margin-top: 40px;
+          flex-wrap: wrap;
+        }
+        .video-proof-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13.5px;
+          color: var(--text2);
+        }
+        .video-proof-item svg { color: var(--green); flex-shrink: 0; }
+        .video-proof-item strong { color: var(--white); font-weight: 700; }
+        .video-proof-divider {
+          width: 1px; height: 28px;
+          background: var(--border);
+        }
+        .video-star { color: var(--gold) !important; }
+
+        /* ══ VIDEO MODAL ══ */
+        .video-modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.88);
+          backdrop-filter: blur(12px);
+          z-index: 2000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .video-modal-inner {
+          position: relative;
+          width: 100%;
+          max-width: 960px;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 0 0 1px rgba(34,197,94,0.2), 0 40px 120px rgba(0,0,0,0.8);
+          animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.88); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        .video-modal-aspect {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%;
+          background: #000;
+        }
+        .video-modal-aspect iframe {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+        .video-modal-close {
+          position: absolute;
+          top: -48px; right: 0;
+          width: 40px; height: 40px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: var(--text);
+          transition: all 0.2s;
+        }
+        .video-modal-close:hover {
+          background: rgba(34,197,94,0.15);
+          border-color: var(--green);
+          color: var(--green);
+        }
+
         @media (max-width: 900px) {
           section { padding: 70px 28px; }
           nav { padding: 16px 24px; }
           nav.scrolled { padding: 12px 24px; }
                     .hero { padding: 74px 24px 60px; }
           .nav-links { display: none; }
+          .video-section { padding: 80px 24px; }
+          .video-caption { flex-direction: column; align-items: flex-start; }
+          .video-proof-strip { gap: 20px; }
+          .video-proof-divider { display: none; }
+          .video-tabs { flex-wrap: wrap; justify-content: center; }
         }
       `}</style>
 
@@ -507,6 +862,7 @@ export default function LandingPage() {
                 <ul className="nav-links">
                     <li><a href="#problem">Problem</a></li>
                     <li><a href="#solution">Solution</a></li>
+                    <li><a href="#vision">Our Story</a></li>
                     <li><a href="#platform">Platform</a></li>
                 </ul>
                 <div className="nav-cta">
@@ -692,6 +1048,225 @@ export default function LandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* ══ VIDEO SHOWCASE SECTION ══ */}
+            <section className="video-section reveal" id="vision">
+                {/* Background layers */}
+                <div className="video-section-bg" />
+                <div className="video-section-grid" />
+                <div className="vid-orb vid-orb-1" />
+                <div className="vid-orb vid-orb-2" />
+                <div className="vid-orb vid-orb-3" />
+
+                {/* Floating micro-particles */}
+                {[
+                    { size: 4, left: '12%', top: '70%', dur: '7s', delay: '0s',   color: 'rgba(34,197,94,0.5)' },
+                    { size: 3, left: '25%', top: '80%', dur: '9s', delay: '-2s',  color: 'rgba(212,168,71,0.5)' },
+                    { size: 5, left: '60%', top: '75%', dur: '8s', delay: '-4s',  color: 'rgba(34,197,94,0.4)' },
+                    { size: 3, left: '78%', top: '65%', dur: '11s', delay: '-1s', color: 'rgba(74,222,128,0.5)' },
+                    { size: 4, left: '88%', top: '82%', dur: '6s', delay: '-3s',  color: 'rgba(212,168,71,0.4)' },
+                    { size: 2, left: '42%', top: '88%', dur: '10s', delay: '-5s', color: 'rgba(34,197,94,0.6)' },
+                ].map((p, i) => (
+                    <div key={i} className="vid-particle" style={{
+                        width: p.size, height: p.size,
+                        left: p.left, top: p.top,
+                        background: p.color,
+                        animationDuration: p.dur,
+                        animationDelay: p.delay,
+                    }} />
+                ))}
+
+                <div className="video-inner">
+                    {/* Section header */}
+                    <div className="video-header">
+                        <div className="section-eyebrow" style={{ justifyContent: 'center' }}>Our Story</div>
+                        <h2 className="section-title" style={{ textAlign: 'center' }}>
+                            See GreenX <em>in Action</em>
+                        </h2>
+                        <p className="section-sub" style={{ margin: '16px auto 0', textAlign: 'center' }}>
+                            Watch how we transform idle farmland into high-yield, professionally managed operations — from soil test to export.
+                        </p>
+
+                        {/* Video selector tabs */}
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
+                            <div className="video-tabs">
+                                {[
+                                    { label: '🌱 Company Story',    idx: 0 },
+                                    { label: '📱 Product Demo',     idx: 1 },
+                                    { label: '👨‍🌾 Farmer Testimonial', idx: 2 },
+                                ].map(tab => (
+                                    <button
+                                        key={tab.idx}
+                                        className={`video-tab-btn${activeVideo === tab.idx ? ' active' : ''}`}
+                                        onClick={() => setActiveVideo(tab.idx)}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Video frame */}
+                    <div className="video-frame-wrap">
+                        <div className="video-aspect">
+                            {/* Thumbnail — rich gradient placeholder with field imagery feel */}
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                background: activeVideo === 0
+                                    ? 'linear-gradient(135deg, #0a1f0e 0%, #0f2d14 30%, #071a0a 60%, #0a1208 100%)'
+                                    : activeVideo === 1
+                                    ? 'linear-gradient(135deg, #0a0f1f 0%, #0d1a2d 30%, #071018 60%, #060a12 100%)'
+                                    : 'linear-gradient(135deg, #1a0f07 0%, #2d1a0d 30%, #180e07 60%, #120a06 100%)',
+                                transition: 'background 0.5s ease',
+                            }}>
+                                {/* Decorative grid lines inside thumbnail */}
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    backgroundImage: 'linear-gradient(rgba(34,197,94,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,197,94,0.06) 1px, transparent 1px)',
+                                    backgroundSize: '48px 48px',
+                                }} />
+                                {/* Central glow */}
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    background: activeVideo === 0
+                                        ? 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(34,197,94,0.12) 0%, transparent 70%)'
+                                        : activeVideo === 1
+                                        ? 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(34,130,197,0.12) 0%, transparent 70%)'
+                                        : 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,168,71,0.12) 0%, transparent 70%)',
+                                }} />
+                                {/* Large icon watermark */}
+                                <div style={{
+                                    position: 'absolute', inset: 0,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    opacity: 0.06,
+                                }}>
+                                    <Sprout style={{ width: 220, height: 220, color: activeVideo === 2 ? '#d4a847' : '#22c55e' }} strokeWidth={1} />
+                                </div>
+                                {/* Video label top-left */}
+                                <div style={{
+                                    position: 'absolute', top: 20, left: 24,
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '5px 14px',
+                                    background: 'rgba(6,10,7,0.65)',
+                                    border: '1px solid rgba(34,197,94,0.2)',
+                                    borderRadius: 20,
+                                    backdropFilter: 'blur(8px)',
+                                    fontSize: 12, fontWeight: 600,
+                                    color: 'var(--text2)',
+                                    letterSpacing: '0.5px',
+                                    zIndex: 5,
+                                }}>
+                                    <span style={{
+                                        width: 7, height: 7, borderRadius: '50%',
+                                        background: '#ef4444',
+                                        boxShadow: '0 0 8px #ef4444',
+                                        display: 'inline-block',
+                                        animation: 'pulse 2s infinite',
+                                    }} />
+                                    {activeVideo === 0 ? 'COMPANY STORY' : activeVideo === 1 ? 'PRODUCT DEMO' : 'TESTIMONIAL'}
+                                </div>
+                            </div>
+
+                            {/* Gradient overlay */}
+                            <div className="video-overlay-grad" />
+
+                            {/* Play button */}
+                            <button
+                                className="video-play-btn"
+                                onClick={() => setVideoModalOpen(true)}
+                                aria-label="Play video"
+                            >
+                                <Play size={28} fill="currentColor" />
+                            </button>
+
+                            {/* Duration badge */}
+                            <div className="video-duration-badge">
+                                {activeVideo === 0 ? '2:45' : activeVideo === 1 ? '4:12' : '3:08'}
+                            </div>
+
+                            {/* Caption bar */}
+                            <div className="video-caption">
+                                <div>
+                                    <div className="video-caption-title">
+                                        {activeVideo === 0
+                                            ? 'How GreenX is Rebuilding Indian Agriculture'
+                                            : activeVideo === 1
+                                            ? 'The GreenX Platform — Full Walkthrough'
+                                            : '"My farm earned 4× more in the first season"'}
+                                    </div>
+                                    <div className="video-caption-sub">
+                                        {activeVideo === 0
+                                            ? 'Our founders explain the vision, mission, and the problem we\'re solving at scale.'
+                                            : activeVideo === 1
+                                            ? 'From soil testing to export — see every feature of the GreenX dashboard.'
+                                            : 'Ramesh Patil, Landowner from Nashik, Maharashtra shares his GreenX journey.'}
+                                    </div>
+                                </div>
+                                <button className="video-watch-cta" onClick={() => setVideoModalOpen(true)}>
+                                    <Play size={14} fill="currentColor" /> Watch Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Social proof strip */}
+                    <div className="video-proof-strip">
+                        <div className="video-proof-item">
+                            <Users size={16} />
+                            <span>Watched by <strong>50K+ farmers</strong></span>
+                        </div>
+                        <div className="video-proof-divider" />
+                        <div className="video-proof-item">
+                            <Star size={16} className="video-star" style={{ color: 'var(--gold)' }} />
+                            <span><strong>4.9 / 5</strong> avg. rating from viewers</span>
+                        </div>
+                        <div className="video-proof-divider" />
+                        <div className="video-proof-item">
+                            <Play size={16} />
+                            <span><strong>3 videos</strong> — Story, Demo & Testimonial</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ══ VIDEO MODAL ══ */}
+            {videoModalOpen && (
+                <div
+                    className="video-modal-backdrop"
+                    onClick={(e) => { if (e.target === e.currentTarget) setVideoModalOpen(false); }}
+                >
+                    <div className="video-modal-inner">
+                        <button
+                            className="video-modal-close"
+                            onClick={() => setVideoModalOpen(false)}
+                            aria-label="Close video"
+                        >
+                            <X size={18} />
+                        </button>
+                        <div className="video-modal-aspect">
+                            <iframe
+                                src={
+                                    activeVideo === 0
+                                        ? 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
+                                        : activeVideo === 1
+                                        ? 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
+                                        : 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
+                                }
+                                title={
+                                    activeVideo === 0
+                                        ? 'GreenX Company Story'
+                                        : activeVideo === 1
+                                        ? 'GreenX Product Demo'
+                                        : 'GreenX Farmer Testimonial'
+                                }
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ══ HOW IT WORKS ══ */}
             <section className="reveal" style={{ background: 'var(--deep)' }}>
