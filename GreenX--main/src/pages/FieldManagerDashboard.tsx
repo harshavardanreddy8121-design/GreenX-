@@ -13,6 +13,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
+import { Card } from '@/components/ui/card';
 
 type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports' | 'ai';
 
@@ -368,25 +369,25 @@ export default function FieldManagerDashboard() {
         {farmsLoading && <DashboardSkeleton />}
 
         {!farmsLoading && (farmsError || samplesError) && (
-          <div className="gx-alert-box gx-alert-red">
-            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div>
+          <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>
+            <p className="text-red-600">
               <strong>Backend Connection Error:</strong>{' '}
               {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
-              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+              <span className="block mt-1 text-xs opacity-80">
                 Please check your connection or try refreshing the page.
-              </div>
-            </div>
-          </div>
+              </span>
+            </p>
+          </Card>
         )}
 
         {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}
         {(activeTab === 'overview' || activeTab === 'tasks') && (<>
           {pendingRx.length > 0 && (
-            <div className="gx-alert-box gx-alert-red">
-              <span><Pill className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-              <div><strong>New Prescription from Expert:</strong> {pendingRx[0]?.fmInstructions || pendingRx[0]?.chemicalName || 'Treatment'} — Read instructions & start immediately.</div>
-            </div>
+            <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
+              <span><Pill className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>
+              <p className="text-red-600"><strong>New Prescription from Expert:</strong> {pendingRx[0]?.fmInstructions || pendingRx[0]?.chemicalName || 'Treatment'} — Read instructions & start immediately.</p>
+            </Card>
           )}
 
           <div className="gx-stats-row">

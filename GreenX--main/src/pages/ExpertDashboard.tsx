@@ -12,6 +12,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { javaApi } from '@/integrations/java-api/client';
+import { Card } from '@/components/ui/card';
 
 type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex' | 'ai';
 
@@ -318,25 +319,25 @@ export default function ExpertDashboard() {
         {samplesLoading && <DashboardSkeleton />}
 
         {!samplesLoading && (samplesError || farmsError) && (
-          <div className="gx-alert-box gx-alert-red">
-            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-            <div>
+          <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
+            <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>
+            <p className="text-red-600">
               <strong>Backend Connection Error:</strong>{' '}
               {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
-              <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
+              <span className="block mt-1 text-xs opacity-80">
                 Please check your connection or try refreshing the page.
-              </div>
-            </div>
-          </div>
+              </span>
+            </p>
+          </Card>
         )}
 
         {/* ═══ OVERVIEW TAB ═══ */}
         {activeTab === 'overview' && (<>
           {pestAlerts.length > 0 && (
-            <div className="gx-alert-box gx-alert-red">
-              <span><Bug className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-              <div><strong>Pest Alert from Field Manager:</strong> {pestAlerts[0]?.pestName || 'Infestation'} reported. Photos uploaded. Issue prescription now.</div>
-            </div>
+            <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
+              <span><Bug className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>
+              <p className="text-red-600"><strong>Pest Alert from Field Manager:</strong> {pestAlerts[0]?.pestName || 'Infestation'} reported. Photos uploaded. Issue prescription now.</p>
+            </Card>
           )}
 
           <div className="gx-stats-row">

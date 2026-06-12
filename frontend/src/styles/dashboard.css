@@ -642,41 +642,6 @@
     transition: width 0.8s ease;
 }
 
-/* ── ALERT BOX ── */
-.gx-alert-box {
-    border-radius: var(--gx-radius-sm);
-    padding: 12px 16px;
-    font-size: 15px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-}
-
-.gx-alert-green {
-    background: var(--gx-green-dim);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-    color: #86efac;
-}
-
-.gx-alert-gold {
-    background: var(--gx-gold-dim);
-    border: 1px solid rgba(240, 180, 41, 0.2);
-    color: #fde68a;
-}
-
-.gx-alert-red {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-}
-
-.gx-alert-blue {
-    background: var(--gx-blue-dim);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    color: #93c5fd;
-}
-
 /* ── SECTION DIVIDER ── */
 .gx-section-divider {
     font-size: 13px;
