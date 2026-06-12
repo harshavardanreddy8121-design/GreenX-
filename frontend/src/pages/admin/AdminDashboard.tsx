@@ -212,7 +212,13 @@ export default function AdminDashboard() {
       {/* Operational Status */}
       <div className="gx-section-divider"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Operational Status</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-        <div className="gx-card">
+        <div
+          className="gx-card"
+          style={{ cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+          onClick={() => navigate('/admin/lab-samples')}
+          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 2px var(--gx-green)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; (e.currentTarget as HTMLDivElement).style.transform = ''; }}
+        >
           <div className="gx-card-header">
             <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Samples Pipeline</div>
             <span className="gx-status gx-s-pending">{pendingSamples.length} Pending</span>
@@ -235,9 +241,18 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             )}
+            <div style={{ marginTop: 10, fontSize: 11, opacity: .45, textAlign: 'center', letterSpacing: 0.3 }}>
+              Click to view all →
+            </div>
           </div>
         </div>
-        <div className="gx-card">
+        <div
+          className="gx-card"
+          style={{ cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+          onClick={() => navigate('/admin/diagnostics')}
+          onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 2px var(--gx-orange)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; (e.currentTarget as HTMLDivElement).style.transform = ''; }}
+        >
           <div className="gx-card-header">
             <div className="gx-card-title"><Bug className="inline-block w-4 h-4 mr-1 align-middle" /> Pest Alerts</div>
             <span className={`gx-status ${alerts.length > 0 ? 'gx-s-alert' : 'gx-s-done'}`}>{alerts.length} Active</span>
@@ -261,13 +276,22 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             )}
+            <div style={{ marginTop: 10, fontSize: 11, opacity: .45, textAlign: 'center', letterSpacing: 0.3 }}>
+              Click to view all →
+            </div>
           </div>
         </div>
       </div>
 
       {/* All Farms Table */}
       <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> All Farms</div>
-      <div className="gx-card">
+      <div
+        className="gx-card"
+        style={{ cursor: 'pointer', transition: 'box-shadow 0.15s, transform 0.15s' }}
+        onClick={e => { if ((e.target as HTMLElement).closest('select') === null) navigate('/admin/land'); }}
+        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 0 0 2px var(--gx-green)'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; (e.currentTarget as HTMLDivElement).style.transform = ''; }}
+      >
         <div className="gx-card-header">
           <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Farm Registry</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

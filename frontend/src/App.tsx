@@ -28,6 +28,7 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDiagnostics from "./pages/admin/AdminDiagnostics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLabSamples from "./pages/admin/AdminLabSamples";
+import AdminFarmers from "./pages/admin/AdminFarmers";
 import SubmissionsPage from "./pages/admin/SubmissionsPage";
 import Workflow from "./pages/Workflow";
 import MyFarms from "./pages/landowner/MyFarms";
@@ -98,6 +99,7 @@ const AppRoutes = () => (
       <Route path="inventory" element={<AdminInventory />} />
       <Route path="drones" element={<AdminDrones />} />
       <Route path="users" element={<AdminUsers />} />
+      <Route path="farmers" element={<AdminFarmers />} />
       <Route path="settings" element={<AdminSettings />} />
     </Route>
     <Route path="*" element={<NotFound />} />
