@@ -28,6 +28,21 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDiagnostics from "./pages/admin/AdminDiagnostics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLabSamples from "./pages/admin/AdminLabSamples";
+import AdminFarmsList from "./pages/admin/AdminFarmsList";
+import AdminFarmDetail from "./pages/admin/AdminFarmDetail";
+import AdminUsersList from "./pages/admin/AdminUsersList";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
+import AdminSubmissionsList from "./pages/admin/AdminSubmissionsList";
+import AdminSubmissionDetail from "./pages/admin/AdminSubmissionDetail";
+import AdminExpertsList from "./pages/admin/AdminExpertsList";
+import AdminFieldManagersList from "./pages/admin/AdminFieldManagersList";
+import AdminWorkersList from "./pages/admin/AdminWorkersList";
+import AdminSoilReportsList from "./pages/admin/AdminSoilReportsList";
+import AdminSoilReportDetail from "./pages/admin/AdminSoilReportDetail";
+import AdminPestAlertsList from "./pages/admin/AdminPestAlertsList";
+import AdminPestAlertDetail from "./pages/admin/AdminPestAlertDetail";
+import AdminPrescriptionsList from "./pages/admin/AdminPrescriptionsList";
+import AdminPrescriptionDetail from "./pages/admin/AdminPrescriptionDetail";
 import Workflow from "./pages/Workflow";
 import MyFarms from "./pages/landowner/MyFarms";
 import SoilReports from "./pages/landowner/SoilReports";
@@ -95,8 +110,24 @@ const AppRoutes = () => (
       <Route path="exports" element={<AdminExports />} />
       <Route path="inventory" element={<AdminInventory />} />
       <Route path="drones" element={<AdminDrones />} />
-      <Route path="users" element={<AdminUsers />} />
+      <Route path="users" element={<AdminUsersList />} />
+      <Route path="users/:id" element={<AdminUserDetail />} />
+      <Route path="users-manage" element={<AdminUsers />} />
       <Route path="settings" element={<AdminSettings />} />
+      {/* List pages */}
+      <Route path="farms" element={<AdminFarmsList />} />
+      <Route path="farms/:id" element={<AdminFarmDetail />} />
+      <Route path="submissions" element={<AdminSubmissionsList />} />
+      <Route path="submissions/:id" element={<AdminSubmissionDetail />} />
+      <Route path="experts" element={<AdminExpertsList />} />
+      <Route path="field-managers" element={<AdminFieldManagersList />} />
+      <Route path="workers" element={<AdminWorkersList />} />
+      <Route path="soil-reports" element={<AdminSoilReportsList />} />
+      <Route path="soil-reports/:id" element={<AdminSoilReportDetail />} />
+      <Route path="pest-alerts" element={<AdminPestAlertsList />} />
+      <Route path="pest-alerts/:id" element={<AdminPestAlertDetail />} />
+      <Route path="prescriptions" element={<AdminPrescriptionsList />} />
+      <Route path="prescriptions/:id" element={<AdminPrescriptionDetail />} />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>
