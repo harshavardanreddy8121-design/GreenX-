@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { admin, auth as apiAuth } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,10 +19,14 @@ interface UserWithRole {
 export default function AdminUsers() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showCreate, setShowCreate] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [form, setForm] = useState({ email: '', password: '', full_name: '', phone: '', role: 'worker' as AppRole });
   const [editForm, setEditForm] = useState({ full_name: '', phone: '', role: 'worker' as AppRole });
+
+  // Role filter from URL query param (?role=expert|fieldmanager|worker|landowner)
+  const roleFilter = searchParams.get('role') || '';
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -132,6 +137,14 @@ export default function AdminUsers() {
     worker: 'bg-primary/10 text-primary',
   };
 
+  // Apply role filter from URL query param
+  const filteredUsers = useMemo(() => {
+    if (!roleFilter) return users;
+    return (users as UserWithRole[]).filter(u => normalizeRoleKey(u.role) === roleFilter);
+  }, [users, roleFilter]);
+
+  const clearRoleFilter = () => setSearchParams({});
+
   return (
     <div>
       <div className="gx-page-header">
@@ -140,6 +153,14 @@ export default function AdminUsers() {
       </div>
 
       <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> User Management</div>
+      {roleFilter && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '8px 14px', background: 'var(--gx-green-dim)', borderRadius: 8, fontSize: 13 }}>
+          <span>Showing <strong>{roleLabels[roleFilter] ?? roleFilter}</strong> users ({filteredUsers.length})</span>
+          <button onClick={clearRoleFilter} className="gx-btn gx-btn-ghost gx-btn-sm" style={{ fontSize: 11, padding: '2px 8px' }}>
+            ✕ Clear filter
+          </button>
+        </div>
+      )}
       <div style={{ marginBottom: 16 }}>
         <button onClick={() => setShowCreate(true)} className="gx-btn gx-btn-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <UserPlus className="w-4 h-4" /> Create User
@@ -148,21 +169,21 @@ export default function AdminUsers() {
 
       {isLoading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <div className="gx-card">
           <div className="gx-card-body" style={{ textAlign: 'center', padding: '50px 0', color: 'var(--gx-text2)' }}>
             <UserPlus className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No users created yet.</p>
+            <p>{roleFilter ? `No ${roleLabels[roleFilter] ?? roleFilter} users found.` : 'No users created yet.'}</p>
           </div>
         </div>
       ) : (
         <div className="gx-card">
           <div className="gx-card-header">
-            <div className="gx-card-title"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> All Users</div>
-            <span className="gx-status gx-s-done">{users.length}</span>
+            <div className="gx-card-title"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> {roleFilter ? `${roleLabels[roleFilter] ?? roleFilter} Users` : 'All Users'}</div>
+            <span className="gx-status gx-s-done">{filteredUsers.length}</span>
           </div>
           <div className="gx-card-body" style={{ display: 'grid', gap: 10 }}>
-            {users.map((u: UserWithRole) => (
+            {filteredUsers.map((u: UserWithRole) => (
               <div key={u.id} className="gx-card" style={{ marginBottom: 0 }}>
                 <div className="gx-card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 14 }}>
                   <div>
