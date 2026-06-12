@@ -14,6 +14,7 @@ import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { AiAssistant } from '@/components/AiAssistant';
 import { Card } from '@/components/ui/card';
+import WeatherWidget from '@/components/WeatherWidget';
 
 type Tab = 'overview' | 'tasks' | 'farms' | 'calendar' | 'rx' | 'soil' | 'operation' | 'photos' | 'pest' | 'irrigation' | 'sowing' | 'assign' | 'complete' | 'attendance' | 'reports' | 'ai';
 
@@ -375,6 +376,16 @@ export default function FieldManagerDashboard() {
 
         {/* ═══ OVERVIEW / TODAY'S TASKS TAB ═══ */}
         {(activeTab === 'overview' || activeTab === 'tasks') && (<>
+          {myFarms && myFarms.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <WeatherWidget
+                village={(myFarms[0] as any).village}
+                pincode={(myFarms[0] as any).pincode}
+                compact={false}
+              />
+            </div>
+          )}
+
           {pendingRx.length > 0 && (
             <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
               <span><Pill className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>

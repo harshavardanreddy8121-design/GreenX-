@@ -12,6 +12,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { AiAssistant } from '@/components/AiAssistant';
+import WeatherWidget from '@/components/WeatherWidget';
 
 type Tab = 'attendance' | 'tasks' | 'farms' | 'photos' | 'requests' | 'ai';
 
@@ -180,6 +181,16 @@ export default function WorkerDashboard() {
           <div className="gx-page-title">Worker Dashboard — {userName} <HardHat className="inline-block w-4 h-4 mr-1 align-middle" /></div>
           <div className="gx-page-sub">{pendingTasks.length} tasks pending · {myFarms.length} farms</div>
         </div>
+
+        {myFarms && myFarms.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <WeatherWidget
+              village={(myFarms[0] as any).village}
+              pincode={(myFarms[0] as any).pincode}
+              compact={true}
+            />
+          </div>
+        )}
 
         {/* Stats Row — always visible */}
         <div className="gx-stats-row">
