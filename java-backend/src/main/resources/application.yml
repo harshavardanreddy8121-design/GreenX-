@@ -100,6 +100,17 @@ openai:
   # Maximum tokens per response
   max-tokens: ${AI_MAX_TOKENS:2000}
 
+# Weather API Configuration
+# ─────────────────────────────────────────────────────────────────────────────
+# Set WEATHER_API_KEY in Railway → Service → Variables to enable live weather.
+# Get a free key at https://www.weatherapi.com/
+# Without a key the WeatherController returns an empty list gracefully.
+# ─────────────────────────────────────────────────────────────────────────────
+weather:
+  api:
+    key: ${WEATHER_API_KEY:}
+    url: ${WEATHER_API_URL:https://api.weatherapi.com/v1}
+
 # CORS Configuration
 # Override at runtime by setting the ALLOWED_ORIGINS environment variable
 # (comma-separated list of origins) in Railway / Render / Vercel.
