@@ -135,22 +135,22 @@ export default function AdminDashboard() {
 
       {/* Stats Row */}
       <div className="gx-stats-row">
-        <div className="gx-stat-card green">
+        <div className="gx-stat-card green" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/land')}>
           <div className="gx-stat-label">Total Farms</div>
           <div className="gx-stat-value">{farms.length}</div>
           <div className="gx-stat-change gx-up">{totalLand} acres total</div>
         </div>
-        <div className="gx-stat-card blue">
+        <div className="gx-stat-card blue" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/farmers')}>
           <div className="gx-stat-label">Total Users</div>
           <div className="gx-stat-value">{users.length}</div>
           <div className="gx-stat-change gx-neutral">{experts.length} experts · {fieldManagers.length} FM · {workers.length} workers</div>
         </div>
-        <div className="gx-stat-card gold">
+        <div className="gx-stat-card gold" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/land')}>
           <div className="gx-stat-label">Active Crops</div>
           <div className="gx-stat-value">{activeCrops}</div>
           <div className="gx-stat-change gx-up">Across all farms</div>
         </div>
-        <div className="gx-stat-card orange">
+        <div className="gx-stat-card orange" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin/diagnostics')}>
           <div className="gx-stat-label">Pending Tasks</div>
           <div className="gx-stat-value">{taskStats.pending}</div>
           <div className="gx-stat-change gx-down">{taskStats.completed} completed</div>
