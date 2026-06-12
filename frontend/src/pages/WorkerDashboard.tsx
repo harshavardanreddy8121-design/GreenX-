@@ -193,7 +193,7 @@ export default function WorkerDashboard() {
               <button
                 className="gx-btn gx-btn-ghost gx-btn-sm"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
-                onClick={() => navigate('/worker/weather')}
+                onClick={() => navigate('/worker/weather', { state: { farm: myFarms[0] } })}
               >
                 <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
               </button>

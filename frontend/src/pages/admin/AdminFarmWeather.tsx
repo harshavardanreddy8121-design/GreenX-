@@ -22,6 +22,16 @@ import {
 interface AdminFarmWeatherProps {
   role?: 'landowner' | 'fieldmanager' | 'expert' | 'worker' | 'admin';
   backPath?: string;
+  farm?: {
+    id?: string;
+    name?: string;
+    village?: string;
+    pincode?: string;
+    district?: string;
+    state?: string;
+    crop?: string;
+    currentCrop?: string;
+  };
 }
 
 // ── Weather icon helper ──────────────────────────────────────────────────────
@@ -89,7 +99,7 @@ function RiskBadge({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function AdminFarmWeather({ role = 'admin', backPath }: AdminFarmWeatherProps) {
+export default function AdminFarmWeather({ role = 'admin', backPath, farm: farmProp }: AdminFarmWeatherProps) {
   const navigate = useNavigate();
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -106,16 +116,17 @@ export default function AdminFarmWeather({ role = 'admin', backPath }: AdminFarm
       ? '/worker'
       : '/admin/weather');
 
-  // Fetch farms
+  // Fetch farms only when no farm prop is provided (admin fallback)
   const { data: farms = [], isLoading: farmsLoading } = useQuery({
     queryKey: ['weather-page-farms', role],
     queryFn: async () => {
       const r = await javaApi.select('farms', {});
       return r.success && r.data ? (r.data as any[]) : [];
     },
+    enabled: !farmProp,
   });
 
-  const farm: any = farms[0];
+  const farm: any = farmProp ?? farms[0];
 
   // Fetch weather for the first farm
   const {

@@ -162,7 +162,7 @@ export default function LandownerDashboard() {
                 <button
                   className="gx-btn gx-btn-ghost gx-btn-sm"
                   style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
-                  onClick={() => navigate('/landowner/weather')}
+                  onClick={() => navigate('/landowner/weather', { state: { farm } })}
                 >
                   <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
                 </button>
