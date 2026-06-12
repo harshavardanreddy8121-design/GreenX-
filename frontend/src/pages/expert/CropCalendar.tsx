@@ -1,37 +1,49 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
 import DashboardShell from '@/components/DashboardShell';
 import { expertMenuItems } from '@/config/dashboardMenus';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
+import { ArrowLeft, CalendarDays, Plus, Sprout } from 'lucide-react';
+import CalendarDetailView from '@/components/calendar/CalendarDetailView';
+import {
+    useCreateCalendarWithPhases,
+    useAddTask,
+    useUpdateTask,
+    useUpdateTaskStatus,
+    useCalendarTasks,
+    mergeTasksIntoCalendar,
+} from '@/hooks/useCropCalendar';
+import type { CalendarTask, TaskStatus } from '@/types/cropCalendar';
+
+// ─── Common crop list ──────────────────────────────────────────────────────────
 
 const COMMON_CROPS = [
-    'Rice',
-    'Wheat',
-    'Maize',
-    'Cotton',
-    'Sugarcane',
-    'Tomato',
-    'Potato',
-    'Onion',
-    'Chickpea',
-    'Soybean',
-    'Groundnut',
-    'Mustard',
-    'Watermelon',
-    'Cucumber',
-    'Chili',
-    'Turmeric',
-    'Ginger',
+    'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane', 'Tomato', 'Potato',
+    'Onion', 'Chickpea', 'Soybean', 'Groundnut', 'Mustard', 'Watermelon',
+    'Cucumber', 'Chili', 'Turmeric', 'Ginger',
 ];
 
-export default function CropCalendar() {
-    const queryClient = useQueryClient();
+// ─── Create Calendar Form ─────────────────────────────────────────────────────
 
-    // Crop selection: dropdown value + optional custom text when "Other" is chosen
+interface CreateFormProps {
+    farms: any[];
+    suggestions: any[];
+    farmsLoading: boolean;
+    suggestionsLoading: boolean;
+    onCreated: () => void;
+}
+
+function CreateCalendarForm({
+    farms,
+    suggestions,
+    farmsLoading,
+    suggestionsLoading,
+    onCreated,
+}: CreateFormProps) {
     const [selectedCrop, setSelectedCrop] = useState('');
     const [cropName, setCropName] = useState('');
     const [selectedFarmId, setSelectedFarmId] = useState('');
@@ -40,7 +52,341 @@ export default function CropCalendar() {
     const [sowingDate, setSowingDate] = useState('');
     const [harvestDate, setHarvestDate] = useState('');
 
-    // Load farms assigned to this expert
+    const createCalendar = useCreateCalendarWithPhases();
+
+    const effectiveCropName = selectedCrop === 'Other' ? cropName : selectedCrop;
+
+    const handleCropSelect = (value: string) => {
+        setSelectedCrop(value);
+        if (value !== 'Other') setCropName('');
+    };
+
+    const handleSuggestionChange = (suggestionId: string) => {
+        setSelectedSuggestionId(suggestionId);
+        if (suggestionId) {
+            const s = suggestions.find((s: any) => s.id === suggestionId);
+            if (s) {
+                const name = s.cropName || s.cropname || s.crop_name || '';
+                const fid = s.farmId || s.farmid || s.farm_id || '';
+                if (name) {
+                    const matched = COMMON_CROPS.find(
+                        (c) => c.toLowerCase() === name.toLowerCase()
+                    );
+                    if (matched) { setSelectedCrop(matched); setCropName(''); }
+                    else { setSelectedCrop('Other'); setCropName(name); }
+                }
+                if (fid) setSelectedFarmId(fid);
+            }
+        }
+    };
+
+    const handleSubmit = () => {
+        const finalCropName = effectiveCropName.trim();
+        if (!finalCropName) {
+            toast.error('Please select or enter a crop name.');
+            return;
+        }
+        const farmId = selectedFarmId || farms[0]?.id || '';
+        if (!farmId) { toast.error('Please select a farm.'); return; }
+        if (!sowingDate) { toast.error('Sowing date is required to generate the full calendar.'); return; }
+        if (!harvestDate) { toast.error('Harvest date is required to generate the full calendar.'); return; }
+        if (harvestDate <= sowingDate) {
+            toast.error('Harvest date must be after sowing date.');
+            return;
+        }
+
+        createCalendar.mutate(
+            {
+                farmId,
+                cropName: finalCropName,
+                season: season.trim() || null,
+                sowingDate,
+                harvestDate,
+                suggestionId: selectedSuggestionId || null,
+            },
+            { onSuccess: onCreated }
+        );
+    };
+
+    const inputCls =
+        'w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30';
+
+    return (
+        <Card className="p-5 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+                <Sprout className="w-5 h-5 text-primary" />
+                <h2 className="font-semibold text-foreground">New Crop Calendar</h2>
+            </div>
+
+            <p className="text-xs text-muted-foreground -mt-2">
+                Enter sowing and harvest dates to auto-generate all four phases with
+                pre-filled tasks, schedules, and responsibilities.
+            </p>
+
+            {/* Crop Name */}
+            <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Crop Name <span className="text-destructive">*</span>
+                </label>
+                <select
+                    value={selectedCrop}
+                    onChange={(e) => handleCropSelect(e.target.value)}
+                    className={inputCls}
+                >
+                    <option value="">— Select a crop —</option>
+                    {COMMON_CROPS.map((crop) => (
+                        <option key={crop} value={crop}>{crop}</option>
+                    ))}
+                    <option value="Other">Other (enter custom crop name)</option>
+                </select>
+            </div>
+
+            {selectedCrop === 'Other' && (
+                <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Custom Crop Name <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                        value={cropName}
+                        onChange={(e) => setCropName(e.target.value)}
+                        placeholder="Enter crop name…"
+                        className={inputCls}
+                        autoFocus
+                    />
+                </div>
+            )}
+
+            {/* Farm */}
+            <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                    Farm <span className="text-destructive">*</span>
+                </label>
+                {farmsLoading ? (
+                    <p className="text-xs text-muted-foreground py-2">Loading farms…</p>
+                ) : (
+                    <select
+                        value={selectedFarmId || farms[0]?.id || ''}
+                        onChange={(e) => setSelectedFarmId(e.target.value)}
+                        className={inputCls}
+                    >
+                        {farms.length === 0 ? (
+                            <option value="">No farms assigned</option>
+                        ) : (
+                            farms.map((farm: any) => (
+                                <option key={farm.id} value={farm.id}>
+                                    {farm.name || farm.farm_code || farm.id}
+                                </option>
+                            ))
+                        )}
+                    </select>
+                )}
+            </div>
+
+            {/* Suggestion auto-fill */}
+            {!suggestionsLoading && suggestions.length > 0 && (
+                <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Use a Crop Suggestion (optional — auto-fills crop &amp; farm)
+                    </label>
+                    <select
+                        value={selectedSuggestionId}
+                        onChange={(e) => handleSuggestionChange(e.target.value)}
+                        className={inputCls}
+                    >
+                        <option value="">— Select a suggestion —</option>
+                        {suggestions.map((s: any) => (
+                            <option key={s.id} value={s.id}>
+                                {s.cropName || s.cropname || s.crop_name || 'Unknown crop'} — Farm{' '}
+                                {s.farmId || s.farmid || s.farm_id}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            )}
+
+            {/* Season + Dates */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Season (optional)
+                    </label>
+                    <input
+                        value={season}
+                        onChange={(e) => setSeason(e.target.value)}
+                        placeholder="e.g. Kharif 2024"
+                        className={inputCls}
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Sowing Date <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        value={sowingDate}
+                        onChange={(e) => setSowingDate(e.target.value)}
+                        className={inputCls}
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Harvest Date <span className="text-destructive">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        value={harvestDate}
+                        onChange={(e) => setHarvestDate(e.target.value)}
+                        className={inputCls}
+                    />
+                </div>
+            </div>
+
+            {/* Phase preview */}
+            {sowingDate && harvestDate && harvestDate > sowingDate && (
+                <div className="rounded-lg bg-muted/50 border border-border p-3">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                        Auto-generated phases preview
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        {[
+                            { label: '🌱 Pre-Sowing', desc: '45 days before sowing', tasks: 6 },
+                            { label: '🌾 Sowing', desc: 'Sowing date ± 7 days', tasks: 6 },
+                            { label: '🌿 Growth', desc: 'Sowing → Harvest', tasks: 9 },
+                            { label: '🌾 Harvesting', desc: '7 days around harvest', tasks: 7 },
+                        ].map((phase) => (
+                            <div key={phase.label} className="p-2 rounded-lg bg-background border border-border">
+                                <p className="font-medium text-foreground">{phase.label}</p>
+                                <p className="text-muted-foreground mt-0.5">{phase.desc}</p>
+                                <p className="text-primary font-semibold mt-1">{phase.tasks} tasks</p>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        Total: <strong>28 tasks</strong> auto-scheduled with dates, assignments, and resources.
+                    </p>
+                </div>
+            )}
+
+            <Button
+                onClick={handleSubmit}
+                disabled={createCalendar.isPending || farmsLoading}
+                className="w-full"
+            >
+                {createCalendar.isPending
+                    ? 'Creating calendar with all phases…'
+                    : 'Create & Publish Comprehensive Calendar'}
+            </Button>
+        </Card>
+    );
+}
+
+// ─── Calendar list card ────────────────────────────────────────────────────────
+
+function CalendarListCard({
+    calendar,
+    onSelect,
+}: {
+    calendar: any;
+    onSelect: (id: string) => void;
+}) {
+    const cropName = calendar.cropName || calendar.cropname || calendar.crop_name || 'Crop';
+    const farmId = calendar.farmId || calendar.farmid || calendar.farm_id || '—';
+    const sowingDate = calendar.sowingDate || calendar.sowingdate || calendar.sowing_date;
+    const harvestDate = calendar.harvestDate || calendar.harvestdate || calendar.harvest_date;
+    const status = calendar.status || 'DRAFT';
+
+    return (
+        <Card
+            className="p-4 cursor-pointer hover:shadow-md transition-all hover:border-primary/30"
+            onClick={() => onSelect(calendar.id)}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-foreground">{cropName}</p>
+                        <Badge
+                            variant={
+                                status === 'PUBLISHED' || status === 'ACTIVE'
+                                    ? 'default'
+                                    : 'secondary'
+                            }
+                            className="text-xs"
+                        >
+                            {status}
+                        </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                        Farm: {farmId}
+                        {calendar.season && ` · ${calendar.season}`}
+                    </p>
+                    {sowingDate && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                            🌱 {sowingDate} → 🌾 {harvestDate || '—'}
+                        </p>
+                    )}
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0">
+                    View Details
+                </Button>
+            </div>
+        </Card>
+    );
+}
+
+// ─── Calendar detail wrapper (loads tasks from API) ───────────────────────────
+
+function CalendarDetailWrapper({
+    calendar,
+    onBack,
+}: {
+    calendar: any;
+    onBack: () => void;
+}) {
+    const { data: apiTasks = [] } = useCalendarTasks(calendar.id);
+    const addTask = useAddTask(calendar.id);
+    const updateTask = useUpdateTask(calendar.id);
+    const updateStatus = useUpdateTaskStatus(calendar.id);
+
+    const calendarDetail = mergeTasksIntoCalendar(calendar, apiTasks);
+
+    const handleStatusChange = (taskId: string, status: TaskStatus) => {
+        updateStatus.mutate({ taskId, status });
+    };
+
+    const handleAddTask = (task: Omit<CalendarTask, 'id' | 'calendarId'>) => {
+        addTask.mutate(task);
+    };
+
+    const handleEditTask = (taskId: string, updates: Partial<CalendarTask>) => {
+        updateTask.mutate({ taskId, updates });
+    };
+
+    return (
+        <div className="space-y-4">
+            <button
+                onClick={onBack}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4" /> Back to all calendars
+            </button>
+
+            <CalendarDetailView
+                calendar={calendarDetail}
+                onTaskStatusChange={handleStatusChange}
+                onAddTask={handleAddTask}
+                onEditTask={handleEditTask}
+            />
+        </div>
+    );
+}
+
+// ─── Main page ─────────────────────────────────────────────────────────────────
+
+export default function CropCalendar() {
+    const [view, setView] = useState<'list' | 'create' | 'detail'>('list');
+    const [selectedCalendarId, setSelectedCalendarId] = useState<string | null>(null);
+
+    // Load farms
     const { data: farms = [], isLoading: farmsLoading } = useQuery({
         queryKey: ['expert-assigned-farms'],
         queryFn: async () => {
@@ -49,7 +395,7 @@ export default function CropCalendar() {
         },
     });
 
-    // Load crop suggestions (optional — form works without them)
+    // Load suggestions
     const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
         queryKey: ['expert-crop-suggestions'],
         queryFn: async () => {
@@ -58,8 +404,8 @@ export default function CropCalendar() {
         },
     });
 
-    // Load existing calendars for display
-    const { data: calendars = [] } = useQuery({
+    // Load calendars
+    const { data: calendars = [], isLoading: calendarsLoading } = useQuery({
         queryKey: ['expert-calendars'],
         queryFn: async () => {
             const res = await javaApi.call<any[]>('/expert/calendars', 'GET');
@@ -67,241 +413,100 @@ export default function CropCalendar() {
         },
     });
 
-    // Derive the effective crop name from dropdown + optional custom input
-    const effectiveCropName = selectedCrop === 'Other' ? cropName : selectedCrop;
+    const selectedCalendar = calendars.find((c: any) => c.id === selectedCalendarId);
 
-    // Handle crop dropdown change
-    const handleCropSelect = (value: string) => {
-        setSelectedCrop(value);
-        if (value !== 'Other') setCropName('');
+    const handleSelectCalendar = (id: string) => {
+        setSelectedCalendarId(id);
+        setView('detail');
     };
 
-    // When a suggestion is selected, auto-fill crop name and farm
-    const handleSuggestionChange = (suggestionId: string) => {
-        setSelectedSuggestionId(suggestionId);
-        if (suggestionId) {
-            const suggestion = suggestions.find((s: any) => s.id === suggestionId);
-            if (suggestion) {
-                const name = suggestion.cropname || suggestion.crop_name || '';
-                const fid = suggestion.farmid || suggestion.farm_id || '';
-                if (name) {
-                    const matched = COMMON_CROPS.find(
-                        (c) => c.toLowerCase() === name.toLowerCase()
-                    );
-                    if (matched) {
-                        setSelectedCrop(matched);
-                        setCropName('');
-                    } else {
-                        setSelectedCrop('Other');
-                        setCropName(name);
-                    }
-                }
-                if (fid) setSelectedFarmId(fid);
-            }
-        }
+    const handleCreated = () => {
+        setView('list');
     };
-
-    const isLoading = farmsLoading || suggestionsLoading;
-
-    const createCalendar = useMutation({
-        mutationFn: async () => {
-            const finalCropName = effectiveCropName.trim();
-            if (!finalCropName) {
-                throw new Error('Please select a crop from the dropdown, or choose "Other" and enter a custom crop name.');
-            }
-
-            const farmId = selectedFarmId || farms[0]?.id || '';
-            if (!farmId) {
-                throw new Error('Please select a farm.');
-            }
-
-            const payload: Record<string, any> = {
-                farmId,
-                cropName: finalCropName,
-                suggestionId: selectedSuggestionId || null,
-                season: season.trim() || null,
-            };
-            if (sowingDate) payload.sowingDate = sowingDate;
-            if (harvestDate) payload.harvestDate = harvestDate;
-
-            const res = await javaApi.call<any>('/expert/calendars', 'POST', payload);
-            if (!res.success) throw new Error(res.error || 'Failed to create calendar');
-
-            const calendarId = res.data?.id;
-            if (calendarId) {
-                await javaApi.call(`/expert/calendars/${calendarId}/publish`, 'POST');
-            }
-
-            await emitWorkflowTrigger({
-                farmId,
-                eventKey: 'crop_calendar_published',
-                triggeredBy: 'expert',
-                note: 'Expert published crop calendar for field execution.',
-            });
-
-            return res.data;
-        },
-        onSuccess: () => {
-            toast.success('Crop calendar created and published');
-            setSelectedCrop('');
-            setCropName('');
-            setSelectedFarmId('');
-            setSelectedSuggestionId('');
-            setSeason('');
-            setSowingDate('');
-            setHarvestDate('');
-            queryClient.invalidateQueries({ queryKey: ['expert-calendars'] });
-        },
-        onError: (err: any) => toast.error(err.message || 'Failed to create calendar'),
-    });
 
     return (
         <DashboardShell menuItems={expertMenuItems} role="Expert">
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Crop Calendar</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Build weekly activity plan and publish to field manager</p>
+                {/* Page header */}
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                            <CalendarDays className="w-8 h-8 text-primary" />
+                            Crop Calendar
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Comprehensive crop management — pre-sowing to post-harvest
+                        </p>
+                    </div>
+                    {view === 'list' && (
+                        <Button onClick={() => setView('create')} className="shrink-0">
+                            <Plus className="w-4 h-4 mr-1" /> New Calendar
+                        </Button>
+                    )}
+                    {view === 'create' && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setView('list')}
+                            className="shrink-0"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-1" /> Cancel
+                        </Button>
+                    )}
                 </div>
 
-                <Card className="p-4 space-y-4">
-                    {/* Crop Name — dropdown with common crops + "Other" for custom entry */}
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
-                            Crop Name <span className="text-destructive">*</span>
-                        </label>
-                        <select
-                            value={selectedCrop}
-                            onChange={(e) => handleCropSelect(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                        >
-                            <option value="">— Select a crop —</option>
-                            {COMMON_CROPS.map((crop) => (
-                                <option key={crop} value={crop}>{crop}</option>
-                            ))}
-                            <option value="Other">Other (enter custom crop name)</option>
-                        </select>
-                    </div>
+                {/* Create form */}
+                {view === 'create' && (
+                    <CreateCalendarForm
+                        farms={farms}
+                        suggestions={suggestions}
+                        farmsLoading={farmsLoading}
+                        suggestionsLoading={suggestionsLoading}
+                        onCreated={handleCreated}
+                    />
+                )}
 
-                    {/* Custom crop name — shown only when "Other" is selected */}
-                    {selectedCrop === 'Other' && (
-                        <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">
-                                Custom Crop Name <span className="text-destructive">*</span>
-                            </label>
-                            <input
-                                value={cropName}
-                                onChange={(e) => setCropName(e.target.value)}
-                                placeholder="Enter crop name…"
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                                autoFocus
-                            />
-                        </div>
-                    )}
+                {/* Calendar detail */}
+                {view === 'detail' && selectedCalendar && (
+                    <CalendarDetailWrapper
+                        calendar={selectedCalendar}
+                        onBack={() => setView('list')}
+                    />
+                )}
 
-                    {/* Farm selection */}
-                    <div>
-                        <label className="block text-xs font-medium text-muted-foreground mb-1">
-                            Farm <span className="text-destructive">*</span>
-                        </label>
-                        {farmsLoading ? (
-                            <p className="text-xs text-muted-foreground py-2">Loading farms…</p>
+                {/* Calendar list */}
+                {view === 'list' && (
+                    <div className="space-y-3">
+                        {calendarsLoading ? (
+                            <Card className="p-8 text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+                            </Card>
+                        ) : calendars.length === 0 ? (
+                            <Card className="p-10 text-center">
+                                <CalendarDays className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-30" />
+                                <p className="text-muted-foreground font-medium">No calendars yet</p>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Create your first comprehensive crop calendar to get started.
+                                </p>
+                                <Button className="mt-4" onClick={() => setView('create')}>
+                                    <Plus className="w-4 h-4 mr-1" /> Create First Calendar
+                                </Button>
+                            </Card>
                         ) : (
-                            <select
-                                value={selectedFarmId || farms[0]?.id || ''}
-                                onChange={(e) => setSelectedFarmId(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                            >
-                                {farms.length === 0 ? (
-                                    <option value="">No farms assigned</option>
-                                ) : (
-                                    farms.map((farm: any) => (
-                                        <option key={farm.id} value={farm.id}>
-                                            {farm.name || farm.farm_code || farm.id}
-                                        </option>
-                                    ))
-                                )}
-                            </select>
+                            <>
+                                <p className="text-sm text-muted-foreground">
+                                    {calendars.length} calendar{calendars.length > 1 ? 's' : ''} — click to view phases and tasks
+                                </p>
+                                {calendars.map((cal: any) => (
+                                    <CalendarListCard
+                                        key={cal.id}
+                                        calendar={cal}
+                                        onSelect={handleSelectCalendar}
+                                    />
+                                ))}
+                            </>
                         )}
                     </div>
-
-                    {/* Optional: pick from existing suggestions to auto-fill */}
-                    {suggestionsLoading ? (
-                        <p className="text-xs text-muted-foreground">Loading suggestions…</p>
-                    ) : suggestions.length > 0 ? (
-                        <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">
-                                Use a Crop Suggestion (optional — auto-fills crop name &amp; farm)
-                            </label>
-                            <select
-                                value={selectedSuggestionId}
-                                onChange={(e) => handleSuggestionChange(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                            >
-                                <option value="">— Select a suggestion —</option>
-                                {suggestions.map((s: any) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.cropname || s.crop_name || 'Unknown crop'} — Farm {s.farmid || s.farm_id}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : null}
-
-                    {/* Season, Sowing Date, Harvest Date (all optional) */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">Season (optional)</label>
-                            <input
-                                value={season}
-                                onChange={(e) => setSeason(e.target.value)}
-                                placeholder="e.g. Kharif 2024"
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">Sowing Date (optional)</label>
-                            <input
-                                type="date"
-                                value={sowingDate}
-                                onChange={(e) => setSowingDate(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">Harvest Date (optional)</label>
-                            <input
-                                type="date"
-                                value={harvestDate}
-                                onChange={(e) => setHarvestDate(e.target.value)}
-                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                            />
-                        </div>
-                    </div>
-
-                    <Button
-                        onClick={() => createCalendar.mutate()}
-                        disabled={createCalendar.isPending || isLoading}
-                    >
-                        {createCalendar.isPending ? 'Creating…' : isLoading ? 'Loading…' : 'Create & Publish Calendar'}
-                    </Button>
-                </Card>
-
-                <div className="space-y-3">
-                    {calendars.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No calendars created yet.</p>
-                    )}
-                    {calendars.map((cal: any) => (
-                        <Card key={cal.id} className="p-4">
-                            <p className="font-medium">{cal.cropName || cal.cropname || cal.crop_name || 'Crop'} — Farm {cal.farmId || cal.farmid || cal.farm_id}</p>
-                            <p className="text-sm text-muted-foreground">Season: {cal.season || '—'} | Status: {cal.status || 'DRAFT'}</p>
-                            {(cal.sowingDate || cal.sowingdate || cal.sowing_date) ? (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Sowing: {cal.sowingDate || cal.sowingdate || cal.sowing_date} → Harvest: {cal.harvestDate || cal.harvestdate || cal.harvest_date || '—'}
-                                </p>
-                            ) : null}
-                        </Card>
-                    ))}
-                </div>
+                )}
             </div>
         </DashboardShell>
     );
