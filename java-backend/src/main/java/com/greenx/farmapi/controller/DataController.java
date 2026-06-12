@@ -24,6 +24,11 @@ public class DataController {
     public ApiResponse<List<Map<String, Object>>> select(
             @PathVariable String tableName,
             @RequestParam(required = false) Map<String, String> params) {
+        // Weather data is served by WeatherController at /data/weather.
+        // Guard here in case Spring MVC path resolution ever routes here instead.
+        if ("weather".equalsIgnoreCase(tableName)) {
+            return ApiResponse.error("Use /data/weather endpoint for weather data");
+        }
         try {
             // Default to empty map if params is null
             Map<String, String> queryParams = params != null ? params : new HashMap<>();
