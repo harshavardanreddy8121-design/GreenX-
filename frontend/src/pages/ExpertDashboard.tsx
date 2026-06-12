@@ -333,6 +333,15 @@ export default function ExpertDashboard() {
                 pincode={(myFarms[0] as any).pincode}
                 compact={false}
               />
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  className="gx-btn gx-btn-ghost gx-btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                  onClick={() => navigate('/expert/weather')}
+                >
+                  <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
+                </button>
+              </div>
             </div>
           )}
 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { javaApi } from '@/integrations/java-api/client';
 import { files } from '@/lib/api';
-import { Bot, Camera, CheckCircle2, CircleDot, CircleX, ClipboardList, Clock, HardHat, Lightbulb, Loader2, LogOut, Package, Square, Trash2, Upload, Wheat } from 'lucide-react';
+import { Bot, Camera, CheckCircle2, CircleDot, CircleX, ClipboardList, Clock, CloudSun, HardHat, Lightbulb, Loader2, LogOut, Package, Square, Trash2, Upload, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { upsertWorkflowEvent } from '@/utils/workflowEvents';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -189,6 +189,15 @@ export default function WorkerDashboard() {
               pincode={(myFarms[0] as any).pincode}
               compact={true}
             />
+            <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                className="gx-btn gx-btn-ghost gx-btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                onClick={() => navigate('/worker/weather')}
+              >
+                <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
+              </button>
+            </div>
           </div>
         )}
 

@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { landOwner, notifications } from '@/lib/api';
-import { AlertTriangle, Banknote, BarChart3, Bell, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, FileText, FolderOpen, Home, Leaf, Lightbulb, LogOut, Map, MapPin, MessageSquare, Receipt, Settings, Sprout, Star, TestTubes, Trash2, Wallet, Wheat, Zap } from 'lucide-react';
+import { AlertTriangle, Banknote, BarChart3, Bell, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, CloudSun, Droplets, FileText, FolderOpen, Home, Leaf, Lightbulb, LogOut, Map, MapPin, MessageSquare, Receipt, Settings, Sprout, Star, TestTubes, Trash2, Wallet, Wheat, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -158,6 +158,15 @@ export default function LandownerDashboard() {
           {farm && (
             <div style={{ marginBottom: 24 }}>
               <WeatherWidget village={farm.village} pincode={farm.pincode} compact={false} />
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  className="gx-btn gx-btn-ghost gx-btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                  onClick={() => navigate('/landowner/weather')}
+                >
+                  <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
+                </button>
+              </div>
             </div>
           )}
 

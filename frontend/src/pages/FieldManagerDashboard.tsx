@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fieldManager } from '@/lib/api';
 import { javaApi } from '@/integrations/java-api/client';
-import { AlertTriangle, BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, CloudSun, Droplets, Loader2, LogOut, PenLine, Pill, Sparkles, Sprout, TestTubes, Tractor, Trash2, TrendingUp, Upload, Users, Wheat } from 'lucide-react';
 import { toast } from 'sonner';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -383,6 +383,15 @@ export default function FieldManagerDashboard() {
                 pincode={(myFarms[0] as any).pincode}
                 compact={false}
               />
+              <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  className="gx-btn gx-btn-ghost gx-btn-sm"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                  onClick={() => navigate('/fieldmanager/weather')}
+                >
+                  <CloudSun size={14} /> View Detailed Weather &amp; Forecast →
+                </button>
+              </div>
             </div>
           )}
 
