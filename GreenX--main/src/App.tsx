@@ -28,6 +28,14 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDiagnostics from "./pages/admin/AdminDiagnostics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLabSamples from "./pages/admin/AdminLabSamples";
+import FarmsList from "./pages/admin/FarmsList";
+import UsersList from "./pages/admin/UsersList";
+import ExpertsList from "./pages/admin/ExpertsList";
+import FieldManagersList from "./pages/admin/FieldManagersList";
+import WorkersList from "./pages/admin/WorkersList";
+import SoilReportsList from "./pages/admin/SoilReportsList";
+import PestAlertsList from "./pages/admin/PestAlertsList";
+import PrescriptionsList from "./pages/admin/PrescriptionsList";
 import Workflow from "./pages/Workflow";
 import MyFarms from "./pages/landowner/MyFarms";
 import SoilReports from "./pages/landowner/SoilReports";
@@ -97,6 +105,14 @@ const AppRoutes = () => (
       <Route path="drones" element={<AdminDrones />} />
       <Route path="users" element={<AdminUsers />} />
       <Route path="settings" element={<AdminSettings />} />
+      <Route path="farms" element={<FarmsList />} />
+      <Route path="users-list" element={<UsersList />} />
+      <Route path="experts" element={<ExpertsList />} />
+      <Route path="field-managers" element={<FieldManagersList />} />
+      <Route path="workers" element={<WorkersList />} />
+      <Route path="soil-reports" element={<SoilReportsList />} />
+      <Route path="pest-alerts" element={<PestAlertsList />} />
+      <Route path="prescriptions" element={<PrescriptionsList />} />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>
