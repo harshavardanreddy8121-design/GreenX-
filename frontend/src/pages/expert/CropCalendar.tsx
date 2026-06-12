@@ -292,11 +292,11 @@ export default function CropCalendar() {
                     )}
                     {calendars.map((cal: any) => (
                         <Card key={cal.id} className="p-4">
-                            <p className="font-medium">{cal.cropname || cal.crop_name || 'Crop'} — Farm {cal.farmid || cal.farm_id}</p>
+                            <p className="font-medium">{cal.cropName || cal.cropname || cal.crop_name || 'Crop'} — Farm {cal.farmId || cal.farmid || cal.farm_id}</p>
                             <p className="text-sm text-muted-foreground">Season: {cal.season || '—'} | Status: {cal.status || 'DRAFT'}</p>
-                            {cal.sowingdate || cal.sowing_date ? (
+                            {(cal.sowingDate || cal.sowingdate || cal.sowing_date) ? (
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Sowing: {cal.sowingdate || cal.sowing_date} → Harvest: {cal.harvestdate || cal.harvest_date || '—'}
+                                    Sowing: {cal.sowingDate || cal.sowingdate || cal.sowing_date} → Harvest: {cal.harvestDate || cal.harvestdate || cal.harvest_date || '—'}
                                 </p>
                             ) : null}
                         </Card>
