@@ -1248,10 +1248,10 @@ export default function LandingPage() {
                             <iframe
                                 src={
                                     activeVideo === 0
-                                        ? 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
+                                        ? 'https://www.youtube.com/embed/aAgNp6EFvf8?autoplay=1&rel=0&modestbranding=1'
                                         : activeVideo === 1
-                                        ? 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
-                                        : 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&modestbranding=1'
+                                        ? 'https://www.youtube.com/embed/aAgNp6EFvf8?autoplay=1&rel=0&modestbranding=1'
+                                        : 'https://www.youtube.com/embed/aAgNp6EFvf8?autoplay=1&rel=0&modestbranding=1'
                                 }
                                 title={
                                     activeVideo === 0
