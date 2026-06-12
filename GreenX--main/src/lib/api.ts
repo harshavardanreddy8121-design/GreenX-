@@ -254,6 +254,12 @@ export const admin = {
 
     registerFarm: (data: FormData) =>
         request<{ farmId: string; farmCode: string; ownerId: string; ownerUid?: string; ownerEmail: string; tempPassword: string }>('/admin/farms/register', 'POST', data, true),
+
+    getSoilReports: () => request<SoilReport[]>('/admin/soil-reports'),
+
+    getPrescriptions: () => request<Prescription[]>('/admin/prescriptions'),
+
+    getWorkers: () => request<User[]>('/admin/workers'),
 };
 
 // ─── EXPERT ──────────────────────────────────────────────────────────────────

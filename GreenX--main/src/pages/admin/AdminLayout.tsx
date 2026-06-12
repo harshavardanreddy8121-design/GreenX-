@@ -1,13 +1,25 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import { BarChart3, Building2, CloudSun, Factory, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Users, Wallet, Wheat } from 'lucide-react';
+import { BarChart3, Building2, Bug, ClipboardList, CloudSun, Factory, FileText, HardHat, LogOut, Map, Microscope, Package, Plane, Settings, TestTubes, Tractor, Users, Wallet, Wheat } from 'lucide-react';
 import { MobileHeader } from '@/components/MobileHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationBell } from '@/components/NotificationBell';
 
 const adminNavItems = [
-  { icon: <BarChart3 size={18} />, label: 'Dashboard', path: '/admin' },
+  { icon: <BarChart3 size={18} />, label: 'Overview', path: '/admin', exact: true },
+  { icon: <Wheat size={18} />, label: 'Farms', path: '/admin/farms' },
+  { icon: <Users size={18} />, label: 'Users', path: '/admin/users' },
+  { icon: <TestTubes size={18} />, label: 'Submissions', path: '/admin/submissions' },
+  { icon: <Microscope size={18} />, label: 'Experts', path: '/admin/experts' },
+  { icon: <Tractor size={18} />, label: 'Field Managers', path: '/admin/field-managers' },
+  { icon: <HardHat size={18} />, label: 'Workers', path: '/admin/workers' },
+  { icon: <FileText size={18} />, label: 'Soil Reports', path: '/admin/soil-reports' },
+  { icon: <Bug size={18} />, label: 'Pest Alerts', path: '/admin/pest-alerts' },
+  { icon: <ClipboardList size={18} />, label: 'Prescriptions', path: '/admin/prescriptions' },
+];
+
+const adminToolsItems = [
   { icon: <Map size={18} />, label: 'Land Management', path: '/admin/land' },
   { icon: <Wheat size={18} />, label: 'Farm Registration', path: '/admin/farm-registration' },
   { icon: <TestTubes size={18} />, label: 'Lab & Samples', path: '/admin/lab-samples' },
@@ -17,7 +29,7 @@ const adminNavItems = [
   { icon: <Package size={18} />, label: 'Exports', path: '/admin/exports' },
   { icon: <Factory size={18} />, label: 'Inventory', path: '/admin/inventory' },
   { icon: <Plane size={18} />, label: 'Drones', path: '/admin/drones' },
-  { icon: <Users size={18} />, label: 'Users', path: '/admin/users' },
+  { icon: <Users size={18} />, label: 'User Management', path: '/admin/users-manage' },
   { icon: <Settings size={18} />, label: 'Settings', path: '/admin/settings' },
 ];
 
@@ -44,11 +56,26 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        <div className="gx-nav-group-label">Management</div>
+        <div className="gx-nav-group-label">Data</div>
         {adminNavItems.map(item => {
-          const isActive = item.path === '/admin'
-            ? location.pathname === '/admin'
-            : location.pathname.startsWith(item.path);
+          const isActive = (item as any).exact
+            ? location.pathname === item.path
+            : location.pathname === item.path || location.pathname.startsWith(item.path + '/');
+          return (
+            <button
+              key={item.path}
+              className={`gx-nav-item${isActive ? ' active' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
+              <span className="gx-nav-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          );
+        })}
+
+        <div className="gx-nav-group-label">Tools</div>
+        {adminToolsItems.map(item => {
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           return (
             <button
               key={item.path}
