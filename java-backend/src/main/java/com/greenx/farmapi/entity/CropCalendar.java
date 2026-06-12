@@ -1,5 +1,6 @@
 package com.greenx.farmapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,24 +21,31 @@ public class CropCalendar {
     private String id;
 
     @Column(name = "FARM_ID", length = 36, nullable = false)
+    @JsonProperty("farmId")
     private String farmId;
 
     @Column(name = "EXPERT_ID", length = 36, nullable = false)
+    @JsonProperty("expertId")
     private String expertId;
 
     @Column(name = "SUGGESTION_ID", length = 36)
+    @JsonProperty("suggestionId")
     private String suggestionId;
 
     @Column(name = "CROP_NAME", length = 100, nullable = false)
+    @JsonProperty("cropName")
     private String cropName;
 
     @Column(name = "SEASON", length = 50)
+    @JsonProperty("season")
     private String season;
 
     @Column(name = "SOWING_DATE")
+    @JsonProperty("sowingDate")
     private LocalDate sowingDate;
 
     @Column(name = "HARVEST_DATE")
+    @JsonProperty("harvestDate")
     private LocalDate harvestDate;
 
     @Column(name = "TOTAL_DURATION_DAYS")

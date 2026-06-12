@@ -28,17 +28,9 @@ class JavaApiClient {
   private baseUrl: string;
   private token: string | null = null;
 
+  // Keys are preserved as-is: the Spring Boot backend returns camelCase JSON
+  // (e.g. cropName, farmId, sowingDate) and we must not alter them.
   private normalizeKeys(value: any): any {
-    if (Array.isArray(value)) {
-      return value.map((item) => this.normalizeKeys(item));
-    }
-    if (value && typeof value === 'object') {
-      const out: Record<string, any> = {};
-      Object.entries(value).forEach(([k, v]) => {
-        out[k.toLowerCase()] = this.normalizeKeys(v);
-      });
-      return out;
-    }
     return value;
   }
 
