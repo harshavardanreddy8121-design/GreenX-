@@ -79,3 +79,13 @@ app:
   upload:
     dir: ${UPLOAD_DIR:./uploads}
 
+# Weather API Configuration (WeatherAPI.com)
+# Sign up at https://www.weatherapi.com/ for a free key (1M calls/month)
+# Set WEATHER_API_KEY in your Railway environment variables
+weather:
+  api:
+    key: ${WEATHER_API_KEY:}
+    url: ${WEATHER_API_URL:https://api.weatherapi.com/v1}
+  cache:
+    duration: 1800  # seconds — 30 minutes
+
