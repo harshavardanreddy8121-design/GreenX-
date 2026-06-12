@@ -8,10 +8,31 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { emitWorkflowTrigger } from '@/utils/workflowNotifications';
 
+const COMMON_CROPS = [
+    'Rice',
+    'Wheat',
+    'Maize',
+    'Cotton',
+    'Sugarcane',
+    'Tomato',
+    'Potato',
+    'Onion',
+    'Chickpea',
+    'Soybean',
+    'Groundnut',
+    'Mustard',
+    'Watermelon',
+    'Cucumber',
+    'Chili',
+    'Turmeric',
+    'Ginger',
+];
+
 export default function CropCalendar() {
     const queryClient = useQueryClient();
 
-    // Manual crop entry fields
+    // Crop selection: dropdown value + optional custom text when "Other" is chosen
+    const [selectedCrop, setSelectedCrop] = useState('');
     const [cropName, setCropName] = useState('');
     const [selectedFarmId, setSelectedFarmId] = useState('');
     const [selectedSuggestionId, setSelectedSuggestionId] = useState('');
@@ -46,6 +67,15 @@ export default function CropCalendar() {
         },
     });
 
+    // Derive the effective crop name from dropdown + optional custom input
+    const effectiveCropName = selectedCrop === 'Other' ? cropName : selectedCrop;
+
+    // Handle crop dropdown change
+    const handleCropSelect = (value: string) => {
+        setSelectedCrop(value);
+        if (value !== 'Other') setCropName('');
+    };
+
     // When a suggestion is selected, auto-fill crop name and farm
     const handleSuggestionChange = (suggestionId: string) => {
         setSelectedSuggestionId(suggestionId);
@@ -54,7 +84,18 @@ export default function CropCalendar() {
             if (suggestion) {
                 const name = suggestion.cropname || suggestion.crop_name || '';
                 const fid = suggestion.farmid || suggestion.farm_id || '';
-                if (name) setCropName(name);
+                if (name) {
+                    const matched = COMMON_CROPS.find(
+                        (c) => c.toLowerCase() === name.toLowerCase()
+                    );
+                    if (matched) {
+                        setSelectedCrop(matched);
+                        setCropName('');
+                    } else {
+                        setSelectedCrop('Other');
+                        setCropName(name);
+                    }
+                }
                 if (fid) setSelectedFarmId(fid);
             }
         }
@@ -64,9 +105,9 @@ export default function CropCalendar() {
 
     const createCalendar = useMutation({
         mutationFn: async () => {
-            const finalCropName = cropName.trim();
+            const finalCropName = effectiveCropName.trim();
             if (!finalCropName) {
-                throw new Error('Crop name is required. Please type a crop name or select a suggestion.');
+                throw new Error('Please select a crop from the dropdown, or choose "Other" and enter a custom crop name.');
             }
 
             const farmId = selectedFarmId || farms[0]?.id || '';
@@ -102,6 +143,7 @@ export default function CropCalendar() {
         },
         onSuccess: () => {
             toast.success('Crop calendar created and published');
+            setSelectedCrop('');
             setCropName('');
             setSelectedFarmId('');
             setSelectedSuggestionId('');
@@ -122,18 +164,39 @@ export default function CropCalendar() {
                 </div>
 
                 <Card className="p-4 space-y-4">
-                    {/* Crop Name — manual text entry (required) */}
+                    {/* Crop Name — dropdown with common crops + "Other" for custom entry */}
                     <div>
                         <label className="block text-xs font-medium text-muted-foreground mb-1">
                             Crop Name <span className="text-destructive">*</span>
                         </label>
-                        <input
-                            value={cropName}
-                            onChange={(e) => setCropName(e.target.value)}
-                            placeholder="e.g. Wheat, Rice, Maize…"
+                        <select
+                            value={selectedCrop}
+                            onChange={(e) => handleCropSelect(e.target.value)}
                             className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
-                        />
+                        >
+                            <option value="">— Select a crop —</option>
+                            {COMMON_CROPS.map((crop) => (
+                                <option key={crop} value={crop}>{crop}</option>
+                            ))}
+                            <option value="Other">Other (enter custom crop name)</option>
+                        </select>
                     </div>
+
+                    {/* Custom crop name — shown only when "Other" is selected */}
+                    {selectedCrop === 'Other' && (
+                        <div>
+                            <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                Custom Crop Name <span className="text-destructive">*</span>
+                            </label>
+                            <input
+                                value={cropName}
+                                onChange={(e) => setCropName(e.target.value)}
+                                placeholder="Enter crop name…"
+                                className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm"
+                                autoFocus
+                            />
+                        </div>
+                    )}
 
                     {/* Farm selection */}
                     <div>
