@@ -203,10 +203,10 @@ export default function AdminDashboard() {
       {/* Team Overview */}
       <div className="gx-section-divider"><Users className="inline-block w-4 h-4 mr-1 align-middle" /> Team Overview</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 20 }}>
-        <RoleCard title=<><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Land Owners</> users={landowners} color="gold" />
-        <RoleCard title=<><Microscope className="inline-block w-4 h-4 mr-1 align-middle" /> Experts</> users={experts} color="blue" />
-        <RoleCard title=<><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Field Managers</> users={fieldManagers} color="orange" />
-        <RoleCard title=<><HardHat className="inline-block w-4 h-4 mr-1 align-middle" /> Workers</> users={workers} color="green" />
+        <RoleCard title=<><Sprout className="inline-block w-4 h-4 mr-1 align-middle" /> Land Owners</> users={landowners} color="gold" onClick={() => navigate('/admin/farmers')} />
+        <RoleCard title=<><Microscope className="inline-block w-4 h-4 mr-1 align-middle" /> Experts</> users={experts} color="blue" onClick={() => navigate('/admin/users?role=expert')} />
+        <RoleCard title=<><Tractor className="inline-block w-4 h-4 mr-1 align-middle" /> Field Managers</> users={fieldManagers} color="orange" onClick={() => navigate('/admin/users?role=fieldmanager')} />
+        <RoleCard title=<><HardHat className="inline-block w-4 h-4 mr-1 align-middle" /> Workers</> users={workers} color="green" onClick={() => navigate('/admin/users?role=worker')} />
       </div>
 
       {/* Operational Status */}
@@ -402,10 +402,16 @@ export default function AdminDashboard() {
   );
 }
 
-function RoleCard({ title, users, color }: { title: string; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange' }) {
+function RoleCard({ title, users, color, onClick }: { title: string; users: any[]; color: 'green' | 'blue' | 'gold' | 'orange'; onClick?: () => void }) {
   const colorVar = `var(--gx-${color})`;
   return (
-    <div className="gx-card">
+    <div
+      className="gx-card"
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow 0.15s, transform 0.15s' }}
+      onMouseEnter={e => { if (onClick) { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 2px ${colorVar}`; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; } }}
+      onMouseLeave={e => { if (onClick) { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; (e.currentTarget as HTMLDivElement).style.transform = ''; } }}
+    >
       <div className="gx-card-header">
         <div className="gx-card-title">{title}</div>
         <span className={`gx-status gx-s-done`}>{users.length}</span>
@@ -426,6 +432,11 @@ function RoleCard({ title, users, color }: { title: string; users: any[]; color:
             {users.length > 5 && (
               <div style={{ fontSize: 11, opacity: .4, textAlign: 'center' }}>+{users.length - 5} more</div>
             )}
+          </div>
+        )}
+        {onClick && (
+          <div style={{ marginTop: 10, fontSize: 11, opacity: .45, textAlign: 'center', letterSpacing: 0.3 }}>
+            Click to view all →
           </div>
         )}
       </div>
