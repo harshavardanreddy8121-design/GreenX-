@@ -13,6 +13,7 @@ import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { AiAssistant } from '@/components/AiAssistant';
 import { javaApi } from '@/integrations/java-api/client';
 import { Card } from '@/components/ui/card';
+import WeatherWidget from '@/components/WeatherWidget';
 
 type Tab = 'overview' | 'farms' | 'samples' | 'results' | 'report' | 'past' | 'suggest' | 'calendar' | 'weather' | 'pest' | 'prescription' | 'photos' | 'cropdb' | 'soillib' | 'pestindex' | 'ai';
 
@@ -325,6 +326,16 @@ export default function ExpertDashboard() {
 
         {/* ═══ OVERVIEW TAB ═══ */}
         {activeTab === 'overview' && (<>
+          {myFarms && myFarms.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <WeatherWidget
+                village={(myFarms[0] as any).village}
+                pincode={(myFarms[0] as any).pincode}
+                compact={false}
+              />
+            </div>
+          )}
+
           {pestAlerts.length > 0 && (
             <Card className="p-4 bg-red-50 border-red-200 border flex items-start gap-3 mb-3">
               <span><Bug className="inline-block w-4 h-4 mr-1 align-middle text-red-600" /></span>

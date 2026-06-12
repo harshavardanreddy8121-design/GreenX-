@@ -12,6 +12,7 @@ import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { AiAssistant } from '@/components/AiAssistant';
 import { useNotifications } from '@/hooks/useNotifications';
+import WeatherWidget from '@/components/WeatherWidget';
 
 type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
 
@@ -154,6 +155,12 @@ export default function LandownerDashboard() {
 
         {/* ═══ OVERVIEW TAB ═══ */}
         {activeTab === 'overview' && (<>
+          {farm && (
+            <div style={{ marginBottom: 24 }}>
+              <WeatherWidget village={farm.village} pincode={farm.pincode} compact={false} />
+            </div>
+          )}
+
           {cropPlans.length > 0 && (
             <div className="gx-alert-box gx-alert-gold">
               <span><Zap className="inline-block w-4 h-4 mr-1 align-middle" /></span>
