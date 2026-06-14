@@ -834,6 +834,257 @@ export default function LandingPage() {
           color: var(--green);
         }
 
+        /* ══ PROBLEM STAT CARDS ══ */
+        .problem-stat-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(34,197,94,0.3) !important;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+        }
+
+        /* ══ SOLUTION SECTION ══ */
+        .solution-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          position: relative;
+        }
+        .solution-step-item {
+          display: flex;
+          gap: 24px;
+          align-items: flex-start;
+          position: relative;
+          padding-bottom: 36px;
+        }
+        .solution-step-item:last-child {
+          padding-bottom: 0;
+        }
+        .solution-step-connector {
+          position: absolute;
+          left: 22px;
+          top: 48px;
+          bottom: 0;
+          width: 2px;
+          background: linear-gradient(to bottom, rgba(22,163,74,0.4), rgba(22,163,74,0.1));
+        }
+        .solution-step-icon-wrap {
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+          border: 1.5px solid;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          background: rgba(22,163,74,0.06);
+          position: relative;
+          z-index: 1;
+        }
+        .solution-step-content {
+          flex: 1;
+          padding-top: 4px;
+        }
+        .solution-step-num {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          margin-bottom: 4px;
+          opacity: 0.8;
+        }
+        .solution-step-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #0f1a12;
+          margin-bottom: 6px;
+          line-height: 1.3;
+        }
+        .solution-step-desc {
+          font-size: 14px;
+          color: #4a6b55;
+          line-height: 1.7;
+        }
+        .solution-feature-card {
+          background: #ffffff;
+          border: 1px solid rgba(22,163,74,0.15);
+          border-radius: 16px;
+          padding: 28px 24px;
+          transition: all 0.3s;
+        }
+        .solution-feature-card:hover {
+          border-color: rgba(22,163,74,0.4);
+          box-shadow: 0 8px 32px rgba(22,163,74,0.12);
+          transform: translateY(-3px);
+        }
+        .solution-feature-icon {
+          color: var(--green2);
+          margin-bottom: 14px;
+        }
+        .solution-feature-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #0f1a12;
+          margin-bottom: 8px;
+        }
+        .solution-feature-desc {
+          font-size: 13.5px;
+          color: #4a6b55;
+          line-height: 1.6;
+        }
+
+        /* ══ DATA SECTION ══ */
+        .data-charts-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          margin-top: 64px;
+        }
+        .data-chart-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 20px;
+          padding: 36px 32px 28px;
+        }
+        .data-chart-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 20px;
+          font-weight: 700;
+          color: var(--white);
+          margin-bottom: 6px;
+          line-height: 1.3;
+        }
+        .data-chart-subtitle {
+          font-size: 12px;
+          color: var(--text3);
+          letter-spacing: 0.5px;
+          margin-bottom: 32px;
+        }
+        .data-bar-chart {
+          display: flex;
+          gap: 12px;
+          height: 220px;
+          align-items: stretch;
+        }
+        .data-bar-y-axis {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: flex-end;
+          padding-bottom: 28px;
+          flex-shrink: 0;
+        }
+        .data-bar-y-label {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          color: var(--text3);
+          line-height: 1;
+        }
+        .data-bar-area {
+          flex: 1;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+        }
+        .data-bar-grid {
+          position: absolute;
+          inset: 0;
+          bottom: 28px;
+          pointer-events: none;
+        }
+        .data-bar-gridline {
+          position: absolute;
+          left: 0; right: 0;
+          height: 1px;
+          background: rgba(34,197,94,0.08);
+        }
+        .data-bars-row {
+          display: flex;
+          gap: 24px;
+          align-items: flex-end;
+          flex: 1;
+          padding-bottom: 28px;
+          justify-content: center;
+        }
+        .data-bar-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          width: 80px;
+          height: 100%;
+          justify-content: flex-end;
+        }
+        .data-bar-value-label {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .data-bar {
+          width: 64px;
+          border-radius: 6px 6px 0 0;
+          height: var(--bar-height);
+          transition: height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+          position: relative;
+        }
+        .data-bar-green {
+          background: linear-gradient(to top, var(--green2), var(--green3));
+          box-shadow: 0 0 20px rgba(34,197,94,0.25);
+        }
+        .data-bar-red {
+          background: linear-gradient(to top, #c2410c, #f97316);
+          box-shadow: 0 0 20px rgba(249,115,22,0.2);
+        }
+        .data-bar-gray {
+          background: linear-gradient(to top, #374151, #6b7280);
+        }
+        .data-bar-x-label {
+          font-size: 12px;
+          color: var(--text2);
+          text-align: center;
+          line-height: 1.4;
+          font-weight: 600;
+        }
+        .data-annotation {
+          position: absolute;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+        }
+        .data-annotation-drop {
+          right: 8px;
+          top: 8px;
+          color: #f97316;
+        }
+        .data-annotation-multiplier {
+          right: 8px;
+          top: 8px;
+          color: var(--green);
+        }
+        .data-annotation-arrow {
+          font-size: 18px;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .data-annotation-text {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 13px;
+          font-weight: 700;
+          background: rgba(0,0,0,0.4);
+          padding: 3px 8px;
+          border-radius: 6px;
+          border: 1px solid currentColor;
+          opacity: 0.9;
+        }
+        .data-chart-caption {
+          font-size: 13px;
+          color: var(--text3);
+          margin-top: 20px;
+          font-style: italic;
+          text-align: center;
+          letter-spacing: 0.2px;
+        }
+
         @media (max-width: 900px) {
           section { padding: 70px 28px; }
           nav { padding: 16px 24px; }
@@ -845,6 +1096,10 @@ export default function LandingPage() {
           .video-proof-strip { gap: 20px; }
           .video-proof-divider { display: none; }
           .video-tabs { flex-wrap: wrap; justify-content: center; }
+          .data-charts-grid { grid-template-columns: 1fr; gap: 24px; }
+          .data-chart-card { padding: 28px 20px 24px; }
+          .solution-steps { gap: 0; }
+          .solution-step-connector { left: 22px; }
         }
       `}</style>
 
@@ -862,6 +1117,7 @@ export default function LandingPage() {
                 <ul className="nav-links">
                     <li><a href="#problem">Problem</a></li>
                     <li><a href="#solution">Solution</a></li>
+                    <li><a href="#data">Data</a></li>
                     <li><a href="#vision">Our Story</a></li>
                     <li><a href="#platform">Platform</a></li>
                 </ul>
@@ -960,42 +1216,62 @@ export default function LandingPage() {
             </div>
 
             {/* ══ PROBLEM SECTION ══ */}
-            <section id="problem" className="reveal" style={{ background: 'var(--deep)' }}>
+            <section id="problem" className="reveal" style={{ background: 'var(--black)' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="section-eyebrow">The Crisis</div>
                     <h2 className="section-title">What India's Farmers <em>Actually Face</em></h2>
-                    <p className="section-sub">
-                        While India dreams of doubling farmer income, reality shows fragmented land, absent owners, and zero professional infrastructure.
+                    <p className="section-sub" style={{ fontSize: '15px', color: 'var(--text2)', marginBottom: '0' }}>
+                        The crisis of fragmented, abandoned farmland
+                    </p>
+                    <p style={{
+                        fontSize: '16px',
+                        color: 'var(--text2)',
+                        lineHeight: 1.85,
+                        maxWidth: '760px',
+                        marginTop: '20px'
+                    }}>
+                        Most Indian farmland is owned by smallholder farmers, each holding just 2–3 acres. But fewer young people want to farm anymore — many are moving to cities for other jobs, and the farming workforce has dropped from <strong style={{ color: 'var(--white)' }}>70% to under 46%</strong> of the population in just two decades. As a result, millions of acres of land sit fragmented, underused, or completely unmanaged, with no one to cultivate them properly.
                     </p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '56px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '56px' }}>
                         {[
-                            { num: '86%', label: 'Holdings < 5 Acres', desc: 'Below economic viability threshold' },
-                            { num: '40%', label: 'Post-Harvest Loss', desc: 'Due to middlemen & poor handling' },
-                            { num: '60%', label: 'Migrant Landowners', desc: 'Farms managed by relatives or abandoned' },
-                            { num: '₹8-12K', label: 'Per Acre Revenue', desc: 'Vs. ₹40K+ in professional farming' }
+                            { num: '86%', label: 'Holdings < 5 Acres', desc: 'Below economic viability threshold', accent: 'var(--green)' },
+                            { num: '40%', label: 'Post-Harvest Loss', desc: 'Due to middlemen & poor handling', accent: '#f97316' },
+                            { num: '60%', label: 'Migrant Landowners', desc: 'Farms managed by relatives or abandoned', accent: '#f97316' },
+                            { num: '₹8-12K', label: 'Per Acre Revenue', desc: 'Vs. ₹40K+ in professional farming', accent: 'var(--gold)' }
                         ].map((item, i) => (
-                            <div key={i} style={{
+                            <div key={i} className="problem-stat-card" style={{
                                 background: 'var(--surface)',
                                 border: '1px solid var(--border)',
+                                borderTop: `3px solid ${item.accent}`,
                                 borderRadius: '16px',
-                                padding: '32px',
+                                padding: '36px 28px',
                                 textAlign: 'center',
-                                transition: 'all 0.3s'
+                                transition: 'all 0.3s',
+                                position: 'relative',
+                                overflow: 'hidden'
                             }}>
                                 <div style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: `radial-gradient(ellipse 80% 60% at 50% 0%, ${item.accent}0d 0%, transparent 70%)`,
+                                    pointerEvents: 'none'
+                                }} />
+                                <div style={{
                                     fontFamily: "'JetBrains Mono', monospace",
-                                    fontSize: '48px',
+                                    fontSize: '52px',
                                     fontWeight: 700,
-                                    color: 'var(--green)',
+                                    color: item.accent,
                                     lineHeight: 1,
-                                    marginBottom: '12px'
+                                    marginBottom: '14px',
+                                    position: 'relative'
                                 }}>{item.num}</div>
                                 <div style={{
                                     fontSize: '15px',
                                     fontWeight: 700,
                                     color: 'var(--white)',
-                                    marginBottom: '8px'
+                                    marginBottom: '8px',
+                                    position: 'relative'
                                 }}>{item.label}</div>
                                 <div style={{
                                     fontSize: '13px',
@@ -1009,42 +1285,227 @@ export default function LandingPage() {
             </section>
 
             {/* ══ SOLUTION SECTION ══ */}
-            <section id="solution" className="reveal">
+            <section id="solution" className="reveal" style={{ background: '#f8faf8' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <div className="section-eyebrow">The Answer</div>
-                    <h2 className="section-title">GreenX <em>Operates</em> Your Farm</h2>
-                    <p className="section-sub">
-                        We don't just "connect" or "advise." We physically takeover your land, run it like a professional operation, and share profits.
+                    <div className="section-eyebrow" style={{ color: 'var(--green2)' }}>The Answer</div>
+                    <h2 className="section-title" style={{ color: '#0f1a12' }}>The <em style={{ color: 'var(--green2)' }}>GreenX</em> Model</h2>
+                    <p style={{ fontSize: '15px', color: '#4a6b55', marginBottom: '0', fontWeight: 600, marginTop: '12px' }}>
+                        Professional farming for landowners who can't manage it themselves
+                    </p>
+                    <p style={{
+                        fontSize: '16px',
+                        color: '#4a6b55',
+                        lineHeight: 1.85,
+                        maxWidth: '760px',
+                        marginTop: '16px'
+                    }}>
+                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: '#0f1a12' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
                     </p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginTop: '56px' }}>
+                    {/* 5-Step Process Flow */}
+                    <div style={{ marginTop: '64px' }}>
+                        <div style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '3px',
+                            textTransform: 'uppercase',
+                            color: 'var(--green2)',
+                            marginBottom: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px'
+                        }}>
+                            <span style={{ width: '24px', height: '1px', background: 'var(--green2)', display: 'inline-block' }} />
+                            How It Works
+                        </div>
+                        <div className="solution-steps">
+                            {[
+                                {
+                                    num: '01',
+                                    icon: <Briefcase size={22} strokeWidth={1.8} />,
+                                    title: 'Landowner Registers Land',
+                                    desc: 'Submit land documents (7/12, survey map). Verified within 48 hours.',
+                                    color: '#16a34a'
+                                },
+                                {
+                                    num: '02',
+                                    icon: <HardHat size={22} strokeWidth={1.8} />,
+                                    title: 'GreenX Consolidates Plots',
+                                    desc: 'We aggregate nearby parcels into a single, professionally managed farm unit.',
+                                    color: '#16a34a'
+                                },
+                                {
+                                    num: '03',
+                                    icon: <FlaskConical size={22} strokeWidth={1.8} />,
+                                    title: 'Soil Testing & Planning',
+                                    desc: 'Clinical NPK, pH, and micronutrient analysis. Expert agronomists build a custom crop calendar.',
+                                    color: '#16a34a'
+                                },
+                                {
+                                    num: '04',
+                                    icon: <Wheat size={22} strokeWidth={1.8} />,
+                                    title: 'Professional Cultivation',
+                                    desc: 'Trained workers execute planting, irrigation, pest control, and harvest using precision tools.',
+                                    color: '#16a34a'
+                                },
+                                {
+                                    num: '05',
+                                    icon: <Ship size={22} strokeWidth={1.8} />,
+                                    title: 'Direct Export & Profit Split',
+                                    desc: 'Produce graded, packed, and sold directly to international buyers. 70% of profits go to the landowner.',
+                                    color: '#d4a847'
+                                }
+                            ].map((step, i, arr) => (
+                                <div key={i} className="solution-step-item">
+                                    {/* Connector line */}
+                                    {i < arr.length - 1 && (
+                                        <div className="solution-step-connector" />
+                                    )}
+                                    <div className="solution-step-icon-wrap" style={{ borderColor: step.color, color: step.color }}>
+                                        {step.icon}
+                                    </div>
+                                    <div className="solution-step-content">
+                                        <div className="solution-step-num" style={{ color: step.color }}>{step.num}</div>
+                                        <div className="solution-step-title">{step.title}</div>
+                                        <div className="solution-step-desc">{step.desc}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Feature cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '64px' }}>
                         {[
-                            { icon: <FlaskConical size={36} strokeWidth={1.5} />, title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
-                            { icon: <Wheat size={36} strokeWidth={1.5} />, title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
-                            { icon: <HardHat size={36} strokeWidth={1.5} />, title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
-                            { icon: <Ship size={36} strokeWidth={1.5} />, title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
+                            { icon: <FlaskConical size={28} strokeWidth={1.5} />, title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
+                            { icon: <Wheat size={28} strokeWidth={1.5} />, title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
+                            { icon: <HardHat size={28} strokeWidth={1.5} />, title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
+                            { icon: <Ship size={28} strokeWidth={1.5} />, title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
                         ].map((item, i) => (
-                            <div key={i} style={{
-                                background: 'var(--surface)',
-                                border: '1px solid var(--border)',
-                                borderRadius: '16px',
-                                padding: '32px',
-                                transition: 'all 0.3s'
-                            }}>
-                                <div style={{ fontSize: '40px', marginBottom: '16px' }}>{item.icon}</div>
-                                <div style={{
-                                    fontSize: '18px',
-                                    fontWeight: 700,
-                                    color: 'var(--white)',
-                                    marginBottom: '10px'
-                                }}>{item.title}</div>
-                                <div style={{
-                                    fontSize: '14px',
-                                    color: 'var(--text2)',
-                                    lineHeight: 1.6
-                                }}>{item.desc}</div>
+                            <div key={i} className="solution-feature-card">
+                                <div className="solution-feature-icon">{item.icon}</div>
+                                <div className="solution-feature-title">{item.title}</div>
+                                <div className="solution-feature-desc">{item.desc}</div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ══ DATA SECTION ══ */}
+            <section id="data" className="reveal" style={{ background: 'var(--black)' }}>
+                <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+                    <div className="section-eyebrow" style={{ justifyContent: 'center' }}>The Numbers</div>
+                    <h2 className="section-title" style={{ textAlign: 'center' }}>
+                        The Data Doesn't <em>Lie</em>
+                    </h2>
+                    <p style={{
+                        fontSize: '16px',
+                        color: 'var(--text2)',
+                        lineHeight: 1.7,
+                        textAlign: 'center',
+                        maxWidth: '560px',
+                        margin: '16px auto 0'
+                    }}>
+                        Two charts that tell the whole story — a workforce in decline, and an income opportunity hiding in plain sight.
+                    </p>
+
+                    <div className="data-charts-grid">
+                        {/* Chart 1: Agricultural Workforce Decline */}
+                        <div className="data-chart-card">
+                            <div className="data-chart-title">Agricultural Workforce Decline</div>
+                            <div className="data-chart-subtitle">% of population employed in agriculture</div>
+                            <div className="data-bar-chart">
+                                <div className="data-bar-y-axis">
+                                    {[100, 75, 50, 25, 0].map(v => (
+                                        <div key={v} className="data-bar-y-label">{v}%</div>
+                                    ))}
+                                </div>
+                                <div className="data-bar-area">
+                                    {/* Grid lines */}
+                                    <div className="data-bar-grid">
+                                        {[0, 25, 50, 75, 100].map(v => (
+                                            <div key={v} className="data-bar-gridline" style={{ bottom: `${v}%` }} />
+                                        ))}
+                                    </div>
+                                    {/* Bars */}
+                                    <div className="data-bars-row">
+                                        <div className="data-bar-col">
+                                            <div className="data-bar-value-label" style={{ color: 'var(--green)' }}>70%</div>
+                                            <div
+                                                className="data-bar data-bar-green"
+                                                style={{ '--bar-height': '70%' } as React.CSSProperties}
+                                            />
+                                            <div className="data-bar-x-label">2001</div>
+                                        </div>
+                                        <div className="data-bar-col">
+                                            <div className="data-bar-value-label" style={{ color: '#f97316' }}>46%</div>
+                                            <div
+                                                className="data-bar data-bar-red"
+                                                style={{ '--bar-height': '46%' } as React.CSSProperties}
+                                            />
+                                            <div className="data-bar-x-label">2023</div>
+                                        </div>
+                                    </div>
+                                    {/* Drop annotation */}
+                                    <div className="data-annotation data-annotation-drop">
+                                        <span className="data-annotation-arrow">↓</span>
+                                        <span className="data-annotation-text">−24 pts</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="data-chart-caption">
+                                24-point decline in 22 years — and still falling.
+                            </div>
+                        </div>
+
+                        {/* Chart 2: Landowner Income Comparison */}
+                        <div className="data-chart-card">
+                            <div className="data-chart-title">Landowner Income Per Acre / Year</div>
+                            <div className="data-chart-subtitle">Annual income in ₹ (Indian Rupees)</div>
+                            <div className="data-bar-chart">
+                                <div className="data-bar-y-axis">
+                                    {['50K', '37.5K', '25K', '12.5K', '0'].map(v => (
+                                        <div key={v} className="data-bar-y-label">₹{v}</div>
+                                    ))}
+                                </div>
+                                <div className="data-bar-area">
+                                    {/* Grid lines */}
+                                    <div className="data-bar-grid">
+                                        {[0, 25, 50, 75, 100].map(v => (
+                                            <div key={v} className="data-bar-gridline" style={{ bottom: `${v}%` }} />
+                                        ))}
+                                    </div>
+                                    {/* Bars */}
+                                    <div className="data-bars-row">
+                                        <div className="data-bar-col">
+                                            <div className="data-bar-value-label" style={{ color: '#9ca3af' }}>₹10K</div>
+                                            <div
+                                                className="data-bar data-bar-gray"
+                                                style={{ '--bar-height': '20%' } as React.CSSProperties}
+                                            />
+                                            <div className="data-bar-x-label" style={{ fontSize: '11px' }}>Traditional<br/>Lease</div>
+                                        </div>
+                                        <div className="data-bar-col">
+                                            <div className="data-bar-value-label" style={{ color: 'var(--green)' }}>₹46K</div>
+                                            <div
+                                                className="data-bar data-bar-green"
+                                                style={{ '--bar-height': '92%' } as React.CSSProperties}
+                                            />
+                                            <div className="data-bar-x-label" style={{ fontSize: '11px' }}>GreenX<br/>Model</div>
+                                        </div>
+                                    </div>
+                                    {/* Multiplier annotation */}
+                                    <div className="data-annotation data-annotation-multiplier">
+                                        <span className="data-annotation-arrow">↑</span>
+                                        <span className="data-annotation-text">4.6×</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="data-chart-caption">
+                                GreenX gives landowners 4.6× more income.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
