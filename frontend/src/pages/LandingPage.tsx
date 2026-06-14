@@ -842,67 +842,6 @@ export default function LandingPage() {
         }
 
         /* ══ SOLUTION SECTION ══ */
-        .solution-steps {
-          display: flex;
-          flex-direction: column;
-          gap: 0;
-          position: relative;
-        }
-        .solution-step-item {
-          display: flex;
-          gap: 24px;
-          align-items: flex-start;
-          position: relative;
-          padding-bottom: 36px;
-        }
-        .solution-step-item:last-child {
-          padding-bottom: 0;
-        }
-        .solution-step-connector {
-          position: absolute;
-          left: 22px;
-          top: 48px;
-          bottom: 0;
-          width: 2px;
-          background: linear-gradient(to bottom, rgba(22,163,74,0.4), rgba(22,163,74,0.1));
-        }
-        .solution-step-icon-wrap {
-          width: 46px;
-          height: 46px;
-          border-radius: 12px;
-          border: 1.5px solid;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          background: rgba(22,163,74,0.06);
-          position: relative;
-          z-index: 1;
-        }
-        .solution-step-content {
-          flex: 1;
-          padding-top: 4px;
-        }
-        .solution-step-num {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 2px;
-          margin-bottom: 4px;
-          opacity: 0.8;
-        }
-        .solution-step-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #0f1a12;
-          margin-bottom: 6px;
-          line-height: 1.3;
-        }
-        .solution-step-desc {
-          font-size: 14px;
-          color: #4a6b55;
-          line-height: 1.7;
-        }
         .solution-feature-card {
           background: #ffffff;
           border: 1px solid rgba(22,163,74,0.15);
@@ -1098,8 +1037,6 @@ export default function LandingPage() {
           .video-tabs { flex-wrap: wrap; justify-content: center; }
           .data-charts-grid { grid-template-columns: 1fr; gap: 24px; }
           .data-chart-card { padding: 28px 20px 24px; }
-          .solution-steps { gap: 0; }
-          .solution-step-connector { left: 22px; }
         }
       `}</style>
 
@@ -1116,8 +1053,8 @@ export default function LandingPage() {
                 </div>
                 <ul className="nav-links">
                     <li><a href="#problem">Problem</a></li>
-                    <li><a href="#solution">Solution</a></li>
                     <li><a href="#data">Data</a></li>
+                    <li><a href="#solution">Solution</a></li>
                     <li><a href="#vision">Our Story</a></li>
                     <li><a href="#platform">Platform</a></li>
                 </ul>
@@ -1284,116 +1221,8 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* ══ SOLUTION SECTION ══ */}
-            <section id="solution" className="reveal" style={{ background: '#f8faf8' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                    <div className="section-eyebrow" style={{ color: 'var(--green2)' }}>The Answer</div>
-                    <h2 className="section-title" style={{ color: '#0f1a12' }}>The <em style={{ color: 'var(--green2)' }}>GreenX</em> Model</h2>
-                    <p style={{ fontSize: '15px', color: '#4a6b55', marginBottom: '0', fontWeight: 600, marginTop: '12px' }}>
-                        Professional farming for landowners who can't manage it themselves
-                    </p>
-                    <p style={{
-                        fontSize: '16px',
-                        color: '#4a6b55',
-                        lineHeight: 1.85,
-                        maxWidth: '760px',
-                        marginTop: '16px'
-                    }}>
-                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: '#0f1a12' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
-                    </p>
-
-                    {/* 5-Step Process Flow */}
-                    <div style={{ marginTop: '64px' }}>
-                        <div style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            letterSpacing: '3px',
-                            textTransform: 'uppercase',
-                            color: 'var(--green2)',
-                            marginBottom: '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px'
-                        }}>
-                            <span style={{ width: '24px', height: '1px', background: 'var(--green2)', display: 'inline-block' }} />
-                            How It Works
-                        </div>
-                        <div className="solution-steps">
-                            {[
-                                {
-                                    num: '01',
-                                    icon: <Briefcase size={22} strokeWidth={1.8} />,
-                                    title: 'Landowner Registers Land',
-                                    desc: 'Submit land documents (7/12, survey map). Verified within 48 hours.',
-                                    color: '#16a34a'
-                                },
-                                {
-                                    num: '02',
-                                    icon: <HardHat size={22} strokeWidth={1.8} />,
-                                    title: 'GreenX Consolidates Plots',
-                                    desc: 'We aggregate nearby parcels into a single, professionally managed farm unit.',
-                                    color: '#16a34a'
-                                },
-                                {
-                                    num: '03',
-                                    icon: <FlaskConical size={22} strokeWidth={1.8} />,
-                                    title: 'Soil Testing & Planning',
-                                    desc: 'Clinical NPK, pH, and micronutrient analysis. Expert agronomists build a custom crop calendar.',
-                                    color: '#16a34a'
-                                },
-                                {
-                                    num: '04',
-                                    icon: <Wheat size={22} strokeWidth={1.8} />,
-                                    title: 'Professional Cultivation',
-                                    desc: 'Trained workers execute planting, irrigation, pest control, and harvest using precision tools.',
-                                    color: '#16a34a'
-                                },
-                                {
-                                    num: '05',
-                                    icon: <Ship size={22} strokeWidth={1.8} />,
-                                    title: 'Direct Export & Profit Split',
-                                    desc: 'Produce graded, packed, and sold directly to international buyers. 70% of profits go to the landowner.',
-                                    color: '#d4a847'
-                                }
-                            ].map((step, i, arr) => (
-                                <div key={i} className="solution-step-item">
-                                    {/* Connector line */}
-                                    {i < arr.length - 1 && (
-                                        <div className="solution-step-connector" />
-                                    )}
-                                    <div className="solution-step-icon-wrap" style={{ borderColor: step.color, color: step.color }}>
-                                        {step.icon}
-                                    </div>
-                                    <div className="solution-step-content">
-                                        <div className="solution-step-num" style={{ color: step.color }}>{step.num}</div>
-                                        <div className="solution-step-title">{step.title}</div>
-                                        <div className="solution-step-desc">{step.desc}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Feature cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '64px' }}>
-                        {[
-                            { icon: <FlaskConical size={28} strokeWidth={1.5} />, title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
-                            { icon: <Wheat size={28} strokeWidth={1.5} />, title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
-                            { icon: <HardHat size={28} strokeWidth={1.5} />, title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
-                            { icon: <Ship size={28} strokeWidth={1.5} />, title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
-                        ].map((item, i) => (
-                            <div key={i} className="solution-feature-card">
-                                <div className="solution-feature-icon">{item.icon}</div>
-                                <div className="solution-feature-title">{item.title}</div>
-                                <div className="solution-feature-desc">{item.desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ══ DATA SECTION ══ */}
-            <section id="data" className="reveal" style={{ background: 'var(--black)' }}>
+            <section id="data" className="reveal" style={{ background: 'var(--deep)' }}>
                 <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
                     <div className="section-eyebrow" style={{ justifyContent: 'center' }}>The Numbers</div>
                     <h2 className="section-title" style={{ textAlign: 'center' }}>
@@ -1506,6 +1335,42 @@ export default function LandingPage() {
                                 GreenX gives landowners 4.6× more income.
                             </div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ══ SOLUTION SECTION ══ */}
+            <section id="solution" className="reveal" style={{ background: '#f8faf8' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    <div className="section-eyebrow" style={{ color: 'var(--green2)' }}>The Answer</div>
+                    <h2 className="section-title" style={{ color: '#0f1a12' }}>The <em style={{ color: 'var(--green2)' }}>GreenX</em> Model</h2>
+                    <p style={{ fontSize: '15px', color: '#4a6b55', marginBottom: '0', fontWeight: 600, marginTop: '12px' }}>
+                        Professional farming for landowners who can't manage it themselves
+                    </p>
+                    <p style={{
+                        fontSize: '16px',
+                        color: '#4a6b55',
+                        lineHeight: 1.85,
+                        maxWidth: '760px',
+                        marginTop: '16px'
+                    }}>
+                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: '#0f1a12' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
+                    </p>
+
+                    {/* Feature cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '64px' }}>
+                        {[
+                            { icon: <FlaskConical size={28} strokeWidth={1.5} />, title: 'Clinical Soil Testing', desc: 'NPK, pH, micronutrient analysis before every season' },
+                            { icon: <Wheat size={28} strokeWidth={1.5} />, title: 'Precision Agriculture', desc: 'Variable Rate Technology, GPS tracking, optimized inputs' },
+                            { icon: <HardHat size={28} strokeWidth={1.5} />, title: 'Professional Workforce', desc: 'Trained workers + expert agronomists on payroll' },
+                            { icon: <Ship size={28} strokeWidth={1.5} />, title: 'Direct Export', desc: 'Bypass 5 middlemen, sell to international buyers' }
+                        ].map((item, i) => (
+                            <div key={i} className="solution-feature-card">
+                                <div className="solution-feature-icon">{item.icon}</div>
+                                <div className="solution-feature-title">{item.title}</div>
+                                <div className="solution-feature-desc">{item.desc}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -1729,53 +1594,6 @@ export default function LandingPage() {
                 </div>
             )}
 
-            {/* ══ HOW IT WORKS ══ */}
-            <section className="reveal" style={{ background: 'var(--deep)' }}>
-                <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
-                    <div className="section-eyebrow" style={{ justifyContent: 'center' }}>Process</div>
-                    <h2 className="section-title">How It Works: <em>5 Steps</em></h2>
-
-                    <div style={{ marginTop: '64px', textAlign: 'left' }}>
-                        {[
-                            { num: '01', title: 'Register Land', desc: 'Submit land docs (7/12, survey map). 48hr verification.' },
-                            { num: '02', title: 'Soil Lab Test', desc: 'Our team conducts clinical NPK, pH, micronutrient analysis.' },
-                            { num: '03', title: 'Crop Plan Assigned', desc: 'Expert agronomist creates custom crop calendar + input schedule.' },
-                            { num: '04', title: 'Farm Operations', desc: 'Our workers execute: planting, irrigation, pest control, harvest.' },
-                            { num: '05', title: 'Export & Payment', desc: 'Produce graded, packed, exported. 70% profit to your account.' }
-                        ].map((step, i) => (
-                            <div key={i} style={{
-                                display: 'flex',
-                                gap: '28px',
-                                marginBottom: '40px',
-                                alignItems: 'flex-start'
-                            }}>
-                                <div style={{
-                                    fontFamily: "'JetBrains Mono', monospace",
-                                    fontSize: '56px',
-                                    fontWeight: 700,
-                                    color: 'var(--border2)',
-                                    lineHeight: 1,
-                                    minWidth: '100px'
-                                }}>{step.num}</div>
-                                <div style={{ flex: 1, paddingTop: '8px' }}>
-                                    <div style={{
-                                        fontSize: '24px',
-                                        fontWeight: 700,
-                                        color: 'var(--white)',
-                                        marginBottom: '8px'
-                                    }}>{step.title}</div>
-                                    <div style={{
-                                        fontSize: '15px',
-                                        color: 'var(--text2)',
-                                        lineHeight: 1.7
-                                    }}>{step.desc}</div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* ══ PLATFORM PREVIEW ══ */}
             <section id="platform" className="reveal" style={{ background: 'var(--deep)', paddingTop: '120px', paddingBottom: '120px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -1934,7 +1752,7 @@ export default function LandingPage() {
                                 Platform
                             </div>
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                {['How It Works', 'Pricing', 'Technology', 'Success Stories'].map((item, i) => (
+                                {['Our Solution', 'Pricing', 'Technology', 'Success Stories'].map((item, i) => (
                                     <li key={i} style={{ marginBottom: '10px' }}>
                                         <a href="#" style={{ fontSize: '13.5px', color: 'var(--text2)', textDecoration: 'none', transition: 'color 0.2s' }}>
                                             {item}
