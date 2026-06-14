@@ -843,15 +843,15 @@ export default function LandingPage() {
 
         /* ══ SOLUTION SECTION ══ */
         .solution-feature-card {
-          background: #ffffff;
-          border: 1px solid rgba(22,163,74,0.15);
+          background: var(--surface);
+          border: 1px solid var(--border);
           border-radius: 16px;
           padding: 28px 24px;
           transition: all 0.3s;
         }
         .solution-feature-card:hover {
-          border-color: rgba(22,163,74,0.4);
-          box-shadow: 0 8px 32px rgba(22,163,74,0.12);
+          border-color: var(--border2);
+          box-shadow: 0 8px 32px rgba(34,197,94,0.12);
           transform: translateY(-3px);
         }
         .solution-feature-icon {
@@ -861,12 +861,12 @@ export default function LandingPage() {
         .solution-feature-title {
           font-size: 16px;
           font-weight: 700;
-          color: #0f1a12;
+          color: var(--white);
           margin-bottom: 8px;
         }
         .solution-feature-desc {
           font-size: 13.5px;
-          color: #4a6b55;
+          color: var(--text2);
           line-height: 1.6;
         }
 
@@ -1340,21 +1340,21 @@ export default function LandingPage() {
             </section>
 
             {/* ══ SOLUTION SECTION ══ */}
-            <section id="solution" className="reveal" style={{ background: '#f8faf8' }}>
+            <section id="solution" className="reveal" style={{ background: 'var(--black)' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="section-eyebrow" style={{ color: 'var(--green2)' }}>The Answer</div>
-                    <h2 className="section-title" style={{ color: '#0f1a12' }}>The <em style={{ color: 'var(--green2)' }}>GreenX</em> Model</h2>
-                    <p style={{ fontSize: '15px', color: '#4a6b55', marginBottom: '0', fontWeight: 600, marginTop: '12px' }}>
+                    <h2 className="section-title" style={{ color: 'var(--white)' }}>The <em style={{ color: 'var(--green2)' }}>GreenX</em> Model</h2>
+                    <p style={{ fontSize: '15px', color: 'var(--text2)', marginBottom: '0', fontWeight: 600, marginTop: '12px' }}>
                         Professional farming for landowners who can't manage it themselves
                     </p>
                     <p style={{
                         fontSize: '16px',
-                        color: '#4a6b55',
+                        color: 'var(--text2)',
                         lineHeight: 1.85,
                         maxWidth: '760px',
                         marginTop: '16px'
                     }}>
-                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: '#0f1a12' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
+                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: 'var(--white)' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
                     </p>
 
                     {/* Feature cards */}
