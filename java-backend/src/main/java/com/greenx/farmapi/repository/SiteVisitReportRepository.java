@@ -19,4 +19,6 @@ public interface SiteVisitReportRepository extends JpaRepository<SiteVisitReport
     List<SiteVisitReport> findByFarmIdAndVisitDateBetween(String farmId, LocalDate from, LocalDate to);
 
     List<SiteVisitReport> findByFarmIdIn(List<String> farmIds);
+
+    List<SiteVisitReport> findByFarmIdInOrderByVisitDateDesc(List<String> farmIds);
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { landOwner, notifications } from '@/lib/api';
+import { landOwner, landownerDashboard, notifications } from '@/lib/api';
 import { AlertTriangle, Banknote, BarChart3, Bell, Bot, Bug, Calendar, Camera, CheckCircle2, ClipboardList, CloudSun, Droplets, FileText, FolderOpen, Home, Leaf, Lightbulb, LogOut, Map, MapPin, MessageSquare, Receipt, Settings, Sprout, Star, TestTubes, Trash2, Wallet, Wheat, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MobileHeader } from '@/components/MobileHeader';
@@ -14,7 +14,7 @@ import { AiAssistant } from '@/components/AiAssistant';
 import { useNotifications } from '@/hooks/useNotifications';
 import WeatherWidget from '@/components/WeatherWidget';
 
-type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai';
+type Tab = 'overview' | 'land' | 'soil' | 'crops' | 'calendar' | 'photos' | 'costs' | 'profit' | 'notifications' | 'contract' | 'settings' | 'farmmap' | 'payments' | 'messages' | 'seasonreport' | 'ai' | 'soiltimeline';
 
 export default function LandownerDashboard() {
   const { user, profile, logout } = useAuth();
@@ -33,6 +33,85 @@ export default function LandownerDashboard() {
   });
 
   const farm: any = myFarms[0];
+
+  // ── Dashboard module queries ──────────────────────────────────────────────
+
+  const {
+    data: dashOverview,
+    isLoading: overviewLoading,
+    isError: overviewError,
+    refetch: refetchOverview,
+  } = useQuery({
+    queryKey: ['dashboard-overview', user?.id],
+    queryFn: () => landownerDashboard.getOverview(),
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+    retry: 2,
+  });
+
+  const {
+    data: dashSoilSamples,
+    isLoading: soilSamplesLoading,
+    isError: soilSamplesError,
+    refetch: refetchSoilSamples,
+  } = useQuery({
+    queryKey: ['dashboard-soil-samples', user?.id],
+    queryFn: () => landownerDashboard.getSoilSamples(),
+    enabled: !!user?.id,
+    retry: 2,
+  });
+
+  const {
+    data: dashSoilReports,
+    isLoading: soilReportsLoading,
+    isError: soilReportsError,
+    refetch: refetchSoilReports,
+  } = useQuery({
+    queryKey: ['dashboard-soil-reports', user?.id],
+    queryFn: () => landownerDashboard.getLatestSoilReports(5),
+    enabled: !!user?.id,
+    refetchInterval: 60000,
+    retry: 2,
+  });
+
+  const {
+    data: dashCropSuggestions,
+    isLoading: cropSuggestionsLoading,
+    isError: cropSuggestionsError,
+    refetch: refetchCropSuggestions,
+  } = useQuery({
+    queryKey: ['dashboard-crop-suggestions', user?.id],
+    queryFn: () => landownerDashboard.getCropSuggestions(),
+    enabled: !!user?.id,
+    retry: 2,
+  });
+
+  const {
+    data: dashTimeline,
+    isLoading: timelineLoading,
+    isError: timelineError,
+    refetch: refetchTimeline,
+  } = useQuery({
+    queryKey: ['dashboard-soil-timeline', user?.id],
+    queryFn: () => landownerDashboard.getSoilTimeline(),
+    enabled: !!user?.id,
+    retry: 2,
+  });
+
+  const {
+    data: dashFinance,
+    isLoading: financeLoading,
+    isError: financeError,
+    refetch: refetchFinance,
+  } = useQuery({
+    queryKey: ['dashboard-finance', user?.id],
+    queryFn: () => landownerDashboard.getFinanceSummary(),
+    enabled: !!user?.id,
+    refetchInterval: 60000,
+    retry: 2,
+  });
+
+  // ── Legacy queries (kept for calendar, photos, operations feed) ───────────
 
   const { data: costs = [] } = useQuery({
     queryKey: ['farm-costs', farm?.id],
@@ -79,13 +158,18 @@ export default function LandownerDashboard() {
     mutationFn: ({ planId }: { planId: string }) => landOwner.selectCrop(planId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crop-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-crop-suggestions'] });
       toast({ title: 'Crop selected! Expert notified. Calendar coming soon.' });
     },
   });
 
   const costsArr = Array.isArray(costs) ? costs : [];
-  const totalCosts = costsArr.reduce((sum: number, c: any) => sum + (parseFloat(c.amount) || 0), 0);
+  const totalCosts = dashFinance?.totalInvestment ?? costsArr.reduce((sum: number, c: any) => sum + (parseFloat(c.amount) || 0), 0);
   const userName = profile?.full_name || user?.email?.split('@')[0] || 'Farmer';
+  const dashSuggestions = dashCropSuggestions?.suggestions ?? [];
+  const dashReports = dashSoilReports?.reports ?? [];
+  const dashSamplesList = dashSoilSamples?.samples ?? [];
+  const dashTimelineStages = dashTimeline?.timeline ?? [];
   const ai = useAI();
 
   return (
@@ -110,7 +194,8 @@ export default function LandownerDashboard() {
 
         <div className="gx-nav-group-label">Reports & Data</div>
         <SideNavItem icon={<TestTubes size={18} />} label="Soil Test Reports" active={activeTab === 'soil'} onClick={() => setActiveTab('soil')} badge="New" badgeColor="gold" />
-        <SideNavItem icon={<Wheat size={18} />} label="Crop Suggestions" active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} badge={cropPlans.length > 0 ? String(cropPlans.length) : undefined} badgeColor="gold" />
+        <SideNavItem icon={<Wheat size={18} />} label="Crop Suggestions" active={activeTab === 'crops'} onClick={() => setActiveTab('crops')} badge={dashSuggestions.length > 0 ? String(dashSuggestions.length) : undefined} badgeColor="gold" />
+        <SideNavItem icon={<ClipboardList size={18} />} label="Sample Timeline" active={activeTab === 'soiltimeline'} onClick={() => setActiveTab('soiltimeline')} />
         <SideNavItem icon={<Calendar size={18} />} label="Crop Calendar" active={activeTab === 'calendar'} onClick={() => setActiveTab('calendar')} />
         <SideNavItem icon={<Camera size={18} />} label="Live Field Photos" active={activeTab === 'photos'} onClick={() => setActiveTab('photos')} />
 
@@ -170,50 +255,128 @@ export default function LandownerDashboard() {
             </div>
           )}
 
-          {cropPlans.length > 0 && (
+          {dashSuggestions.length > 0 && !dashSuggestions.some(s => s.isSelected) && (
             <div className="gx-alert-box gx-alert-gold">
               <span><Zap className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-              <div><strong>Action Required:</strong> Expert has suggested {cropPlans.length} crop(s) for your soil. Please review and select your preferred crop to unlock the season plan.</div>
+              <div><strong>Action Required:</strong> Expert has suggested {dashSuggestions.length} crop(s) for your soil. Please review and select your preferred crop to unlock the season plan.</div>
             </div>
           )}
 
+          {overviewError && (
+            <div className="gx-alert-box gx-alert-red" style={{ marginBottom: 12 }}>
+              <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+              <span>Could not load overview stats. </span>
+              <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchOverview()}>Retry</button>
+            </div>
+          )}
           <div className="gx-stats-row">
-            <div className="gx-stat-card gold"><div className="gx-stat-label">Total Land Area</div><div className="gx-stat-value">{farm?.totalLand || 0}<span className="gx-stat-unit"> ac</span></div><div className="gx-stat-change gx-up">✓ {myFarms.length} field(s) active</div></div>
-            <div className="gx-stat-card green"><div className="gx-stat-label">Predicted Yield</div><div className="gx-stat-value">{farm?.expected_yield ? (farm.expected_yield / 1000).toFixed(1) : '—'}<span className="gx-stat-unit"> T</span></div><div className="gx-stat-change gx-up">↑ Based on soil analysis</div></div>
-            <div className="gx-stat-card blue"><div className="gx-stat-label">Input Costs So Far</div><div className="gx-stat-value">₹{totalCosts > 0 ? `${(totalCosts / 1000).toFixed(0)}K` : '0'}</div><div className="gx-stat-change gx-neutral">Budget: ₹45,000</div></div>
-            <div className="gx-stat-card orange"><div className="gx-stat-label">Soil Samples</div><div className="gx-stat-value">{sampleTrack.length}</div><div className="gx-stat-change gx-neutral">Live tracking</div></div>
+            <div className="gx-stat-card gold">
+              <div className="gx-stat-label">Total Land Area</div>
+              <div className="gx-stat-value">
+                {overviewLoading ? <span style={{ opacity: 0.4 }}>…</span> : (dashOverview?.totalLandArea ?? farm?.totalLand ?? 0)}
+                <span className="gx-stat-unit"> ac</span>
+              </div>
+              <div className="gx-stat-change gx-up">✓ {dashOverview?.activeFarms ?? myFarms.length} field(s) active</div>
+            </div>
+            <div className="gx-stat-card green">
+              <div className="gx-stat-label">Predicted Yield</div>
+              <div className="gx-stat-value">{farm?.expected_yield ? (farm.expected_yield / 1000).toFixed(1) : '—'}<span className="gx-stat-unit"> T</span></div>
+              <div className="gx-stat-change gx-up">↑ Based on soil analysis</div>
+            </div>
+            <div className="gx-stat-card blue">
+              <div className="gx-stat-label">Input Costs So Far</div>
+              <div className="gx-stat-value">
+                {financeLoading ? <span style={{ opacity: 0.4 }}>…</span> : `₹${totalCosts > 0 ? `${(totalCosts / 1000).toFixed(0)}K` : '0'}`}
+              </div>
+              <div className="gx-stat-change gx-neutral">Budget: ₹45,000</div>
+            </div>
+            <div className="gx-stat-card orange">
+              <div className="gx-stat-label">Soil Samples</div>
+              <div className="gx-stat-value">
+                {overviewLoading ? <span style={{ opacity: 0.4 }}>…</span> : (dashOverview?.totalSoilSamples ?? sampleTrack.length)}
+              </div>
+              <div className="gx-stat-change gx-neutral">Live tracking</div>
+            </div>
           </div>
 
           <div className="gx-content-grid">
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Latest Soil Report</div><span className="gx-status gx-s-done">Recent</span></div>
+              <div className="gx-card-header">
+                <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Latest Soil Report</div>
+                <span className="gx-status gx-s-done">Recent</span>
+              </div>
               <div className="gx-card-body">
-                <SoilMetric label="pH Level" value={farm?.soil_ph} good={farm?.soil_ph >= 6 && farm?.soil_ph <= 7.5} />
-                <SoilMetric label="Nitrogen (N)" value={farm?.soil_nitrogen ? `${farm.soil_nitrogen} kg/ha` : undefined} good={farm?.soil_nitrogen >= 200} />
-                <SoilMetric label="Phosphorus (P)" value={farm?.soil_phosphorus ? `${farm.soil_phosphorus} kg/ha` : undefined} good />
-                <SoilMetric label="Potassium (K)" value={farm?.soil_potassium ? `${farm.soil_potassium} kg/ha` : undefined} good />
-                <SoilMetric label="Moisture Content" value={farm?.soil_moisture ? `${farm.soil_moisture}%` : undefined} />
-                <SoilMetric label="Organic Matter" value={farm?.soil_organic_carbon ? `${farm.soil_organic_carbon}%` : undefined} good={false} />
+                {soilReportsLoading ? (
+                  <div style={{ padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>Loading soil data…</div>
+                ) : soilReportsError ? (
+                  <div style={{ color: 'var(--gx-red)', fontSize: 13 }}>
+                    Failed to load report.{' '}
+                    <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => refetchSoilReports()}>Retry</button>
+                  </div>
+                ) : dashReports.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No soil reports yet.</div>
+                ) : (() => {
+                  const r = dashReports[0];
+                  return (<>
+                    <div style={{ fontSize: 11, color: 'var(--gx-text2)', marginBottom: 8 }}>
+                      {r.farmName} · {r.reportDate ?? (r.submittedDate ? new Date(r.submittedDate).toLocaleDateString('en-IN') : '—')}
+                      {r.expertName && r.expertName !== 'Unknown' && ` · Expert: ${r.expertName}`}
+                    </div>
+                    <SoilMetric label="pH Level" value={r.ph} good={r.ph != null && r.ph >= 6 && r.ph <= 7.5} />
+                    <SoilMetric label="Nitrogen (N)" value={r.nitrogen != null ? `${r.nitrogen} kg/ha` : undefined} good={r.nitrogen != null && r.nitrogen >= 200} />
+                    <SoilMetric label="Phosphorus (P)" value={r.phosphorus != null ? `${r.phosphorus} kg/ha` : undefined} good />
+                    <SoilMetric label="Potassium (K)" value={r.potassium != null ? `${r.potassium} kg/ha` : undefined} good />
+                    <SoilMetric label="Moisture" value={r.moisture != null ? `${r.moisture}%` : undefined} />
+                    <SoilMetric label="Organic Matter" value={r.organicMatter != null ? `${r.organicMatter}%` : undefined} good={false} />
+                    {r.overallRating && <div style={{ marginTop: 8, fontSize: 12, color: 'var(--gx-gold)' }}>Rating: {r.overallRating}</div>}
+                  </>);
+                })()}
                 <div className="gx-btn-row"><button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => setActiveTab('soil')}><FileText className="inline-block w-4 h-4 mr-1 align-middle" /> View Full Report</button></div>
               </div>
             </div>
 
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Expert Crop Suggestions</div><span className="gx-status gx-s-pending">Select Required</span></div>
+              <div className="gx-card-header">
+                <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Expert Crop Suggestions</div>
+                <span className="gx-status gx-s-pending">
+                  {cropSuggestionsLoading ? '…' : `${dashSuggestions.length} Options`}
+                </span>
+              </div>
               <div className="gx-card-body">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {cropPlans.length === 0 ? (
+                  {cropSuggestionsLoading ? (
+                    <div style={{ padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>Loading suggestions…</div>
+                  ) : cropSuggestionsError ? (
+                    <div style={{ color: 'var(--gx-red)', fontSize: 13 }}>
+                      Failed to load.{' '}
+                      <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => refetchCropSuggestions()}>Retry</button>
+                    </div>
+                  ) : dashSuggestions.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> No crop suggestions yet. Expert will submit after soil report.</div>
-                  ) : cropPlans.slice(0, 2).map((plan: any, i: number) => (
+                  ) : dashSuggestions.slice(0, 2).map((plan, i) => (
                     <div key={plan.id} className={i === 0 ? 'gx-crop-option recommended' : 'gx-crop-option default'}>
                       <div>
-                        <div style={{ fontWeight: 600, color: i === 0 ? 'var(--gx-green)' : 'var(--gx-text)', fontSize: 14 }}>{plan.cropName}</div>
-                        <div style={{ fontSize: 12, color: 'var(--gx-text2)', marginTop: 2 }}>Yield: {plan.expected_yield || '—'} · Profit: ₹{parseFloat(plan.expected_revenue || 0).toLocaleString()}/ac</div>
+                        <div style={{ fontWeight: 600, color: i === 0 ? 'var(--gx-green)' : 'var(--gx-text)', fontSize: 14 }}>
+                          {plan.cropName}{plan.variety ? ` (${plan.variety})` : ''}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--gx-text2)', marginTop: 2 }}>
+                          Yield: {plan.expectedYieldMin ?? '—'}–{plan.expectedYieldMax ?? '—'} {plan.yieldUnit ?? 'T/ac'} · Profit: ₹{(plan.profitPerAcre ?? 0).toLocaleString()}/ac
+                        </div>
                       </div>
-                      <button className={`gx-btn gx-btn-sm ${i === 0 ? 'gx-btn-primary' : 'gx-btn-ghost'}`} onClick={() => approveCropPlan.mutate({ planId: plan.id })}>Select</button>
+                      <button
+                        className={`gx-btn gx-btn-sm ${plan.isSelected ? 'gx-btn-green' : i === 0 ? 'gx-btn-primary' : 'gx-btn-ghost'}`}
+                        onClick={() => !plan.isSelected && approveCropPlan.mutate({ planId: plan.id })}
+                        disabled={plan.isSelected}
+                      >
+                        {plan.isSelected ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Selected</> : 'Select'}
+                      </button>
                     </div>
                   ))}
-                  {cropPlans.length > 2 && <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => setActiveTab('crops')}>View All {cropPlans.length} Suggestions →</button>}
+                  {dashSuggestions.length > 2 && (
+                    <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => setActiveTab('crops')}>
+                      View All {dashSuggestions.length} Suggestions →
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -221,16 +384,28 @@ export default function LandownerDashboard() {
 
           <div className="gx-content-grid">
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Sample Live Track</div><span className="gx-status gx-s-pending">{sampleTrack.length}</span></div>
+              <div className="gx-card-header">
+                <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Sample Live Track</div>
+                <span className="gx-status gx-s-pending">
+                  {soilSamplesLoading ? '…' : (dashSoilSamples?.totalSamples ?? sampleTrack.length)}
+                </span>
+              </div>
               <div className="gx-card-body">
-                {sampleTrack.length === 0 ? (
+                {soilSamplesLoading ? (
+                  <div style={{ padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>Loading samples…</div>
+                ) : soilSamplesError ? (
+                  <div style={{ color: 'var(--gx-red)', fontSize: 13 }}>
+                    Failed to load.{' '}
+                    <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => refetchSoilSamples()}>Retry</button>
+                  </div>
+                ) : dashSamplesList.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gx-text2)', fontSize: 13 }}>No samples logged for your farms yet.</div>
-                ) : sampleTrack.slice(0, 6).map((s: any) => (
+                ) : dashSamplesList.slice(0, 6).map((s) => (
                   <div key={s.id} className="gx-activity-item">
                     <div className="gx-act-icon" style={{ background: 'var(--gx-gold-dim)' }}><TestTubes size={18} /></div>
                     <div>
-                      <div className="gx-act-text"><strong>{s.sampleCode || s.id}</strong> · {s.status || 'PENDING'}</div>
-                      <div className="gx-act-time">{s.collectionDate || s.createdAt ? new Date(s.collectionDate || s.createdAt).toLocaleString() : ''}</div>
+                      <div className="gx-act-text"><strong>{s.farmName}</strong> · {s.status}</div>
+                      <div className="gx-act-time">{s.collectionDate ? new Date(s.collectionDate).toLocaleDateString('en-IN') : '—'}</div>
                     </div>
                   </div>
                 ))}
@@ -259,15 +434,30 @@ export default function LandownerDashboard() {
             <div className="gx-card">
               <div className="gx-card-header"><div className="gx-card-title"><Wallet className="inline-block w-4 h-4 mr-1 align-middle" /> Season Finance Tracker</div></div>
               <div className="gx-card-body">
-                {costsArr.length > 0 ? costsArr.slice(0, 4).map((c: any, i: number) => (
-                  <div key={i} className="gx-metric-row"><span className="gx-metric-label">{c.description || c.cost_category || 'Cost'}</span><span className="gx-metric-value">₹{parseFloat(c.amount || 0).toLocaleString()}</span></div>
-                )) : (<>
+                {financeLoading ? (
+                  <div style={{ padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>Loading finance data…</div>
+                ) : financeError ? (
+                  <div style={{ color: 'var(--gx-red)', fontSize: 13 }}>
+                    Failed to load.{' '}
+                    <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => refetchFinance()}>Retry</button>
+                  </div>
+                ) : dashFinance && dashFinance.breakdown.length > 0 ? (
+                  dashFinance.breakdown.slice(0, 4).map((b, i) => (
+                    <div key={i} className="gx-metric-row">
+                      <span className="gx-metric-label">{b.category}</span>
+                      <span className="gx-metric-value">₹{b.amount.toLocaleString()} <span style={{ fontSize: 11, color: 'var(--gx-text2)' }}>({b.percentage}%)</span></span>
+                    </div>
+                  ))
+                ) : (<>
                   <div className="gx-metric-row"><span className="gx-metric-label">Seeds & Planting</span><span className="gx-metric-value">—</span></div>
                   <div className="gx-metric-row"><span className="gx-metric-label">Fertilizers</span><span className="gx-metric-value">—</span></div>
                   <div className="gx-metric-row"><span className="gx-metric-label">Pesticides</span><span className="gx-metric-value">—</span></div>
                   <div className="gx-metric-row"><span className="gx-metric-label">Labour</span><span className="gx-metric-value">—</span></div>
                 </>)}
                 <div className="gx-metric-row"><span className="gx-metric-label" style={{ color: 'var(--gx-text)' }}>Total Spent</span><span className="gx-metric-value" style={{ color: 'var(--gx-gold)' }}>₹{totalCosts > 0 ? totalCosts.toLocaleString() : '0'}</span></div>
+                {dashFinance && (
+                  <div className="gx-metric-row"><span className="gx-metric-label">Revenue</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{dashFinance.revenue.toLocaleString()}</span></div>
+                )}
                 <div style={{ marginTop: 14 }}>
                   <div className="gx-progress-label"><span>Budget Used</span><span>₹{(totalCosts / 1000).toFixed(1)}K / ₹45K</span></div>
                   <div className="gx-progress-bar"><div className="gx-progress-fill" style={{ width: `${Math.min((totalCosts / 45000) * 100, 100)}%`, background: 'var(--gx-gold)' }} /></div>
@@ -320,63 +510,185 @@ export default function LandownerDashboard() {
         {/* ═══ SOIL TEST REPORTS TAB ═══ */}
         {activeTab === 'soil' && (<>
           <div className="gx-section-divider"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Test Reports</div>
-          <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> Full Soil Analysis Report</div><span className="gx-status gx-s-done">Latest Report</span></div>
-            <div className="gx-card-body">
-              <div className="gx-form-grid">
-                <SoilMetric label="pH Level" value={farm?.soil_ph} good={farm?.soil_ph >= 6 && farm?.soil_ph <= 7.5} />
-                <SoilMetric label="Nitrogen (N)" value={farm?.soil_nitrogen ? `${farm.soil_nitrogen} kg/ha` : undefined} good={farm?.soil_nitrogen >= 200} />
-                <SoilMetric label="Phosphorus (P)" value={farm?.soil_phosphorus ? `${farm.soil_phosphorus} kg/ha` : undefined} good />
-                <SoilMetric label="Potassium (K)" value={farm?.soil_potassium ? `${farm.soil_potassium} kg/ha` : undefined} good />
-                <SoilMetric label="Organic Matter" value={farm?.soil_organic_carbon ? `${farm.soil_organic_carbon}%` : undefined} good={false} />
-                <SoilMetric label="Moisture Content" value={farm?.soil_moisture ? `${farm.soil_moisture}%` : undefined} />
-                <SoilMetric label="EC (dS/m)" value={farm?.soil_ec} />
-                <SoilMetric label="Zinc (ppm)" value={farm?.soil_zinc} />
-                <SoilMetric label="Boron (ppm)" value={farm?.soil_boron} />
-                <SoilMetric label="Sulphur (ppm)" value={farm?.soil_sulphur} />
-              </div>
-              {farm?.expert_remarks && (
-                <div style={{ marginTop: 16, padding: 14, background: 'var(--gx-surface2)', borderRadius: 8, borderLeft: '3px solid var(--gx-gold)' }}>
-                  <div style={{ fontSize: 12, color: 'var(--gx-gold)', fontWeight: 600, marginBottom: 6 }}>Expert Interpretation</div>
-                  <div style={{ fontSize: 13, color: 'var(--gx-text2)', lineHeight: 1.6 }}>{farm.expert_remarks}</div>
-                </div>
-              )}
-              <div className="gx-btn-row" style={{ marginTop: 16 }}>
-                <button className="gx-btn gx-btn-ghost" onClick={() => toast({ title: 'PDF report download will be available soon.' })}><FileText className="inline-block w-4 h-4 mr-1 align-middle" /> Download PDF Report</button>
+          {soilReportsLoading && (
+            <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gx-text2)', fontSize: 13 }}>Loading soil reports…</div>
+          )}
+          {soilReportsError && (
+            <div className="gx-alert-box gx-alert-red" style={{ marginBottom: 12 }}>
+              <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+              <span>Failed to load soil reports. </span>
+              <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchSoilReports()}>Retry</button>
+            </div>
+          )}
+          {!soilReportsLoading && !soilReportsError && dashReports.length === 0 && (
+            <div className="gx-card">
+              <div className="gx-card-body" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <TestTubes size={48} strokeWidth={1.5} style={{ margin: '0 auto 12px' }} />
+                <div>No soil reports yet. Expert will submit after collecting samples.</div>
               </div>
             </div>
-          </div>
+          )}
+          {dashReports.map((report) => (
+            <div key={report.id} className="gx-card" style={{ marginBottom: 20 }}>
+              <div className="gx-card-header">
+                <div className="gx-card-title"><TestTubes className="inline-block w-4 h-4 mr-1 align-middle" /> {report.farmName} — Soil Analysis</div>
+                <span className="gx-status gx-s-done">{report.overallRating ?? 'Report'}</span>
+              </div>
+              <div className="gx-card-body">
+                <div style={{ fontSize: 11, color: 'var(--gx-text2)', marginBottom: 12 }}>
+                  Date: {report.reportDate ?? (report.submittedDate ? new Date(report.submittedDate).toLocaleDateString('en-IN') : '—')}
+                  {report.expertName && report.expertName !== 'Unknown' && ` · Expert: ${report.expertName}`}
+                </div>
+                <div className="gx-form-grid">
+                  <SoilMetric label="pH Level" value={report.ph} good={report.ph != null && report.ph >= 6 && report.ph <= 7.5} />
+                  <SoilMetric label="Nitrogen (N)" value={report.nitrogen != null ? `${report.nitrogen} kg/ha` : undefined} good={report.nitrogen != null && report.nitrogen >= 200} />
+                  <SoilMetric label="Phosphorus (P)" value={report.phosphorus != null ? `${report.phosphorus} kg/ha` : undefined} good />
+                  <SoilMetric label="Potassium (K)" value={report.potassium != null ? `${report.potassium} kg/ha` : undefined} good />
+                  <SoilMetric label="Organic Matter" value={report.organicMatter != null ? `${report.organicMatter}%` : undefined} good={false} />
+                  <SoilMetric label="Moisture Content" value={report.moisture != null ? `${report.moisture}%` : undefined} />
+                  <SoilMetric label="EC (dS/m)" value={report.ec} />
+                  <SoilMetric label="Zinc (ppm)" value={report.zinc} />
+                  <SoilMetric label="Boron (ppm)" value={report.boron} />
+                  <SoilMetric label="Sulphur (ppm)" value={report.sulphur} />
+                </div>
+                {report.notes && (
+                  <div style={{ marginTop: 16, padding: 14, background: 'var(--gx-surface2)', borderRadius: 8, borderLeft: '3px solid var(--gx-gold)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--gx-gold)', fontWeight: 600, marginBottom: 6 }}>Expert Remarks</div>
+                    <div style={{ fontSize: 13, color: 'var(--gx-text2)', lineHeight: 1.6 }}>{report.notes}</div>
+                  </div>
+                )}
+                <div className="gx-btn-row" style={{ marginTop: 16 }}>
+                  <button className="gx-btn gx-btn-ghost" onClick={() => toast({ title: 'PDF report download will be available soon.' })}><FileText className="inline-block w-4 h-4 mr-1 align-middle" /> Download PDF Report</button>
+                </div>
+              </div>
+            </div>
+          ))}
         </>)}
 
         {/* ═══ CROP SUGGESTIONS TAB ═══ */}
         {activeTab === 'crops' && (<>
           <div className="gx-section-divider"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Crop Suggestions</div>
           <div className="gx-card">
-            <div className="gx-card-header"><div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Expert Crop Suggestions</div><span className="gx-status gx-s-pending">{cropPlans.length} Options</span></div>
+            <div className="gx-card-header">
+              <div className="gx-card-title"><Wheat className="inline-block w-4 h-4 mr-1 align-middle" /> Expert Crop Suggestions</div>
+              <span className="gx-status gx-s-pending">{cropSuggestionsLoading ? '…' : `${dashSuggestions.length} Options`}</span>
+            </div>
             <div className="gx-card-body">
-              {cropPlans.length === 0 ? (
+              {cropSuggestionsLoading ? (
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gx-text2)', fontSize: 13 }}>Loading crop suggestions…</div>
+              ) : cropSuggestionsError ? (
+                <div className="gx-alert-box gx-alert-red">
+                  <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+                  <span>Failed to load suggestions. </span>
+                  <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchCropSuggestions()}>Retry</button>
+                </div>
+              ) : dashSuggestions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
                   <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}><Wheat size={48} strokeWidth={1.5} /></div>
                   <div>No crop suggestions yet. Expert will submit after soil report.</div>
                 </div>
-              ) : cropPlans.map((plan: any, i: number) => (
+              ) : dashSuggestions.map((plan, i) => (
                 <div key={plan.id} style={{ padding: 16, background: 'var(--gx-surface2)', borderRadius: 10, marginBottom: 12, border: i === 0 ? '1px solid var(--gx-green)' : '1px solid var(--gx-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 16, color: i === 0 ? 'var(--gx-green)' : 'var(--gx-text)' }}>{i === 0 ? <><Star className="inline-block w-4 h-4 mr-1 align-middle" /> </> : ''}{plan.cropName} {plan.cropVariety ? `(${plan.cropVariety})` : ''}</div>
-                      <div style={{ fontSize: 12, color: 'var(--gx-text2)', marginTop: 2 }}>{plan.season || 'Kharif'} Season · {plan.durationDays || '—'} days</div>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: i === 0 ? 'var(--gx-green)' : 'var(--gx-text)' }}>
+                        {i === 0 && <Star className="inline-block w-4 h-4 mr-1 align-middle" />}
+                        {plan.cropName}{plan.variety ? ` (${plan.variety})` : ''}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--gx-text2)', marginTop: 2 }}>
+                        {plan.season ?? 'Kharif'} Season · {plan.durationDays ?? '—'} days
+                        {plan.expertName && plan.expertName !== 'Unknown' && ` · ${plan.expertName}`}
+                      </div>
                     </div>
-                    <button className={`gx-btn ${plan.isselected ? 'gx-btn-green' : i === 0 ? 'gx-btn-primary' : 'gx-btn-ghost'}`} onClick={() => !plan.isselected && approveCropPlan.mutate({ planId: plan.id })} disabled={plan.isselected}>{plan.isselected ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Selected</> : 'Select Crop'}</button>
+                    <button
+                      className={`gx-btn ${plan.isSelected ? 'gx-btn-green' : i === 0 ? 'gx-btn-primary' : 'gx-btn-ghost'}`}
+                      onClick={() => !plan.isSelected && approveCropPlan.mutate({ planId: plan.id })}
+                      disabled={plan.isSelected}
+                    >
+                      {plan.isSelected ? <><CheckCircle2 className="inline-block w-4 h-4 mr-1 align-middle" /> Selected</> : 'Select Crop'}
+                    </button>
                   </div>
                   <div className="gx-form-grid">
-                    <div className="gx-metric-row"><span className="gx-metric-label">Expected Yield</span><span className="gx-metric-value">{plan.expectedYieldMin || '—'} – {plan.expectedYieldMax || '—'} {plan.yieldUnit || 'T/ac'}</span></div>
-                    <div className="gx-metric-row"><span className="gx-metric-label">Profit/Acre</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{parseFloat(plan.profitPerAcre || 0).toLocaleString()}</span></div>
-                    <div className="gx-metric-row"><span className="gx-metric-label">Input Cost Est.</span><span className="gx-metric-value">₹{parseFloat(plan.inputCostEstimate || 0).toLocaleString()}</span></div>
-                    <div className="gx-metric-row"><span className="gx-metric-label">Suitability Score</span><span className="gx-metric-value" style={{ color: 'var(--gx-gold)' }}>{plan.suitabilityScore || '—'}/10</span></div>
+                    <div className="gx-metric-row"><span className="gx-metric-label">Expected Yield</span><span className="gx-metric-value">{plan.expectedYieldMin ?? '—'} – {plan.expectedYieldMax ?? '—'} {plan.yieldUnit ?? 'T/ac'}</span></div>
+                    <div className="gx-metric-row"><span className="gx-metric-label">Profit/Acre</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{(plan.profitPerAcre ?? 0).toLocaleString()}</span></div>
+                    <div className="gx-metric-row"><span className="gx-metric-label">Input Cost Est.</span><span className="gx-metric-value">₹{(plan.inputCostEstimate ?? 0).toLocaleString()}</span></div>
+                    <div className="gx-metric-row"><span className="gx-metric-label">Suitability Score</span><span className="gx-metric-value" style={{ color: 'var(--gx-gold)' }}>{plan.suitabilityScore ?? '—'}/10</span></div>
                   </div>
-                  {plan.expertNotes && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--gx-text2)', fontStyle: 'italic' }}><Lightbulb className="inline-block w-4 h-4 mr-1 align-middle" /> {plan.expertNotes}</div>}
+                  {plan.reasoning && (
+                    <div style={{ marginTop: 10, fontSize: 12, color: 'var(--gx-text2)', fontStyle: 'italic' }}>
+                      <Lightbulb className="inline-block w-4 h-4 mr-1 align-middle" /> {plan.reasoning}
+                    </div>
+                  )}
+                  {plan.submittedDate && (
+                    <div style={{ marginTop: 6, fontSize: 11, color: 'var(--gx-text2)' }}>
+                      Submitted: {new Date(plan.submittedDate).toLocaleDateString('en-IN')}
+                    </div>
+                  )}
                 </div>
               ))}
+            </div>
+          </div>
+        </>)}
+
+        {/* ═══ SOIL SAMPLE TIMELINE TAB ═══ */}
+        {activeTab === 'soiltimeline' && (<>
+          <div className="gx-section-divider"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Soil Sample Timeline</div>
+          {timelineLoading && (
+            <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gx-text2)', fontSize: 13 }}>Loading timeline…</div>
+          )}
+          {timelineError && (
+            <div className="gx-alert-box gx-alert-red" style={{ marginBottom: 12 }}>
+              <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+              <span>Failed to load timeline. </span>
+              <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchTimeline()}>Retry</button>
+            </div>
+          )}
+          <div className="gx-card">
+            <div className="gx-card-header">
+              <div className="gx-card-title"><ClipboardList className="inline-block w-4 h-4 mr-1 align-middle" /> Sample Processing Stages</div>
+            </div>
+            <div className="gx-card-body">
+              {!timelineLoading && dashTimelineStages.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                  <ClipboardList size={48} strokeWidth={1.5} style={{ margin: '0 auto 12px' }} />
+                  <div>No timeline data available yet.</div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {dashTimelineStages.map((stage, idx) => {
+                    const isCompleted = stage.status === 'completed';
+                    const isInProgress = stage.status === 'in_progress';
+                    const dotColor = isCompleted ? 'var(--gx-green)' : isInProgress ? 'var(--gx-gold)' : 'var(--gx-border)';
+                    const lineColor = isCompleted ? 'var(--gx-green)' : 'var(--gx-border)';
+                    return (
+                      <div key={idx} style={{ display: 'flex', gap: 16, position: 'relative' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 24, flexShrink: 0 }}>
+                          <div style={{ width: 16, height: 16, borderRadius: '50%', background: dotColor, border: `2px solid ${dotColor}`, flexShrink: 0, marginTop: 4 }} />
+                          {idx < dashTimelineStages.length - 1 && (
+                            <div style={{ width: 2, flex: 1, background: lineColor, minHeight: 32 }} />
+                          )}
+                        </div>
+                        <div style={{ paddingBottom: 24, flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600, fontSize: 14, color: isCompleted ? 'var(--gx-text)' : isInProgress ? 'var(--gx-gold)' : 'var(--gx-text2)' }}>
+                              {stage.stage}
+                            </span>
+                            <span className={`gx-status ${isCompleted ? 'gx-s-done' : isInProgress ? 'gx-s-pending' : ''}`} style={{ fontSize: 10 }}>
+                              {isCompleted ? 'Done' : isInProgress ? 'In Progress' : 'Pending'}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--gx-text2)' }}>{stage.description}</div>
+                          {stage.date && (
+                            <div style={{ fontSize: 11, color: 'var(--gx-text2)', marginTop: 4 }}>
+                              {new Date(stage.date).toLocaleDateString('en-IN')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </>)}
@@ -448,20 +760,49 @@ export default function LandownerDashboard() {
           <div className="gx-card" style={{ marginBottom: 20 }}>
             <div className="gx-card-header"><div className="gx-card-title"><Wallet className="inline-block w-4 h-4 mr-1 align-middle" /> Season Input Costs Breakdown</div></div>
             <div className="gx-card-body">
-              <table className="gx-data-table">
-                <thead><tr><th>#</th><th>Category</th><th>Description</th><th>Amount (₹)</th><th>Date</th></tr></thead>
-                <tbody>
-                  {costsArr.length === 0 ? (
-                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 30, opacity: .5 }}>No costs recorded yet</td></tr>
-                  ) : costsArr.map((c: any, i: number) => (
-                    <tr key={i}><td>{i + 1}</td><td>{c.cost_category || c.operation_type || '—'}</td><td>{c.description || c.product_used || '—'}</td><td style={{ color: 'var(--gx-gold)' }}>₹{parseFloat(c.amount || c.cost_incurred || 0).toLocaleString()}</td><td>{c.date ? new Date(c.date).toLocaleDateString('en-IN') : '—'}</td></tr>
-                  ))}
-                </tbody>
-              </table>
+              {financeLoading ? (
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--gx-text2)', fontSize: 13 }}>Loading finance data…</div>
+              ) : financeError ? (
+                <div className="gx-alert-box gx-alert-red">
+                  <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+                  <span>Failed to load finance data. </span>
+                  <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchFinance()}>Retry</button>
+                </div>
+              ) : (
+                <table className="gx-data-table">
+                  <thead><tr><th>#</th><th>Category</th><th>Amount (₹)</th><th>Share (%)</th></tr></thead>
+                  <tbody>
+                    {!dashFinance || dashFinance.breakdown.length === 0 ? (
+                      <tr><td colSpan={4} style={{ textAlign: 'center', padding: 30, opacity: .5 }}>No costs recorded yet</td></tr>
+                    ) : dashFinance.breakdown.map((b, i) => (
+                      <tr key={i}>
+                        <td>{i + 1}</td>
+                        <td>{b.category}</td>
+                        <td style={{ color: 'var(--gx-gold)' }}>₹{b.amount.toLocaleString()}</td>
+                        <td>{b.percentage}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               <div className="gx-metric-row" style={{ marginTop: 16, padding: '12px 0', borderTop: '1px solid var(--gx-border)' }}>
                 <span className="gx-metric-label" style={{ fontWeight: 700, color: 'var(--gx-text)' }}>Total Input Costs</span>
                 <span className="gx-metric-value" style={{ color: 'var(--gx-gold)', fontSize: 18 }}>₹{totalCosts > 0 ? totalCosts.toLocaleString() : '0'}</span>
               </div>
+              {dashFinance && (
+                <div className="gx-metric-row">
+                  <span className="gx-metric-label" style={{ fontWeight: 700, color: 'var(--gx-text)' }}>Revenue</span>
+                  <span className="gx-metric-value" style={{ color: 'var(--gx-green)', fontSize: 18 }}>₹{dashFinance.revenue.toLocaleString()}</span>
+                </div>
+              )}
+              {dashFinance && (
+                <div className="gx-metric-row">
+                  <span className="gx-metric-label" style={{ fontWeight: 700, color: 'var(--gx-text)' }}>Profit / Loss</span>
+                  <span className="gx-metric-value" style={{ color: dashFinance.profitLoss >= 0 ? 'var(--gx-green)' : 'var(--gx-red)', fontSize: 18 }}>
+                    ₹{dashFinance.profitLoss.toLocaleString()} ({dashFinance.profitMargin.toFixed(1)}%)
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </>)}
@@ -469,17 +810,34 @@ export default function LandownerDashboard() {
         {/* ═══ YIELD & PROFIT TAB ═══ */}
         {activeTab === 'profit' && (<>
           <div className="gx-section-divider"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Yield & Profit Tracker</div>
+          {financeError && (
+            <div className="gx-alert-box gx-alert-red" style={{ marginBottom: 12 }}>
+              <AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" />
+              <span>Failed to load finance data. </span>
+              <button className="gx-btn gx-btn-ghost gx-btn-sm" style={{ marginLeft: 8 }} onClick={() => refetchFinance()}>Retry</button>
+            </div>
+          )}
           <div className="gx-content-grid">
             <div className="gx-card">
               <div className="gx-card-header"><div className="gx-card-title"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Season Summary</div></div>
               <div className="gx-card-body">
-                <div className="gx-metric-row"><span className="gx-metric-label">Total Input Costs</span><span className="gx-metric-value" style={{ color: 'var(--gx-gold)' }}>₹{totalCosts > 0 ? totalCosts.toLocaleString() : '0'}</span></div>
-                <div className="gx-metric-row"><span className="gx-metric-label">Expected Revenue</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{farm?.expected_revenue ? parseFloat(farm.expected_revenue).toLocaleString() : '—'}</span></div>
-                <div className="gx-metric-row"><span className="gx-metric-label">Net Profit (Est.)</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{farm?.expected_revenue ? (parseFloat(farm.expected_revenue) - totalCosts).toLocaleString() : '—'}</span></div>
-                <div style={{ marginTop: 14 }}>
-                  <div className="gx-progress-label"><span>Budget Used</span><span>₹{(totalCosts / 1000).toFixed(1)}K / ₹45K</span></div>
-                  <div className="gx-progress-bar"><div className="gx-progress-fill" style={{ width: `${Math.min((totalCosts / 45000) * 100, 100)}%`, background: 'var(--gx-gold)' }} /></div>
-                </div>
+                {financeLoading ? (
+                  <div style={{ padding: '16px 0', color: 'var(--gx-text2)', fontSize: 13 }}>Loading…</div>
+                ) : (<>
+                  <div className="gx-metric-row"><span className="gx-metric-label">Total Input Costs</span><span className="gx-metric-value" style={{ color: 'var(--gx-gold)' }}>₹{totalCosts > 0 ? totalCosts.toLocaleString() : '0'}</span></div>
+                  <div className="gx-metric-row"><span className="gx-metric-label">Revenue</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>₹{dashFinance ? dashFinance.revenue.toLocaleString() : (farm?.expected_revenue ? parseFloat(farm.expected_revenue).toLocaleString() : '—')}</span></div>
+                  <div className="gx-metric-row">
+                    <span className="gx-metric-label">Profit / Loss</span>
+                    <span className="gx-metric-value" style={{ color: (dashFinance?.profitLoss ?? 0) >= 0 ? 'var(--gx-green)' : 'var(--gx-red)' }}>
+                      ₹{dashFinance ? dashFinance.profitLoss.toLocaleString() : (farm?.expected_revenue ? (parseFloat(farm.expected_revenue) - totalCosts).toLocaleString() : '—')}
+                      {dashFinance && <span style={{ fontSize: 12, marginLeft: 6 }}>({dashFinance.profitMargin.toFixed(1)}%)</span>}
+                    </span>
+                  </div>
+                  <div style={{ marginTop: 14 }}>
+                    <div className="gx-progress-label"><span>Budget Used</span><span>₹{(totalCosts / 1000).toFixed(1)}K / ₹45K</span></div>
+                    <div className="gx-progress-bar"><div className="gx-progress-fill" style={{ width: `${Math.min((totalCosts / 45000) * 100, 100)}%`, background: 'var(--gx-gold)' }} /></div>
+                  </div>
+                </>)}
               </div>
             </div>
             <div className="gx-card">
@@ -487,9 +845,24 @@ export default function LandownerDashboard() {
               <div className="gx-card-body">
                 <div className="gx-profit-box">
                   <div style={{ fontSize: 12, color: 'var(--gx-text2)' }}>Your Share ({farm?.landowner_share_pct || 80}%)</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gx-green)', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.landowner_share_pct || 80)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gx-green)', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>
+                    {dashFinance && dashFinance.revenue > 0
+                      ? `₹${((dashFinance.revenue * (farm?.landowner_share_pct || 80)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+                      : farm?.expected_revenue
+                        ? `₹${((parseFloat(farm.expected_revenue) * (farm?.landowner_share_pct || 80)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+                        : '—'}
+                  </div>
                 </div>
-                <div className="gx-metric-row" style={{ marginTop: 16 }}><span className="gx-metric-label">GreenX Share ({farm?.greenx_share_pct || 20}%)</span><span className="gx-metric-value">₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.greenx_share_pct || 20)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</span></div>
+                <div className="gx-metric-row" style={{ marginTop: 16 }}>
+                  <span className="gx-metric-label">GreenX Share ({farm?.greenx_share_pct || 20}%)</span>
+                  <span className="gx-metric-value">
+                    {dashFinance && dashFinance.revenue > 0
+                      ? `₹${((dashFinance.revenue * (farm?.greenx_share_pct || 20)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+                      : farm?.expected_revenue
+                        ? `₹${((parseFloat(farm.expected_revenue) * (farm?.greenx_share_pct || 20)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`
+                        : '—'}
+                  </span>
+                </div>
                 <div className="gx-metric-row"><span className="gx-metric-label">Predicted Yield</span><span className="gx-metric-value">{farm?.expected_yield ? `${(farm.expected_yield / 1000).toFixed(1)} T` : '—'}</span></div>
               </div>
             </div>

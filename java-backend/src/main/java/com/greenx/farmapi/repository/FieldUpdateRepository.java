@@ -20,4 +20,6 @@ public interface FieldUpdateRepository extends JpaRepository<FieldUpdate, String
     List<FieldUpdate> findByRelatedScheduleItemId(String scheduleItemId);
 
     List<FieldUpdate> findByFarmIdIn(List<String> farmIds);
+
+    List<FieldUpdate> findByFarmIdInAndTransactionType(List<String> farmIds, String transactionType);
 }

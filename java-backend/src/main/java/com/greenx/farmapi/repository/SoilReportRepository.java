@@ -26,4 +26,8 @@ public interface SoilReportRepository extends JpaRepository<SoilReport, String> 
     List<SoilReport> findByExpertIdAndFarmIdIn(String expertId, List<String> farmIds);
 
     List<SoilReport> findByFarmIdIn(List<String> farmIds);
+
+    List<SoilReport> findByFarmIdInOrderByCreatedAtDesc(List<String> farmIds);
+
+    long countByFarmIdIn(List<String> farmIds);
 }
