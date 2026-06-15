@@ -425,6 +425,32 @@ export const landOwner = {
     getFinanceSummary: () => request<FinanceSummary>('/landowner/finance/summary'),
 
     getStats: () => request<Record<string, number | object>>('/landowner/stats'),
+
+    // ─── Dashboard-specific endpoints ────────────────────────────────────────
+
+    getOverviewData: () =>
+        request<DashboardOverview>('/landowner/dashboard/overview'),
+
+    getDashboardSoilSamples: () =>
+        request<SoilSample[]>('/landowner/dashboard/soil-samples'),
+
+    getDashboardSoilReports: () =>
+        request<SoilReport[]>('/landowner/dashboard/soil-reports'),
+
+    getDashboardCropSuggestions: () =>
+        request<CropSuggestion[]>('/landowner/dashboard/crop-suggestions'),
+
+    getSoilTimeline: (farmId: string) =>
+        request<SoilTimelineStage[]>(`/landowner/dashboard/farms/${farmId}/soil-timeline`),
+
+    getDashboardFinanceSummary: () =>
+        request<DashboardFinanceSummary>('/landowner/dashboard/finance-summary'),
+
+    getFieldUpdates: () =>
+        request<FieldUpdate[]>('/landowner/dashboard/field-updates'),
+
+    getSchedule: () =>
+        request<ScheduleItem[]>('/landowner/dashboard/schedule'),
 };
 
 // ─── AI ──────────────────────────────────────────────────────────────────────
@@ -703,4 +729,56 @@ export interface LandRegistrationSubmission {
     submittedAt?: string;
     notes?: string;
     createdAt?: string;
+}
+
+// ─── Dashboard-specific types ─────────────────────────────────────────────────
+
+export interface DashboardOverview {
+    totalLand: number;
+    totalCosts: number;
+    totalSamples: number;
+    farmCount: number;
+}
+
+export interface DashboardFinanceSummary {
+    totalInvestment: number;
+    totalExpenses: number;
+    totalRevenue: number;
+    profit: number;
+    farmCount: number;
+}
+
+export interface SoilTimelineStage {
+    stage: string;
+    completed: boolean;
+    date?: string;
+}
+
+export interface FieldUpdate {
+    id: string;
+    farmId: string;
+    fieldManagerId: string;
+    updateType: string;
+    title?: string;
+    description?: string;
+    photoUrl?: string;
+    amount?: number;
+    transactionType?: string;
+    relatedScheduleItemId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface ScheduleItem {
+    id: string;
+    farmId: string;
+    expertId: string;
+    operationName: string;
+    scheduledDate: string;
+    scheduledEndDate?: string;
+    status: string;
+    description?: string;
+    notes?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
