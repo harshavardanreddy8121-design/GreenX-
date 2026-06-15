@@ -361,6 +361,16 @@ export const landOwner = {
     getFinanceSummary: () => request<FinanceSummary>('/landowner/finance/summary'),
 
     getStats: () => request<Record<string, number | object>>('/landowner/stats'),
+
+    /** GET /landowner/dashboard/overview — aggregated overview stats */
+    getDashboardOverview: () => request<LandownerOverview>('/landowner/dashboard/overview'),
+
+    /** GET /landowner/seasonal-finance — seasonal finance breakdown */
+    getSeasonalFinance: () => request<SeasonalFinance[]>('/landowner/seasonal-finance'),
+
+    /** GET /landowner/soil-sample/:id/timeline — 5-stage sample timeline */
+    getSampleTimeline: (sampleId: string) =>
+        request<SampleTimelineStage[]>(`/landowner/soil-sample/${sampleId}/timeline`),
 };
 
 // ─── AI ──────────────────────────────────────────────────────────────────────
@@ -626,4 +636,40 @@ export interface FinanceSummary {
     costByType: Record<string, number>;
     landOwnerShare80: number;
     farmCount: number;
+}
+
+// ─── LANDOWNER DASHBOARD TYPES ───────────────────────────────────────────────
+
+export interface LandownerOverview {
+    totalLandAcres: number;
+    totalInputCost: number;
+    totalSoilSamples: number;
+    farmCount: number;
+    activeFarms: number;
+    pendingSamples: number;
+    completedReports: number;
+    cropSuggestionsCount: number;
+}
+
+export interface SeasonalFinance {
+    id: string;
+    farmId: string;
+    farmName?: string;
+    season: string;
+    year: number;
+    totalInvestment: number;
+    totalExpenses: number;
+    totalRevenue: number;
+    profitLoss: number;
+    category?: string;
+    description?: string;
+    createdAt?: string;
+}
+
+export interface SampleTimelineStage {
+    stage: string;
+    label: string;
+    status: 'pending' | 'in-progress' | 'completed';
+    date?: string;
+    notes?: string;
 }
