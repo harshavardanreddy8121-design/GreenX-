@@ -287,8 +287,8 @@ export default function LandownerDashboard() {
                 <div className="gx-metric-row"><span className="gx-metric-label">Current Crop</span><span className="gx-metric-value">{farm?.currentCrop || '—'}</span></div>
                 <div className="gx-metric-row"><span className="gx-metric-label">Current Stage</span><span className="gx-metric-value">{farm?.currentStage || '—'}</span></div>
                 <div className="gx-metric-row"><span className="gx-metric-label">Contract Date</span><span className="gx-metric-value">{farm?.contract_date ? new Date(farm.contract_date).toLocaleDateString('en-IN') : '—'}</span></div>
-                <div className="gx-metric-row"><span className="gx-metric-label">Your Share</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>{farm?.landowner_share_pct || 70}%</span></div>
-                <div className="gx-metric-row"><span className="gx-metric-label">GreenX Share</span><span className="gx-metric-value">{farm?.greenx_share_pct || 30}%</span></div>
+                <div className="gx-metric-row"><span className="gx-metric-label">Your Share</span><span className="gx-metric-value" style={{ color: 'var(--gx-green)' }}>{farm?.landowner_share_pct || 80}%</span></div>
+                <div className="gx-metric-row"><span className="gx-metric-label">GreenX Share</span><span className="gx-metric-value">{farm?.greenx_share_pct || 20}%</span></div>
               </div>
             </div>
           </div>
@@ -475,13 +475,13 @@ export default function LandownerDashboard() {
               </div>
             </div>
             <div className="gx-card">
-              <div className="gx-card-header"><div className="gx-card-title"><Banknote className="inline-block w-4 h-4 mr-1 align-middle" /> Your Share (70/30 Split)</div></div>
+              <div className="gx-card-header"><div className="gx-card-title"><Banknote className="inline-block w-4 h-4 mr-1 align-middle" /> Your Share (80/20 Split)</div></div>
               <div className="gx-card-body">
                 <div className="gx-profit-box">
-                  <div style={{ fontSize: 12, color: 'var(--gx-text2)' }}>Your Share ({farm?.landowner_share_pct || 70}%)</div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gx-green)', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.landowner_share_pct || 70)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</div>
+                  <div style={{ fontSize: 12, color: 'var(--gx-text2)' }}>Your Share ({farm?.landowner_share_pct || 80}%)</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--gx-green)', fontFamily: "'JetBrains Mono', monospace", marginTop: 4 }}>₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.landowner_share_pct || 80)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</div>
                 </div>
-                <div className="gx-metric-row" style={{ marginTop: 16 }}><span className="gx-metric-label">GreenX Share ({farm?.greenx_share_pct || 30}%)</span><span className="gx-metric-value">₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.greenx_share_pct || 30)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</span></div>
+                <div className="gx-metric-row" style={{ marginTop: 16 }}><span className="gx-metric-label">GreenX Share ({farm?.greenx_share_pct || 20}%)</span><span className="gx-metric-value">₹{farm?.expected_revenue ? ((parseFloat(farm.expected_revenue) * (farm?.greenx_share_pct || 20)) / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—'}</span></div>
                 <div className="gx-metric-row"><span className="gx-metric-label">Predicted Yield</span><span className="gx-metric-value">{farm?.expected_yield ? `${(farm.expected_yield / 1000).toFixed(1)} T` : '—'}</span></div>
               </div>
             </div>

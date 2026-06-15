@@ -1128,7 +1128,7 @@ export default function LandingPage() {
                     width: 'max-content'
                 }}>
                     {[...Array(16)].map((_, i) => {
-                        const items = ['Clinical Soil Testing', 'Precision Agriculture', 'Real-Time Dashboard', 'Direct International Export', 'Expert Agronomists', '70% Revenue to Landowner', 'GPS Field Tracking', 'VRT Technology'];
+                        const items = ['Clinical Soil Testing', 'Precision Agriculture', 'Real-Time Dashboard', 'Direct International Export', 'Expert Agronomists', '80% Revenue to Landowner', 'GPS Field Tracking', 'VRT Technology'];
                         return (
                             <div key={i} style={{
                                 display: 'flex',
@@ -1294,7 +1294,7 @@ export default function LandingPage() {
                             <div className="data-chart-subtitle">Annual income in ₹ (Indian Rupees)</div>
                             <div className="data-bar-chart">
                                 <div className="data-bar-y-axis">
-                                    {['50K', '37.5K', '25K', '12.5K', '0'].map(v => (
+                                    {['60K', '45K', '30K', '15K', '0'].map(v => (
                                         <div key={v} className="data-bar-y-label">₹{v}</div>
                                     ))}
                                 </div>
@@ -1311,15 +1311,15 @@ export default function LandingPage() {
                                             <div className="data-bar-value-label" style={{ color: '#9ca3af' }}>₹10K</div>
                                             <div
                                                 className="data-bar data-bar-gray"
-                                                style={{ '--bar-height': '20%' } as React.CSSProperties}
+                                                style={{ '--bar-height': '17%' } as React.CSSProperties}
                                             />
                                             <div className="data-bar-x-label" style={{ fontSize: '11px' }}>Traditional<br/>Lease</div>
                                         </div>
                                         <div className="data-bar-col">
-                                            <div className="data-bar-value-label" style={{ color: 'var(--green)' }}>₹46K</div>
+                                            <div className="data-bar-value-label" style={{ color: 'var(--green)' }}>₹53K</div>
                                             <div
                                                 className="data-bar data-bar-green"
-                                                style={{ '--bar-height': '92%' } as React.CSSProperties}
+                                                style={{ '--bar-height': '88%' } as React.CSSProperties}
                                             />
                                             <div className="data-bar-x-label" style={{ fontSize: '11px' }}>GreenX<br/>Model</div>
                                         </div>
@@ -1327,12 +1327,12 @@ export default function LandingPage() {
                                     {/* Multiplier annotation */}
                                     <div className="data-annotation data-annotation-multiplier">
                                         <span className="data-annotation-arrow">↑</span>
-                                        <span className="data-annotation-text">4.6×</span>
+                                        <span className="data-annotation-text">5.3×</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="data-chart-caption">
-                                GreenX gives landowners 4.6× more income.
+                                GreenX gives landowners 5.3× more income.
                             </div>
                         </div>
                     </div>
@@ -1354,7 +1354,7 @@ export default function LandingPage() {
                         maxWidth: '760px',
                         marginTop: '16px'
                     }}>
-                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: 'var(--white)' }}>Landowners earn 70% of the profits</strong>, while GreenX handles all the work.
+                        GreenX takes care of farmland on behalf of landowners who can't manage it themselves. We bring together small, scattered plots into larger, professionally-run farms, use scientific soil testing and modern technology — sensors, precision farming tools, data-driven crop planning — to grow the right crops the right way, and sell the harvest directly to international buyers, skipping middlemen entirely. <strong style={{ color: 'var(--white)' }}>Landowners earn 80% of the profits</strong>, while GreenX handles all the work.
                     </p>
 
                     {/* Feature cards */}
