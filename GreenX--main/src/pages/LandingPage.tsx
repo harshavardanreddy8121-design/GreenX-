@@ -613,7 +613,7 @@ export default function LandingPage() {
                     width: 'max-content'
                 }}>
                     {[...Array(16)].map((_, i) => {
-                        const items = ['Clinical Soil Testing', 'Precision Agriculture', 'Real-Time Dashboard', 'Direct International Export', 'Expert Agronomists', '70% Revenue to Landowner', 'GPS Field Tracking', 'VRT Technology'];
+                        const items = ['Clinical Soil Testing', 'Precision Agriculture', 'Real-Time Dashboard', 'Direct International Export', 'Expert Agronomists', '80% Revenue to Landowner', 'GPS Field Tracking', 'VRT Technology'];
                         return (
                             <div key={i} style={{
                                 display: 'flex',
@@ -739,7 +739,7 @@ export default function LandingPage() {
                             { num: '02', title: 'Soil Lab Test', desc: 'Our team conducts clinical NPK, pH, micronutrient analysis.' },
                             { num: '03', title: 'Crop Plan Assigned', desc: 'Expert agronomist creates custom crop calendar + input schedule.' },
                             { num: '04', title: 'Farm Operations', desc: 'Our workers execute: planting, irrigation, pest control, harvest.' },
-                            { num: '05', title: 'Export & Payment', desc: 'Produce graded, packed, exported. 70% profit to your account.' }
+                            { num: '05', title: 'Export & Payment', desc: 'Produce graded, packed, exported. 80% profit to your account.' }
                         ].map((step, i) => (
                             <div key={i} style={{
                                 display: 'flex',
@@ -1031,7 +1031,7 @@ export default function LandingPage() {
                                 fontWeight: 900,
                                 color: 'var(--gold)',
                                 lineHeight: 1
-                            }}>70 / 30</div>
+                            }}>80 / 20</div>
                             <div style={{
                                 fontSize: '14px',
                                 color: 'var(--text3)',
@@ -1045,7 +1045,7 @@ export default function LandingPage() {
                             <div>
                                 <div style={{ fontSize: '28px', marginBottom: '12px' }}><Wheat size={28} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--white)', marginBottom: '8px' }}>
-                                    Landowner (70%)
+                                    Landowner (80%)
                                 </div>
                                 <ul style={{ fontSize: '13.5px', color: 'var(--text2)', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
                                     <li>₹22,000+ per acre/year</li>
@@ -1058,7 +1058,7 @@ export default function LandingPage() {
                             <div>
                                 <div style={{ fontSize: '28px', marginBottom: '12px' }}><Building2 size={28} strokeWidth={1.5} /></div>
                                 <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--green)', marginBottom: '8px' }}>
-                                    GreenX (30%)
+                                    GreenX (20%)
                                 </div>
                                 <ul style={{ fontSize: '13.5px', color: 'var(--text2)', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
                                     <li>Covers all operating costs</li>

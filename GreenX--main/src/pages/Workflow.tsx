@@ -198,7 +198,7 @@ const phases: Phase[] = [
       },
       {
         id: '23',
-        text: 'System auto-calculates split: 70% to Land Owner and 30% to GreenX, then sends payment summary.',
+        text: 'System auto-calculates split: 80% to Land Owner and 20% to GreenX, then sends payment summary.',
         owner: 'App Auto',
       },
       {
@@ -355,7 +355,7 @@ const dataFlowRows: DataFlowRow[] = [
     id: 'sale_completed',
     event: 'Sale or export completed',
     doneBy: 'Cluster Admin',
-    systemDoes: 'Auto-calculates 70/30 split and generates report.',
+    systemDoes: 'Auto-calculates 80/20 split and generates report.',
     notifies: 'Land Owner: Full season report and payment breakdown on dashboard.',
   },
 ];

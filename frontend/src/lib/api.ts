@@ -688,7 +688,7 @@ export interface Prescription {
 export interface FinanceSummary {
     totalCosts: number;
     costByType: Record<string, number>;
-    landOwnerShare70: number;
+    landOwnerShare80: number;
     farmCount: number;
 }
 
