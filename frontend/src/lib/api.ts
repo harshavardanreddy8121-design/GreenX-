@@ -425,6 +425,26 @@ export const landOwner = {
     getFinanceSummary: () => request<FinanceSummary>('/landowner/finance/summary'),
 
     getStats: () => request<Record<string, number | object>>('/landowner/stats'),
+
+    // ── Dashboard module APIs ──────────────────────────────────────────────
+
+    getDashboardOverview: () =>
+        request<DashboardOverview>('/landowner/dashboard/overview'),
+
+    getDashboardSoilSamples: (farmId: string) =>
+        request<DashboardSoilSamples>(`/landowner/dashboard/farms/${farmId}/soil-samples`),
+
+    getDashboardSoilReports: (farmId: string) =>
+        request<DashboardSoilReport[]>(`/landowner/dashboard/farms/${farmId}/soil-reports`),
+
+    getDashboardCropSuggestions: (farmId: string) =>
+        request<DashboardCropSuggestion[]>(`/landowner/dashboard/farms/${farmId}/crop-suggestions`),
+
+    getDashboardSoilTimeline: (farmId: string) =>
+        request<DashboardSoilTimeline>(`/landowner/dashboard/farms/${farmId}/soil-sample-timeline`),
+
+    getDashboardFinanceSummary: (farmId: string) =>
+        request<DashboardFinanceSummary>(`/landowner/dashboard/farms/${farmId}/finance-summary`),
 };
 
 // ─── AI ──────────────────────────────────────────────────────────────────────
@@ -703,4 +723,92 @@ export interface LandRegistrationSubmission {
     submittedAt?: string;
     notes?: string;
     createdAt?: string;
+}
+
+// ─── DASHBOARD MODULE TYPES ───────────────────────────────────────────────────
+
+export interface DashboardOverview {
+    totalLandArea: number;
+    totalInputCosts: number;
+    totalSoilSamples: number;
+    farmsCount: number;
+    activeStatus: string;
+    lastUpdate: string;
+}
+
+export interface DashboardSoilSampleItem {
+    id: string;
+    sampleCode: string;
+    collectionDate?: string;
+    status: string;
+    collectedBy?: string;
+    reportId?: string;
+}
+
+export interface DashboardSoilSamples {
+    totalSamples: number;
+    samples: DashboardSoilSampleItem[];
+}
+
+export interface DashboardSoilReport {
+    id: string;
+    submittedDate?: string;
+    expertName?: string;
+    ph?: number;
+    nitrogen?: number;
+    phosphorus?: number;
+    potassium?: number;
+    organicMatter?: number;
+    moisture?: number;
+    ecDsM?: number;
+    zincPpm?: number;
+    boronPpm?: number;
+    sulphurPpm?: number;
+    ironPpm?: number;
+    notes?: string;
+    overallRating?: string;
+    status: string;
+    farmId: string;
+}
+
+export interface DashboardCropSuggestion {
+    id: string;
+    cropName: string;
+    variety?: string;
+    expectedYieldMin?: number;
+    expectedYieldMax?: number;
+    yieldUnit?: string;
+    profitPerAcre?: number;
+    inputCostEstimate?: number;
+    durationDays?: number;
+    suitabilityScore?: number;
+    reasoning?: string;
+    expertName?: string;
+    submittedDate?: string;
+    selected: boolean;
+    season?: string;
+    farmId: string;
+}
+
+export interface DashboardTimelineStage {
+    stage: string;
+    status: 'COMPLETED' | 'IN_PROGRESS' | 'PENDING';
+    date?: string;
+    description: string;
+}
+
+export interface DashboardSoilTimeline {
+    timeline: DashboardTimelineStage[];
+    currentStage: string;
+}
+
+export interface DashboardFinanceSummary {
+    totalInvestment: number;
+    expenses: Record<string, number>;
+    revenue: number;
+    profitLoss: number;
+    profitMargin: number;
+    budgetUsed: number;
+    budgetLimit: number;
+    lastUpdated: string;
 }
