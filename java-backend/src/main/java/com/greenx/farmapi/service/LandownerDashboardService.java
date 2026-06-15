@@ -4,6 +4,8 @@ import com.greenx.farmapi.entity.*;
 import com.greenx.farmapi.model.User;
 import com.greenx.farmapi.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,6 +15,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class LandownerDashboardService {
+
+    private static final Logger log = LoggerFactory.getLogger(LandownerDashboardService.class);
 
     private final FarmRepository farmRepository;
     private final SoilReportRepository soilReportRepository;
@@ -24,8 +28,24 @@ public class LandownerDashboardService {
     // ── MODULE 1: Overview Dashboard ─────────────────────────────────────────
 
     public Map<String, Object> getOverviewData(String landownerId) {
+        log.debug("Fetching overview data for landowner: {}", landownerId);
         List<Farm> farms = farmRepository.findByOwnerId(landownerId);
+
+        // Handle null or empty farms list
+        if (farms == null || farms.isEmpty()) {
+            log.info("No farms found for landowner: {}", landownerId);
+            Map<String, Object> empty = new LinkedHashMap<>();
+            empty.put("totalLandArea", 0.0);
+            empty.put("totalInputCosts", 0.0);
+            empty.put("totalSoilSamples", 0);
+            empty.put("activeFarms", 0);
+            empty.put("totalFarms", 0);
+            empty.put("message", "No farms registered yet");
+            return empty;
+        }
+
         List<String> farmIds = farms.stream().map(Farm::getId).toList();
+        log.debug("Found {} farm(s) for landowner: {}", farms.size(), landownerId);
 
         double totalLand = farms.stream()
                 .mapToDouble(f -> f.getTotalLand() != null ? f.getTotalLand() : 0.0)
@@ -43,7 +63,7 @@ public class LandownerDashboardService {
         long totalSamples = farmIds.isEmpty() ? 0 : soilReportRepository.countByFarmIdIn(farmIds);
 
         long activeFarms = farms.stream()
-                .filter(f -> !"INACTIVE".equalsIgnoreCase(f.getStatus()))
+                .filter(f -> f.getStatus() == null || !"INACTIVE".equalsIgnoreCase(f.getStatus()))
                 .count();
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -52,6 +72,7 @@ public class LandownerDashboardService {
         result.put("totalSoilSamples", totalSamples);
         result.put("activeFarms", activeFarms);
         result.put("totalFarms", farms.size());
+        log.debug("Overview data: totalLand={}, activeFarms={}, totalSamples={}", totalLand, activeFarms, totalSamples);
         return result;
     }
 

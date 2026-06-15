@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -25,7 +25,7 @@ export default function LandownerDashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const { data: myFarms = [], isError: farmsError, error: farmsErr } = useQuery({
+  const { data: myFarms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
     queryKey: ['landowner-farms', user?.id],
     queryFn: () => landOwner.getFarms(),
     enabled: !!user?.id,
@@ -172,6 +172,17 @@ export default function LandownerDashboard() {
   const dashTimelineStages = dashTimeline?.timeline ?? [];
   const ai = useAI();
 
+  // ── Debug logging ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    console.log('[LandownerDashboard] Overview:', dashOverview);
+    console.log('[LandownerDashboard] Soil Samples:', dashSoilSamples);
+    console.log('[LandownerDashboard] Soil Reports:', dashSoilReports);
+    console.log('[LandownerDashboard] Crop Suggestions:', dashCropSuggestions);
+    console.log('[LandownerDashboard] Timeline:', dashTimeline);
+    console.log('[LandownerDashboard] Finance:', dashFinance);
+    console.log('[LandownerDashboard] My Farms:', myFarms);
+  }, [dashOverview, dashSoilSamples, dashSoilReports, dashCropSuggestions, dashTimeline, dashFinance, myFarms]);
+
   return (
     <div className="gx-dashboard lo-accent">
       <MobileHeader title="Land Owner" roleIcon={<Home size={18} />} />
@@ -235,6 +246,23 @@ export default function LandownerDashboard() {
           <div className="gx-alert-box gx-alert-red">
             <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
             <div><strong>Backend Connection Error:</strong> {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}</div>
+          </div>
+        )}
+
+        {!farmsLoading && !farmsError && myFarms.length === 0 && (
+          <div className="gx-alert-box gx-alert-gold">
+            <span><Zap className="inline-block w-4 h-4 mr-1 align-middle" /></span>
+            <div>
+              <strong>No farms registered yet.</strong>{' '}
+              Your dashboard will populate once a farm is linked to your account.
+              <button
+                className="gx-btn gx-btn-primary gx-btn-sm"
+                style={{ marginLeft: 12 }}
+                onClick={() => navigate('/landowner/register')}
+              >
+                Register Your First Farm →
+              </button>
+            </div>
           </div>
         )}
 
@@ -471,7 +499,18 @@ export default function LandownerDashboard() {
         {/* ═══ MY LAND DETAILS TAB ═══ */}
         {activeTab === 'land' && (<>
           <div className="gx-section-divider"><MapPin className="inline-block w-4 h-4 mr-1 align-middle" /> My Land Details</div>
-          <div className="gx-card" style={{ marginBottom: 20 }}>
+          {!farmsLoading && myFarms.length === 0 && (
+            <div className="gx-card">
+              <div className="gx-card-body" style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gx-text2)' }}>
+                <MapPin size={48} strokeWidth={1.5} style={{ margin: '0 auto 12px' }} />
+                <div style={{ marginBottom: 12 }}>No farm registered yet. Register your first farm to see land details here.</div>
+                <button className="gx-btn gx-btn-primary gx-btn-sm" onClick={() => navigate('/landowner/register')}>
+                  Register Your First Farm →
+                </button>
+              </div>
+            </div>
+          )}
+          {farm && <div className="gx-card" style={{ marginBottom: 20 }}>
             <div className="gx-card-header"><div className="gx-card-title"><Home className="inline-block w-4 h-4 mr-1 align-middle" /> Farm Information</div><span className="gx-status gx-s-done">{farm?.status || 'Active'}</span></div>
             <div className="gx-card-body">
               <div className="gx-form-grid">
@@ -489,7 +528,7 @@ export default function LandownerDashboard() {
                 <div className="gx-metric-row"><span className="gx-metric-label">GreenX Share</span><span className="gx-metric-value">{farm?.greenx_share_pct || 20}%</span></div>
               </div>
             </div>
-          </div>
+          </div>}
           {myFarms.length > 1 && (
             <div className="gx-card">
               <div className="gx-card-header"><div className="gx-card-title"><FolderOpen className="inline-block w-4 h-4 mr-1 align-middle" /> All My Farms ({myFarms.length})</div></div>
