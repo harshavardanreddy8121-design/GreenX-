@@ -427,6 +427,119 @@ export const landOwner = {
     getStats: () => request<Record<string, number | object>>('/landowner/stats'),
 };
 
+// ─── LANDOWNER DASHBOARD ─────────────────────────────────────────────────────
+
+export interface DashboardOverview {
+    totalLandArea: number;
+    totalInputCosts: number;
+    totalSoilSamples: number;
+    activeFarms: number;
+    totalFarms: number;
+}
+
+export interface DashboardSoilSampleItem {
+    id: string;
+    farmId: string;
+    farmName: string;
+    collectionDate: string | null;
+    status: string;
+    reportId: string;
+}
+
+export interface DashboardSoilSamplesResponse {
+    totalSamples: number;
+    samples: DashboardSoilSampleItem[];
+}
+
+export interface DashboardSoilReport {
+    id: string;
+    farmId: string;
+    farmName: string;
+    submittedDate: string | null;
+    reportDate: string | null;
+    ph: number | null;
+    nitrogen: number | null;
+    phosphorus: number | null;
+    potassium: number | null;
+    organicMatter: number | null;
+    moisture: number | null;
+    ec: number | null;
+    zinc: number | null;
+    boron: number | null;
+    sulphur: number | null;
+    overallRating: string | null;
+    notes: string | null;
+    expertName: string;
+}
+
+export interface DashboardSoilReportsResponse {
+    reports: DashboardSoilReport[];
+}
+
+export interface DashboardCropSuggestion {
+    id: string;
+    farmId: string;
+    farmName: string;
+    cropName: string;
+    variety: string | null;
+    season: string | null;
+    expectedYieldMin: number | null;
+    expectedYieldMax: number | null;
+    yieldUnit: string | null;
+    profitPerAcre: number | null;
+    inputCostEstimate: number | null;
+    durationDays: number | null;
+    suitabilityScore: number | null;
+    reasoning: string | null;
+    isSelected: boolean;
+    submittedDate: string | null;
+    expertName: string;
+}
+
+export interface DashboardCropSuggestionsResponse {
+    suggestions: DashboardCropSuggestion[];
+}
+
+export interface DashboardTimelineStage {
+    stage: string;
+    date: string | null;
+    status: 'completed' | 'in_progress' | 'pending';
+    description: string;
+}
+
+export interface DashboardTimelineResponse {
+    timeline: DashboardTimelineStage[];
+}
+
+export interface DashboardFinanceSummary {
+    totalInvestment: number;
+    expenses: Record<string, number>;
+    revenue: number;
+    profitLoss: number;
+    profitMargin: number;
+    breakdown: Array<{ category: string; amount: number; percentage: number }>;
+}
+
+export const landownerDashboard = {
+    getOverview: () =>
+        request<DashboardOverview>('/landowner/dashboard/overview'),
+
+    getSoilSamples: () =>
+        request<DashboardSoilSamplesResponse>('/landowner/dashboard/soil-samples'),
+
+    getLatestSoilReports: (limit = 5) =>
+        request<DashboardSoilReportsResponse>(`/landowner/dashboard/soil-reports?limit=${limit}`),
+
+    getCropSuggestions: () =>
+        request<DashboardCropSuggestionsResponse>('/landowner/dashboard/crop-suggestions'),
+
+    getSoilTimeline: () =>
+        request<DashboardTimelineResponse>('/landowner/dashboard/soil-timeline'),
+
+    getFinanceSummary: () =>
+        request<DashboardFinanceSummary>('/landowner/dashboard/finance-summary'),
+};
+
 // ─── AI ──────────────────────────────────────────────────────────────────────
 
 export const ai = {
