@@ -1,18 +1,20 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { admin } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { DashboardSkeleton } from '@/components/LoadingSkeleton';
 
-import { AlertTriangle, BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Building2, ChevronRight, ClipboardList, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
-  const { data: farms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr } = useQuery({
+  const { data: farms = [], isLoading: farmsLoading, isError: farmsError, error: farmsErr, refetch: refetchFarms } = useQuery({
     queryKey: ['admin-farms'],
     queryFn: () => admin.getFarms(),
     retry: 2,
@@ -113,47 +115,101 @@ export default function AdminDashboard() {
       {farmsLoading && <DashboardSkeleton />}
 
       {!farmsLoading && (farmsError || samplesError) && (
-        <div className="gx-alert-box gx-alert-red">
-          <span><AlertTriangle className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-          <div>
+        <div className="gx-alert-box gx-alert-red" style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <AlertTriangle className="inline-block w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div style={{ flex: 1 }}>
             <strong>Backend Connection Error:</strong>{' '}
             {(farmsErr || samplesErr)?.message || 'Could not load data from the server.'}
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
               Please check your connection or try refreshing the page.
             </div>
           </div>
+          <button className="gx-btn gx-btn-ghost gx-btn-sm" onClick={() => refetchFarms()}>Retry</button>
         </div>
       )}
 
       {/* Alert */}
       {alerts.length > 0 && (
-        <div className="gx-alert-box gx-alert-red">
-          <span><ShieldAlert className="inline-block w-4 h-4 mr-1 align-middle" /></span>
-          <div><strong>Active Pest Alerts:</strong> {alerts.length} unresolved alerts across farms. Review and assign experts immediately.</div>
+        <div className="gx-alert-box gx-alert-red" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/admin/pest-alerts')}>
+          <ShieldAlert className="inline-block w-4 h-4 flex-shrink-0" />
+          <div style={{ flex: 1 }}><strong>Active Pest Alerts:</strong> {alerts.length} unresolved alerts across farms. Review and assign experts immediately.</div>
+          <ChevronRight size={16} />
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="gx-stats-row">
-        <div className="gx-stat-card green">
-          <div className="gx-stat-label">Total Farms</div>
+      {/* Stats Row — 9 clickable cards */}
+      <div className="gx-stats-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
+        <div className="gx-stat-card green" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/farms')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><Tractor size={12} style={{ display: 'inline', marginRight: 4 }} />Total Farms</div>
           <div className="gx-stat-value">{farms.length}</div>
           <div className="gx-stat-change gx-up">{totalLand} acres total</div>
         </div>
-        <div className="gx-stat-card blue">
-          <div className="gx-stat-label">Total Users</div>
+        <div className="gx-stat-card blue" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/users')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><Users size={12} style={{ display: 'inline', marginRight: 4 }} />Total Users</div>
           <div className="gx-stat-value">{users.length}</div>
-          <div className="gx-stat-change gx-neutral">{experts.length} experts · {fieldManagers.length} FM · {workers.length} workers</div>
+          <div className="gx-stat-change gx-neutral">{experts.length} experts · {fieldManagers.length} FM</div>
         </div>
-        <div className="gx-stat-card gold">
-          <div className="gx-stat-label">Active Crops</div>
-          <div className="gx-stat-value">{activeCrops}</div>
-          <div className="gx-stat-change gx-up">Across all farms</div>
+        <div className="gx-stat-card gold" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/submissions')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><TestTubes size={12} style={{ display: 'inline', marginRight: 4 }} />Submissions</div>
+          <div className="gx-stat-value">{pendingSamples.length}</div>
+          <div className="gx-stat-change gx-down">Pending samples</div>
         </div>
-        <div className="gx-stat-card orange">
-          <div className="gx-stat-label">Pending Tasks</div>
-          <div className="gx-stat-value">{taskStats.pending}</div>
-          <div className="gx-stat-change gx-down">{taskStats.completed} completed</div>
+        <div className="gx-stat-card orange" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/experts')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><Microscope size={12} style={{ display: 'inline', marginRight: 4 }} />Total Experts</div>
+          <div className="gx-stat-value">{experts.length}</div>
+          <div className="gx-stat-change gx-up">Soil & crop experts</div>
+        </div>
+        <div className="gx-stat-card green" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/field-managers')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><Tractor size={12} style={{ display: 'inline', marginRight: 4 }} />Field Managers</div>
+          <div className="gx-stat-value">{fieldManagers.length}</div>
+          <div className="gx-stat-change gx-up">On-ground managers</div>
+        </div>
+        <div className="gx-stat-card blue" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/workers')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><HardHat size={12} style={{ display: 'inline', marginRight: 4 }} />Total Workers</div>
+          <div className="gx-stat-value">{workers.length}</div>
+          <div className="gx-stat-change gx-neutral">Farm workers</div>
+        </div>
+        <div className="gx-stat-card gold" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/soil-reports')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><TestTubes size={12} style={{ display: 'inline', marginRight: 4 }} />Soil Reports</div>
+          <div className="gx-stat-value">—</div>
+          <div className="gx-stat-change gx-up">Lab analysis</div>
+        </div>
+        <div className="gx-stat-card orange" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/pest-alerts')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><Bug size={12} style={{ display: 'inline', marginRight: 4 }} />Pest Alerts</div>
+          <div className="gx-stat-value">{alerts.length}</div>
+          <div className="gx-stat-change gx-down">Active alerts</div>
+        </div>
+        <div className="gx-stat-card green" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+          onClick={() => navigate('/admin/prescriptions')}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px -8px rgba(0,0,0,0.2)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+          <div className="gx-stat-label"><ClipboardList size={12} style={{ display: 'inline', marginRight: 4 }} />Prescriptions</div>
+          <div className="gx-stat-value">—</div>
+          <div className="gx-stat-change gx-up">Expert prescriptions</div>
         </div>
       </div>
 
