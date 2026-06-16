@@ -93,8 +93,9 @@ app:
 openai:
   # Primary resolution: OPENAI_API_KEY env var (set in Railway Variables panel)
   api-key: ${OPENAI_API_KEY:}
-  # Model to use — override with AI_MODEL env var if needed (e.g. gpt-4o, gpt-3.5-turbo)
-  model: ${AI_MODEL:gpt-4}
+  # Model to use — override with AI_MODEL env var if needed.
+  # Default is gpt-4o (latest, widely available). Falls back to gpt-3.5-turbo automatically.
+  model: ${AI_MODEL:gpt-4o}
   # Sampling temperature: 0.0 = deterministic, 1.0 = creative
   temperature: ${AI_TEMPERATURE:0.7}
   # Maximum tokens per response

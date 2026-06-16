@@ -42,8 +42,11 @@ public class AiService {
     @Value("${openai.api-key:${OPENAI_API_KEY:}}")
     private String openAiApiKey;
 
-    @Value("${openai.model:${AI_MODEL:gpt-4}}")
+    @Value("${openai.model:${AI_MODEL:gpt-4o}}")
     private String openAiModel;
+
+    /** Ordered fallback chain tried when the primary model is unavailable. */
+    private static final List<String> MODEL_FALLBACK_CHAIN = List.of("gpt-4o", "gpt-3.5-turbo");
 
     @Value("${openai.temperature:${AI_TEMPERATURE:0.7}}")
     private double temperature;
@@ -60,14 +63,14 @@ public class AiService {
         String trimmedKey = openAiApiKey != null ? openAiApiKey.trim() : "";
         if (trimmedKey.isEmpty()) {
             log.warn("[GreenX AI] OPENAI_API_KEY is not set — falling back to rule-based engine. " +
-                     "Set OPENAI_API_KEY in Railway environment variables to enable GPT-4.");
+                     "Set OPENAI_API_KEY in Railway environment variables to enable GPT.");
         } else if (trimmedKey.equals("your-openai-api-key")) {
             log.warn("[GreenX AI] OPENAI_API_KEY is still the placeholder value — " +
-                     "replace it with a real key to enable GPT-4.");
+                     "replace it with a real key to enable GPT.");
         } else {
             String masked = trimmedKey.substring(0, Math.min(7, trimmedKey.length())) + "****";
-            log.info("[GreenX AI] OpenAI configured ✓  key={} model={} maxTokens={}",
-                     masked, openAiModel, maxTokens);
+            log.info("[GreenX AI] OpenAI configured ✓  key={} primaryModel={} fallbackChain={} maxTokens={}",
+                     masked, openAiModel, MODEL_FALLBACK_CHAIN, maxTokens);
         }
     }
 
@@ -467,49 +470,14 @@ public class AiService {
 
     @SuppressWarnings("unchecked")
     private String callOpenAI(String systemPrompt, String userMessage) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(openAiApiKey);
-
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         messages.add(Map.of("role", "user", "content", userMessage));
-
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", openAiModel);
-        requestBody.put("messages", messages);
-        requestBody.put("temperature", temperature);
-        requestBody.put("max_tokens", maxTokens);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(OPENAI_API_URL, entity, Map.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
-                if (choices != null && !choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
-                }
-            }
-        } catch (Exception e) {
-            log.error("OpenAI API call failed: {}", e.getMessage());
-            throw e;
-        }
-
-        throw new RuntimeException("No response from OpenAI");
+        return callOpenAIWithModels(messages);
     }
 
     @SuppressWarnings("unchecked")
     private String callOpenAIWithHistory(String systemPrompt, String userMessage, List<AiConversation> history) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(openAiApiKey);
-
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
 
@@ -524,31 +492,78 @@ public class AiService {
         }
 
         messages.add(Map.of("role", "user", "content", userMessage));
+        return callOpenAIWithModels(messages);
+    }
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("model", openAiModel);
-        requestBody.put("messages", messages);
-        requestBody.put("temperature", temperature);
-        requestBody.put("max_tokens", maxTokens);
+    /**
+     * Attempt the OpenAI chat-completions call with the configured primary model,
+     * then fall back through MODEL_FALLBACK_CHAIN on model-not-found errors.
+     * Throws the last exception if every model in the chain fails.
+     */
+    @SuppressWarnings("unchecked")
+    private String callOpenAIWithModels(List<Map<String, String>> messages) {
+        RestTemplate restTemplate = new RestTemplate();
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(openAiApiKey);
 
-        try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(OPENAI_API_URL, entity, Map.class);
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
-                if (choices != null && !choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
-                }
+        // Build the ordered list of models to try: primary first, then fallbacks
+        List<String> modelsToTry = new ArrayList<>();
+        modelsToTry.add(openAiModel);
+        for (String fallback : MODEL_FALLBACK_CHAIN) {
+            if (!fallback.equals(openAiModel)) {
+                modelsToTry.add(fallback);
             }
-        } catch (Exception e) {
-            log.error("OpenAI API call with history failed: {}", e.getMessage());
-            throw e;
         }
 
-        throw new RuntimeException("No response from OpenAI");
+        Exception lastException = null;
+        for (String model : modelsToTry) {
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("model", model);
+            requestBody.put("messages", messages);
+            requestBody.put("temperature", temperature);
+            requestBody.put("max_tokens", maxTokens);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+            try {
+                log.debug("[GreenX AI] Calling OpenAI with model={}", model);
+                ResponseEntity<Map> response = restTemplate.postForEntity(OPENAI_API_URL, entity, Map.class);
+                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) response.getBody().get("choices");
+                    if (choices != null && !choices.isEmpty()) {
+                        Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+                        if (!model.equals(openAiModel)) {
+                            log.info("[GreenX AI] Primary model '{}' unavailable; used fallback model '{}'",
+                                     openAiModel, model);
+                        }
+                        return (String) message.get("content");
+                    }
+                }
+                lastException = new RuntimeException("No response from OpenAI with model=" + model);
+            } catch (Exception e) {
+                String msg = e.getMessage() != null ? e.getMessage() : "";
+                boolean isModelNotFound = msg.contains("model_not_found")
+                        || msg.contains("does not exist")
+                        || msg.contains("404");
+                if (isModelNotFound) {
+                    log.warn("[GreenX AI] Model '{}' not available ({}), trying next fallback...", model, msg);
+                    lastException = e;
+                } else {
+                    // Non-model error (auth, network, quota) — fail fast, no point retrying other models
+                    log.error("[GreenX AI] OpenAI API call failed with model='{}': {}", model, msg);
+                    throw e;
+                }
+            }
+        }
+
+        log.error("[GreenX AI] All models exhausted: {}. Last error: {}", modelsToTry,
+                  lastException != null ? lastException.getMessage() : "unknown");
+        throw new RuntimeException("All OpenAI models unavailable: " + modelsToTry, lastException);
     }
+
+
 
     // ── System Prompt ─────────────────────────────────────────────────────────
 
