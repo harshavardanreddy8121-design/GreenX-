@@ -17,6 +17,7 @@ import ExpertDashboard from "./pages/ExpertDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOverview from "./pages/admin/AdminOverview";
 import AdminFarmRegistration from "./pages/admin/AdminFarmRegistration";
 import AdminWeather from "./pages/admin/AdminWeather";
 import AdminExports from "./pages/admin/AdminExports";
@@ -28,6 +29,26 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDiagnostics from "./pages/admin/AdminDiagnostics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLabSamples from "./pages/admin/AdminLabSamples";
+// Admin list pages
+import AdminFarmsList from "./pages/admin/list/AdminFarmsList";
+import AdminUsersList from "./pages/admin/list/AdminUsersList";
+import AdminSubmissionsList from "./pages/admin/list/AdminSubmissionsList";
+import AdminExpertsList from "./pages/admin/list/AdminExpertsList";
+import AdminFieldManagersList from "./pages/admin/list/AdminFieldManagersList";
+import AdminWorkersList from "./pages/admin/list/AdminWorkersList";
+import AdminSoilReportsList from "./pages/admin/list/AdminSoilReportsList";
+import AdminPestAlertsList from "./pages/admin/list/AdminPestAlertsList";
+import AdminPrescriptionsList from "./pages/admin/list/AdminPrescriptionsList";
+// Admin detail pages
+import AdminFarmDetail from "./pages/admin/detail/AdminFarmDetail";
+import AdminUserDetail from "./pages/admin/detail/AdminUserDetail";
+import AdminSubmissionDetail from "./pages/admin/detail/AdminSubmissionDetail";
+import AdminExpertDetail from "./pages/admin/detail/AdminExpertDetail";
+import AdminFieldManagerDetail from "./pages/admin/detail/AdminFieldManagerDetail";
+import AdminWorkerDetail from "./pages/admin/detail/AdminWorkerDetail";
+import AdminSoilReportDetail from "./pages/admin/detail/AdminSoilReportDetail";
+import AdminPestAlertDetail from "./pages/admin/detail/AdminPestAlertDetail";
+import AdminPrescriptionDetail from "./pages/admin/detail/AdminPrescriptionDetail";
 import Workflow from "./pages/Workflow";
 import MyFarms from "./pages/landowner/MyFarms";
 import SoilReports from "./pages/landowner/SoilReports";
@@ -85,7 +106,8 @@ const AppRoutes = () => (
     <Route path="/expert/prescriptions" element={<ProtectedRoute allowedRoles={['expert', 'admin']}><Prescriptions /></ProtectedRoute>} />
     <Route path="/worker" element={<ProtectedRoute allowedRoles={['worker', 'user', 'admin']}><WorkerDashboard /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
-      <Route index element={<AdminDashboard />} />
+      <Route index element={<AdminOverview />} />
+      <Route path="dashboard" element={<AdminDashboard />} />
       <Route path="land" element={<AdminLand />} />
       <Route path="farm-registration" element={<AdminFarmRegistration />} />
       <Route path="lab-samples" element={<AdminLabSamples />} />
@@ -95,8 +117,28 @@ const AppRoutes = () => (
       <Route path="exports" element={<AdminExports />} />
       <Route path="inventory" element={<AdminInventory />} />
       <Route path="drones" element={<AdminDrones />} />
-      <Route path="users" element={<AdminUsers />} />
+      <Route path="users-manage" element={<AdminUsers />} />
       <Route path="settings" element={<AdminSettings />} />
+      {/* List pages */}
+      <Route path="farms" element={<AdminFarmsList />} />
+      <Route path="users" element={<AdminUsersList />} />
+      <Route path="submissions" element={<AdminSubmissionsList />} />
+      <Route path="experts" element={<AdminExpertsList />} />
+      <Route path="field-managers" element={<AdminFieldManagersList />} />
+      <Route path="workers" element={<AdminWorkersList />} />
+      <Route path="soil-reports" element={<AdminSoilReportsList />} />
+      <Route path="pest-alerts" element={<AdminPestAlertsList />} />
+      <Route path="prescriptions" element={<AdminPrescriptionsList />} />
+      {/* Detail pages */}
+      <Route path="farms/:id" element={<AdminFarmDetail />} />
+      <Route path="users/:id" element={<AdminUserDetail />} />
+      <Route path="submissions/:id" element={<AdminSubmissionDetail />} />
+      <Route path="experts/:id" element={<AdminExpertDetail />} />
+      <Route path="field-managers/:id" element={<AdminFieldManagerDetail />} />
+      <Route path="workers/:id" element={<AdminWorkerDetail />} />
+      <Route path="soil-reports/:id" element={<AdminSoilReportDetail />} />
+      <Route path="pest-alerts/:id" element={<AdminPestAlertDetail />} />
+      <Route path="prescriptions/:id" element={<AdminPrescriptionDetail />} />
     </Route>
     <Route path="*" element={<NotFound />} />
   </Routes>
