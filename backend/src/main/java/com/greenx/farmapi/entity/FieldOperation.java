@@ -59,8 +59,7 @@ public class FieldOperation {
     @Column(name = "TEMPERATURE_C", precision = 4, scale = 1)
     private BigDecimal temperatureC;
 
-    @Lob
-    @Column(name = "OBSERVATIONS")
+    @Column(name = "OBSERVATIONS", columnDefinition = "TEXT")
     private String observations;
 
     @Column(name = "PHOTOS")
