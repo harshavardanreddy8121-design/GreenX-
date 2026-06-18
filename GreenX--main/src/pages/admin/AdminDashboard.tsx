@@ -5,10 +5,13 @@ import { toast } from 'sonner';
 import { useAI } from '@/hooks/useAI';
 import { AiInsightPanel } from '@/components/AiInsightPanel';
 import { DashboardSkeleton } from '@/components/LoadingSkeleton';
+import { useNavigate } from 'react-router-dom';
 
-import { AlertTriangle, BarChart3, Bot, Bug, Building2, HardHat, Microscope, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
+import { AlertTriangle, BarChart3, Bot, Bug, Building2, ChevronRight, HardHat, Microscope, Pill, Search, ShieldAlert, Sprout, TestTubes, Tractor, Trash2, Users, Wallet, Wheat } from 'lucide-react';
+
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [farmSearch, setFarmSearch] = useState('');
   const [uidSearch, setUidSearch] = useState('');
 
@@ -133,28 +136,90 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stats Row */}
-      <div className="gx-stats-row">
-        <div className="gx-stat-card green">
-          <div className="gx-stat-label">Total Farms</div>
-          <div className="gx-stat-value">{farms.length}</div>
-          <div className="gx-stat-change gx-up">{totalLand} acres total</div>
-        </div>
-        <div className="gx-stat-card blue">
-          <div className="gx-stat-label">Total Users</div>
-          <div className="gx-stat-value">{users.length}</div>
-          <div className="gx-stat-change gx-neutral">{experts.length} experts · {fieldManagers.length} FM · {workers.length} workers</div>
-        </div>
-        <div className="gx-stat-card gold">
-          <div className="gx-stat-label">Active Crops</div>
-          <div className="gx-stat-value">{activeCrops}</div>
-          <div className="gx-stat-change gx-up">Across all farms</div>
-        </div>
-        <div className="gx-stat-card orange">
-          <div className="gx-stat-label">Pending Tasks</div>
-          <div className="gx-stat-value">{taskStats.pending}</div>
-          <div className="gx-stat-change gx-down">{taskStats.completed} completed</div>
-        </div>
+      {/* Quick Actions */}
+      <div className="gx-section-divider" style={{ marginBottom: 12 }}><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Quick Actions</div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
+        <button className="gx-btn gx-btn-green" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/farm-registration')}>
+          <Building2 className="w-4 h-4" /> Register Farm
+        </button>
+        <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/users')}>
+          <Users className="w-4 h-4" /> Manage Users
+        </button>
+        <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/lab-samples')}>
+          <TestTubes className="w-4 h-4" /> Lab Samples
+        </button>
+        <button className="gx-btn gx-btn-ghost" style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={() => navigate('/admin/diagnostics')}>
+          <Bug className="w-4 h-4" /> Diagnostics
+        </button>
+      </div>
+
+      {/* Clickable Stats Row — 8 cards */}
+      <div className="gx-section-divider"><BarChart3 className="inline-block w-4 h-4 mr-1 align-middle" /> Overview</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+        <ClickableStatCard
+          color="green"
+          label="Total Farms"
+          value={farms.length}
+          sub={`${totalLand} acres total`}
+          icon={<Building2 className="w-5 h-5" />}
+          onClick={() => navigate('/admin/farms')}
+        />
+        <ClickableStatCard
+          color="blue"
+          label="Total Users"
+          value={users.length}
+          sub={`${landowners.length} owners · ${workers.length} workers`}
+          icon={<Users className="w-5 h-5" />}
+          onClick={() => navigate('/admin/users-list')}
+        />
+        <ClickableStatCard
+          color="gold"
+          label="Experts"
+          value={experts.length}
+          sub="Soil & crop specialists"
+          icon={<Microscope className="w-5 h-5" />}
+          onClick={() => navigate('/admin/experts')}
+        />
+        <ClickableStatCard
+          color="orange"
+          label="Field Managers"
+          value={fieldManagers.length}
+          sub="On-ground supervisors"
+          icon={<Tractor className="w-5 h-5" />}
+          onClick={() => navigate('/admin/field-managers')}
+        />
+        <ClickableStatCard
+          color="green"
+          label="Workers"
+          value={workers.length}
+          sub="Registered farm workers"
+          icon={<HardHat className="w-5 h-5" />}
+          onClick={() => navigate('/admin/workers')}
+        />
+        <ClickableStatCard
+          color="blue"
+          label="Soil Reports"
+          value={pendingSamples.length}
+          sub="Samples in pipeline"
+          icon={<TestTubes className="w-5 h-5" />}
+          onClick={() => navigate('/admin/soil-reports')}
+        />
+        <ClickableStatCard
+          color="orange"
+          label="Pest Alerts"
+          value={alerts.length}
+          sub={alerts.length > 0 ? 'Needs attention' : 'All clear'}
+          icon={<Bug className="w-5 h-5" />}
+          onClick={() => navigate('/admin/pest-alerts')}
+        />
+        <ClickableStatCard
+          color="gold"
+          label="Prescriptions"
+          value={taskStats.pending}
+          sub={`${taskStats.completed} completed`}
+          icon={<Pill className="w-5 h-5" />}
+          onClick={() => navigate('/admin/prescriptions')}
+        />
       </div>
 
       {/* UID + Farm Search */}
@@ -387,6 +452,54 @@ export default function AdminDashboard() {
         </div>
       </div>
     </>
+  );
+}
+
+function ClickableStatCard({
+  label,
+  value,
+  sub,
+  icon,
+  color,
+  onClick,
+}: {
+  label: string;
+  value: number;
+  sub: string;
+  icon: React.ReactNode;
+  color: 'green' | 'blue' | 'gold' | 'orange';
+  onClick: () => void;
+}) {
+  const colorVar = `var(--gx-${color})`;
+  return (
+    <div
+      className="gx-stat-card"
+      onClick={onClick}
+      style={{
+        cursor: 'pointer',
+        borderLeft: `4px solid ${colorVar}`,
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        position: 'relative',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 24px -8px ${colorVar}55`;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.transform = '';
+        (e.currentTarget as HTMLDivElement).style.boxShadow = '';
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="gx-stat-label">{label}</div>
+        <span style={{ color: colorVar, opacity: 0.7 }}>{icon}</span>
+      </div>
+      <div className="gx-stat-value" style={{ color: colorVar }}>{value}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+        <div className="gx-stat-change" style={{ fontSize: 11 }}>{sub}</div>
+        <ChevronRight className="w-3 h-3" style={{ opacity: 0.4 }} />
+      </div>
+    </div>
   );
 }
 
